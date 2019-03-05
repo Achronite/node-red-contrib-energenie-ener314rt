@@ -1,0 +1,105 @@
+<script type="text/javascript">
+    RED.nodes.registerType('ook-switch',{
+        category: 'Raspberry Pi',
+        color: '#5ab946',
+        defaults: {
+            name: {value:""},
+            zone: {value:0},
+            switchNum: {value:1},
+        },
+        inputs:1,
+        outputs:1,
+        align: "left",
+        icon: "bridge.png",
+        paletteLabel: 'ENER314RT OOK switch',
+        label: function() { return this.name || ("ener314rt "+ this.zone + ":" + this.switchNum) || this.paletteLabel; },
+    });
+</script>
+
+<script type="text/x-red" data-template-name="ook-switch">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-zone"><i class="fa fa-home"></i> Zone</label>
+        <input type="number" id="node-input-zone" placeholder="default">
+    </div>
+    <div class="form-row">
+        <label for="node-input-switchNum"><i class="fa fa-plug"></i> Switch #</label>
+        <select id="node-input-switchNum">
+            <option value='1'>1</option>
+            <option value='2'>2</option>
+            <option value='3'>3</option>
+            <option value='4'>4</option>
+            <option value='5'>5</option>
+            <option value='6'>6</option>
+            <option value='0'>0 (all in zone)</option>
+        </select>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="ook-switch">
+    <h3>Inputs</h3>
+        <dl class="message-properties">
+            <dt>payload
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>The state that you want the switch to be in, where true=on, false=off</dd>
+        </dl>
+        <p>OR</p>
+        <dl class="message-properties">
+            <dt>payload
+                <span class="property-type">string</span>
+            </dt>
+            <dd>The state that you want the switch to be in, 'on' or 'off'</dd>
+        </dl>
+        <p>OR</p>
+        <dl class="message-properties">
+            <dt class="optional">payload.switchNum
+                <span class="property-type">Integer</span>
+            </dt>
+            <dd>(Optional) switchNum should be set 0-6, where 0 switches ALL switches assigned to the same zone.</dd>
+            <dt class="optional" default=0>payload.zone
+                <span class="property-type">Integer</span>
+            </dt>
+            <dd>(Optional) 20 bit unsigned integer (ie. 0..1048575), omit to use the default zone 444102 (0x6C6C6).</dd>
+            <dt>payload.powerOn
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>The state that you want the switch to be in, where true/'on'=on, false/'off'=off.</dd>
+            <dt>payload.repeat
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>(Optional Advanced) The number of times to send the radio transmission in a burst (range 1-255).
+            Use this value if you wish to override the default of 20 re-transmissions (26ms each), 
+            for example if you have a lot of interference or your devices are switching inconsistently.</dd>
+        </dl>
+            
+    <h3>Outputs</h3>
+        <dl class="message-properties">
+            <dt>msg
+                <span class="property-type">object</span>
+            </dt>
+            <dd>Passed unchanged</dd>
+        </dl>
+
+    <h3>Details</h3>
+        <p>Node that switches on/off the OOK 'Receive only' devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>This includes:</p>
+        <ul>
+            <li>Green Button Adaptors</li>
+            <li>Blue Text Adaptor Plugs</li>
+            <li>Light switches</li>
+            <li>Double Sockets</li>
+        </ul>
+        <p>This node cannot control the monitor devices that also transmit, such as the 'Pink' Monitor Plug, 'Purple' Smart Plug+, TRVs or PIRs. 
+            These devices use FSK and OpenThings protocols which are currently not supported.</p>
+            
+        <p>Example <code>msg.payload</code>:</p>
+<pre>{
+    "zone": 123456,
+    "switchNum": 1,
+    "powerOn": true
+}</pre>
+</script>
