@@ -128,7 +128,7 @@ of the MiHome monitor devices but nodes for these have yet to be added.
 
 Please raise any bugs, questions or queries using the github issues link below:
 
-https://github.com/Achronite/node-red-contrib-energenie-ener314/issues
+https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
 @Achronite - January 2019
