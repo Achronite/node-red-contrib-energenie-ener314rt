@@ -14,9 +14,11 @@ var ArrayType = require('ref-array');
 
 var int = ref.types.uint8;
 var IntArray = ArrayType(int);
+var path = require('path');
+
 
 // link the C shared object file provided by energenie
-var libradio = ffi.Library('../C/build/Release/radio', {
+var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
   'radio_init': [ 'void', [] ],
   'radio_reset': [ 'void', ['void'] ],
   'radio_get_ver': [ 'uint8', ['void'] ],

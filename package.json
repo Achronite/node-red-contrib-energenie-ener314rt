@@ -5,7 +5,8 @@
   "dependencies": {
     "ffi": "latest",
     "ref": "latest",
-    "ref-array": "latest"
+    "ref-array": "latest",
+    "path": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
