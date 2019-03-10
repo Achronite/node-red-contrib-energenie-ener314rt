@@ -16,12 +16,15 @@ module.exports = function(RED) {
         RED.nodes.createNode(this,config);
         var node = this;
 
+        var device = RED.nodes.getNode(config.device);
+
         // Initialise radio
         libradio.radio_init();
 
         node.on('input', function(msg) {
             this.status({fill:"yellow",shape:"ring",text:"Sending"});
-            var deviceId = Number(config.deviceId) || 0;
+            var deviceId = Number(device.deviceId) || 0;
+            var productId = Number(device.productId) || 2;
             var xmits = 20;
 
             // Check all variables before we call the C routine to transmit, msg.payload overrides any defaults set in node
@@ -45,10 +48,10 @@ module.exports = function(RED) {
             if (Number(msg.payload.repeat))
                 xmits = Number(msg.payload.repeat);
 
-            this.warn("Switching deviceId:" + deviceId + " switchState:" + switchState + " xmits:" + xmits);
+            this.warn("Switching " +productId +":"+ deviceId + " switchState:" + switchState + " xmits:" + xmits+" device:"+device);
 
             // Send payload
-            var res = libradio.openThings_switch(2, deviceId, switchState, xmits);
+            var res = libradio.openThings_switch(productId, deviceId, switchState, xmits);
 
             // Set the node status in the GUI
             switch (switchState) {

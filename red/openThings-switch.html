@@ -1,28 +1,11 @@
-<script type="text/javascript">
-    RED.nodes.registerType('openThings-switch',{
-        category: 'Raspberry Pi',
-        color: '#5ab946',
-        defaults: {
-            name: {value:"Adaptor Plus"},
-            deviceId: {value:0}
-        },
-        inputs:1,
-        outputs:1,
-        align: "left",
-        icon: "bridge.png",
-        paletteLabel: 'OT switch',
-        label: function() { return this.name || ("OT "+ this.deviceId) || this.paletteLabel; },
-    });
-</script>
-
 <script type="text/x-red" data-template-name="openThings-switch">
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-deviceId"><i class="fa fa-plug"></i> Device ID</label>
-        <input type="number" id="node-input-deviceId" placeholder="Discover">
+        <label><i class="fa fa-plug"></i> Device</label>
+        <input type="text" id="node-input-device" placeholder="0" style="width: 100%"/>
     </div>
 </script>
 
@@ -79,4 +62,23 @@
     "deviceId": 8294,
     "powerOn": true
 }</pre>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('openThings-switch',{
+        category: 'Raspberry Pi',
+        color: '#5ab946',
+        defaults: {
+            name: {value:"Adaptor Plus"},
+            device: {type:"openThings-device", required: true}
+        },
+        inputs:1,
+        outputs:1,
+        align: "left",
+        icon: "bridge.png",
+        paletteLabel: 'C&M Switch',
+        label: function() {
+            return (this.name || this.label || this.paletteLabel);
+        },
+    });
 </script>
