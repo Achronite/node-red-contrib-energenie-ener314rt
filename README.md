@@ -25,7 +25,7 @@ NOTE: This module does not currently support the older 'Pi-mote' board or the Mi
 
 2) Install this module as you would any node-red module using the 'Manage palette' option in Node-Red GUI or by using npm.
 
-3a) Perform one-time only setup to teach your 'Control' devices to operate with your selected zone code(s) switch number(s) combinations: 
+3) Perform one-time only setup to teach your 'Control' devices to operate with your selected zone code(s) switch number(s) combinations (if applicable): 
 
 * Create a simple test flow in node-red.  The simplest way is to wire an inject node with payload of boolean 'true' as an input to your new 'ook-switch' node, for example:
 ```
@@ -73,7 +73,7 @@ NOTE: This module does not currently support the older 'Pi-mote' board or the Mi
 
 TIP: If you already know the house/zone code assigned, for example to an RF hand controller, you can use that in your node to make the device work with both.
 
-3b) Perform one-time only setup to learn your 'Control & Monitor' devices
+4) Perform one-time only setup to learn your 'Control & Monitor' devices (if applicable)
 * TBD
 
 
