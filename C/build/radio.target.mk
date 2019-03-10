@@ -83,6 +83,7 @@ INCS_Release := \
 
 OBJS := \
 	$(obj).target/$(TARGET)/src/achronite/ook_send.o \
+	$(obj).target/$(TARGET)/src/achronite/openThings.o \
 	$(obj).target/$(TARGET)/src/energenie/radio.o \
 	$(obj).target/$(TARGET)/src/energenie/hrfm69.o \
 	$(obj).target/$(TARGET)/src/energenie/spis.o \

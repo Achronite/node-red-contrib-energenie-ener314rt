@@ -20,7 +20,8 @@
   "node-red": {
     "nodes": {
       "ook-switch": "red/ook-switch.js",
-      "ener314rt-raw": "red/ener314rt-raw.js"
+      "ener314rt-raw": "red/ener314rt-raw.js",
+      "openThings-switch": "red/openThings-switch.js"
     }
   },
   "keywords": [

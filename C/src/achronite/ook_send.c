@@ -8,12 +8,6 @@
 ** C module addition to energenie code to simplify the sending of OOK based transmissions to the Energenie ENER314-RT
 ** by only needing 1 call to C.
 **
-** Functions performed include:
-**    initialising the radio and setting the modulation
-**    formatting and encoding the OOK radio request
-**    encoding of the house code/zone and switch request
-**    sending the request
-**
 ** Author: Phil Grainger - @Achronite, January 2019
 */
 
@@ -48,7 +42,18 @@ void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char * en
     }
 }
 
-// OokSend, sends a signal to a 'dumb' receive only OOK based Energenie switch device from legacy or MiHome range
+/*
+** OokSend
+** =======
+** Send a switch signal to a 'Control only' RF OOK based Energenie smart switch adaptors, sockets, switches and relays
+** Currently this covers all smart switchable devices except the 'HiHome Adaptor Plus' and 'MiHome Heating' TRV
+**
+** Functions performed include:
+**    initialising the radio and setting the modulation
+**    encoding of the house code/zone and switch request
+**    formatting and encoding an OOK radio request
+**    sending the radio request via the ENER314-RT RaspberryPi adaptor
+*/
 unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned char bSwitchState, unsigned char xmits)
 {
     int ret = 0;
@@ -105,6 +110,7 @@ unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned cha
     // Transmit encoded payload 26ms per payload * xmits
     radio_transmit(radio_msg,OOK_MSGLEN,xmits);
 
+    // place radio into standby mode, this may need to change to support FSK or receive mode
     radio_standby();
   
     return ret;

@@ -1,0 +1,82 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openThings-switch',{
+        category: 'Raspberry Pi',
+        color: '#5ab946',
+        defaults: {
+            name: {value:"Adaptor Plus"},
+            deviceId: {value:0}
+        },
+        inputs:1,
+        outputs:1,
+        align: "left",
+        icon: "bridge.png",
+        paletteLabel: 'OT switch',
+        label: function() { return this.name || ("OT "+ this.deviceId) || this.paletteLabel; },
+    });
+</script>
+
+<script type="text/x-red" data-template-name="openThings-switch">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-deviceId"><i class="fa fa-plug"></i> Device ID</label>
+        <input type="number" id="node-input-deviceId" placeholder="Discover">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="openThings-switch">
+    <h3>Inputs</h3>
+        <dl class="message-properties">
+            <dt>payload
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>The state that you want the switch to be in, where true=on, false=off</dd>
+        </dl>
+        <p>OR</p>
+        <dl class="message-properties">
+            <dt>payload
+                <span class="property-type">string</span>
+            </dt>
+            <dd>The state that you want the switch to be in, 'on' or 'off'</dd>
+        </dl>
+        <p>OR</p>
+        <dl class="message-properties">
+            <dt>payload.deviceId
+                <span class="property-type">Integer</span>
+            </dt>
+            <dd>deviceId should be set the MiHome deviceId of the device.</dd>
+            <dt>payload.powerOn
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>The state that you want the switch to be in, where true/'on'=on, false/'off'=off.</dd>
+            <dt>payload.repeat
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>(Optional Advanced) The number of times to send the radio transmission in a burst (range 1-255).
+            Use this value if you wish to override the default of 20 re-transmissions (26ms each), 
+            for example if you have a lot of interference or your devices are switching inconsistently.</dd>
+        </dl>
+            
+    <h3>Outputs</h3>
+        <dl class="message-properties">
+            <dt>msg
+                <span class="property-type">object</span>
+            </dt>
+            <dd>Passed unchanged</dd>
+        </dl>
+
+    <h3>Details</h3>
+        <p>Node that switches on/off the OpenThings based devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>This includes:</p>
+        <ul>
+            <li>Purple Button MiHome Monitor + Switch Adaptors</li>
+        </ul>
+            
+        <p>Example <code>msg.payload</code>:</p>
+<pre>{
+    "deviceId": 8294,
+    "powerOn": true
+}</pre>
+</script>

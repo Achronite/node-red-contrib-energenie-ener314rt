@@ -11,11 +11,10 @@
 var ffi = require('ffi');
 var ref = require('ref');
 var ArrayType = require('ref-array');
+var path = require('path');
 
 var int = ref.types.uint8;
 var IntArray = ArrayType(int);
-var path = require('path');
-
 
 // link the C shared object file provided by energenie
 var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
@@ -33,7 +32,9 @@ var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
   'radio_standby':  [ 'void', ['void'] ],
   'radio_finished': [ 'void',  ['void'] ],
   'OokSend':        [ 'uint8', ['uint32', 'uint8', 'uint8', 'uint8'] ],
-  'encodeDecimal':  [ 'void', ['uint32', 'uint8', IntArray ]]
+  'encodeDecimal':  [ 'void', ['uint32', 'uint8', IntArray ]],
+  'openThings_switch': ['uint8', ['uint8', 'uint32', 'uint8', 'uint8'] ]
 });
+// unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits)
 
 module.exports = libradio;
