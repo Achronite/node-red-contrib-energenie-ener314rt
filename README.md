@@ -6,15 +6,17 @@ https://energenie4u.co.uk/
 
 ## Purpose
 
-You can use this node-red module to turn on and off the Energenie OOK based devices such as sockets lights and relays 
+You can use this node-red module to turn on and off the Energenie smart devices such as adapters, sockets, lights and relays 
 on a Raspberry Pi with an ENER314-RT board and node-red.
 
-Currently supported devices includes the green button devices, and the receive only devices in the newer MiHome range.
+Currently only switching of devices is supported.  'Control' and 'Control & Monitor' devices are supported from the legacy and MiHome range.
+
+There are 2 nodes for switching devices, one is based on the OOK transmission standard which covers all 'Control only' energenie devices, the other
+supports switching of FSK/OpenThings 'Control & Monitor' devices (see below for full list).
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
-This module does not currently support the older 'Pi-mote' board, the MiHome hub or the MiHome 'monitor' devices that also transmit
-(see below for the full supported list).
+NOTE: This module does not currently support the older 'Pi-mote' board or the MiHome hub (see below for the full supported list).
 
 
 ## Getting Started
@@ -23,7 +25,7 @@ This module does not currently support the older 'Pi-mote' board, the MiHome hub
 
 2) Install this module as you would any node-red module using the 'Manage palette' option in Node-Red GUI or by using npm.
 
-3) Perform one-time only setup to teach your devices to operate with your selected zone code(s) switch number(s) combinations: 
+3a) Perform one-time only setup to teach your 'Control' devices to operate with your selected zone code(s) switch number(s) combinations: 
 
 * Create a simple test flow in node-red.  The simplest way is to wire an inject node with payload of boolean 'true' as an input to your new 'ook-switch' node, for example:
 ```
@@ -71,10 +73,13 @@ This module does not currently support the older 'Pi-mote' board, the MiHome hub
 
 TIP: If you already know the house/zone code assigned, for example to an RF hand controller, you can use that in your node to make the device work with both.
 
+3b) Perform one-time only setup to learn your 'Control & Monitor' devices
+* TBD
 
-## Zone Rules
 
-* Each Energenie OOK based device can be assigned to a specifc zone (or house code) and a switch number.
+## 'Control Only' OOK Devices - Zone Rules
+
+* Each Energenie 'Control only' or OOK based device can be assigned to a specifc zone (or house code) and a switch number.
 * Each zone is encoded as a 20-bit address (1-1048575 decimal).
 * Each zone can contain up to 6 switches (1-6) - NOTE: officially energenie state this is only 4 devices (1-4)
 * All devices within the same zone can be switched at the same time using a switch number of '0'.
@@ -83,18 +88,15 @@ TIP: If you already know the house/zone code assigned, for example to an RF hand
 
 ## Supported Devices
 
-Please note that there are two different radio standards supported by the Energenie and MiHome range of devices. 
-This node currently only works with the OOK (On-Off Keying) based devices.  Generally speaking all of
-the energenie radio & MiHome devices that are '1-way' or 'receive only' are supported, whereas any devices that also
-transmit or monitor are not.  This is because the '2-way' devices use the MiHome FSK OpenThings protocol.  I do not
-currently own any of the '2-way' monitoring devices, so I am unable to support them at present.
+This node works with all switchable (or 'Control') devices, including devices in the OOK & FSK (OpenThings) ranges.
 
 Here is a list of what I believe this node **should** be compatible with:
 
-* ENER002 Green Button Socket (tested OK)
+OOK Node:
+* ENER002 Green Button Socket (tested)
 * ENER010 4 Gang Extension lead
 * MIHO002 Smart Plug with Blue Text
-* MIHO007 Double Wall Socket White
+* MIHO007 Double Wall Socket White (tested)
 * MIHO008 Single Light Switch White
 * MIHO014 In-line Controller
 * MIHO015 In-line Relay
@@ -104,6 +106,9 @@ Here is a list of what I believe this node **should** be compatible with:
 * MIHO024 Single Light Switch Nickel
 * MIHO025 Single Light Switch Chrome
 * MIHO026 Single Light Switch Steel
+
+OpenThings Node:
+* NEW: MIHO005: MiHome Adapter Plus (switching only) (tested)
 
 ## Built With
 
