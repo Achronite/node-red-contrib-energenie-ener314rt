@@ -32,9 +32,11 @@ var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
   'radio_standby':  [ 'void', ['void'] ],
   'radio_finished': [ 'void',  ['void'] ],
   'OokSend':        [ 'uint8', ['uint32', 'uint8', 'uint8', 'uint8'] ],
-  'encodeDecimal':  [ 'void', ['uint32', 'uint8', IntArray ]],
-  'openThings_switch': ['uint8', ['uint8', 'uint32', 'uint8', 'uint8'] ]
-});
+  'encodeDecimal':  [ 'void', ['uint32', 'uint8', IntArray ] ],
+  'openThings_switch': ['uint8', ['uint8', 'uint32', 'uint8', 'uint8'] ],
+  'openThings_discover': ['int8', ['uint8', 'string'] ]
+  });
 // unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits)
+// unsigned char openThings_discover(unsigned char iTimeOut, unsigned char *devices )
 
 module.exports = libradio;

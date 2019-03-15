@@ -1,7 +1,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('ook-switch',{
-        category: 'Raspberry Pi',
-        color: '#5ab946',
+        category: 'Energenie Pi',
+        color: '#3ebbeb',
         defaults: {
             name: {value:""},
             zone: {value:0},
@@ -9,9 +9,9 @@
         },
         inputs:1,
         outputs:1,
-        align: "left",
-        icon: "bridge.png",
-        paletteLabel: 'ENER314RT OOK switch',
+        align: "right",
+        icon: "Adaptor.pn.png",
+        paletteLabel: 'Control Only',
         label: function() { return this.name || ("ener314rt "+ this.zone + ":" + this.switchNum) || this.paletteLabel; },
     });
 </script>

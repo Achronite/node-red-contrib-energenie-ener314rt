@@ -58,7 +58,7 @@
 #define OTP_LIGHT_LEVEL     0x6C
 #define OTP_MOTION_DETECTOR 0x6D
 #define OTP_OCCUPANCY       0x6F
-#define OTP_REAL_POWER      0x70
+#define OTP_REAL_POWER      0x70 //112
 #define OTP_REACTIVE_POWER  0x71
 #define OTP_ROTATION_SPEED  0x72
 #define OTP_SWITCH_STATE    0x73
@@ -71,6 +71,21 @@
 /* OpenThings Command Paramters - 0x80 added*/
 #define OTCP_SWITCH_STATE    0xF3
 
+// OpenThings record data types
+#define	OT_UINT   0x00
+#define	OT_UINT4  0x10    // 4
+#define	OT_UINT8  0x20    // 8
+#define	OT_UINT12 0x30    // 12
+#define	OT_UINT16 0x40    // 16
+#define	OT_UINT20 0x50    // 20
+#define	OT_UINT24 0x60    // 24
+#define	OT_CHAR   0x70
+#define	OT_SINT   0x80    // dec=128
+#define	OT_SINT8  0x90    // 8
+#define	OT_SINT16 0xA0    // 16
+#define	OT_SINT24 0xB0    // 24
+#define	OT_FLOAT  0xF0    // Not implemented yet
+
 /* OpenThings Commands */
 #define OTC_SWITCH_ON  0xF3, 0x01, 0x01, 0x00
 #define OTC_SWITCH_OFF 0xF3, 0x01, 0x00, 0x00
@@ -82,6 +97,8 @@
 #define OT_DEFAULT_PIP 0x01, 0x00
 #define OT_DEFAULT_DEVICEID 0x00, 0x20, 0x66
 
+#define OT_MAX_RECS 0xF
+
 // Array positions
 #define OTS_MSGLEN 14       // Length with only 1 command sent
 #define OTH_INDEX_PRODUCTID 2
@@ -89,10 +106,25 @@
 #define OT_INDEX_R1 8
 #define OT_INDEX_R1_VALUE 10 
 
+// Radio constants (from radio.c)
+#define MAX_FIFO_BUFFER   66
+
+// OpenThings record
+struct OTrecord {
+    unsigned char wr;
+    unsigned char paramId;
+    unsigned char typeId;
+    char typeIndex;
+    int  retInt;                // I'm hoping this deals with signed and unsigned values
+    char retChar[15];            // Length max is 15 for a record
+};
+
+
 
 /***** FUNCTION PROTOTYPES *****/
 //extern void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
 extern unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits);
+extern unsigned char openThings_discover(unsigned char iTimeOut, char *devices );
 
 #endif
 
