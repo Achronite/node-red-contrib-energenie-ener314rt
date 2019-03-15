@@ -1,6 +1,6 @@
 <script type="text/javascript">
     RED.nodes.registerType('ook-switch',{
-        category: 'Energenie Pi',
+        category: 'ENER314-RT',
         color: '#3ebbeb',
         defaults: {
             name: {value:""},
@@ -10,9 +10,9 @@
         inputs:1,
         outputs:1,
         align: "right",
-        icon: "Adaptor.pn.png",
+        icon: "Adaptor.png",
         paletteLabel: 'Control Only',
-        label: function() { return this.name || ("ener314rt "+ this.zone + ":" + this.switchNum) || this.paletteLabel; },
+        label: function() { return this.name || ("Control "+ this.zone + ":" + this.switchNum) || this.paletteLabel; },
     });
 </script>
 

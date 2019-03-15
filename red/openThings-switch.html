@@ -66,7 +66,7 @@
 
 <script type="text/javascript">
     RED.nodes.registerType('openThings-switch',{
-        category: 'Energenie Pi',
+        category: 'ENER314-RT',
         color: '#82529e',
         defaults: {
             name: {value:"Adaptor Plus"},
@@ -80,5 +80,8 @@
         label: function() {
             return (this.name || this.label || this.paletteLabel);
         },
+        oneditsave: function(){
+            this.label = $('#node-input-device option:selected').text();
+        }        
     });
 </script>
