@@ -104,14 +104,20 @@ unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned cha
         radio_msg[INDEX_SC+1] += 6;
     }
 
+    // mutex access radio adaptor
+    pthread_mutex_lock(&radio_mutex);
+
     // Set OOK mode for receive only devices, always set before transmit as we want to support FSK in the future
     radio_modulation(RADIO_MODULATION_OOK);
 
     // Transmit encoded payload 26ms per payload * xmits
     radio_transmit(radio_msg,OOK_MSGLEN,xmits);
 
+    //unlock mutex
+    pthread_mutex_unlock(&radio_mutex);
+
     // place radio into standby mode, this may need to change to support FSK or receive mode
-    radio_standby();
+    //radio_standby();
   
     return ret;
 }

@@ -468,8 +468,11 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
     cryptMsg(CRYPT_PID, CRYPT_PIP, &radio_msg[5], (OTS_MSGLEN-5));
 
     /*
-    ** Transmit via radio adaptor
+    ** Transmit via radio adaptor, using mutex to block the radio
     */
+
+    // mutex access radio adaptor (for a while!)
+    pthread_mutex_lock(&radio_mutex);
 
     // Set FSK mode for OpenThings devices
     radio_modulation(RADIO_MODULATION_FSK);
@@ -477,8 +480,11 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
     // Transmit encoded payload 26ms per payload * xmits
     radio_transmit(radio_msg,OTS_MSGLEN,xmits);
 
+    // release mutex lock
+    pthread_mutex_unlock(&radio_mutex);
+
     // place radio into standby mode, this may need to change to support receive mode
-    radio_standby();
+    //radio_standby();
   
     return ret;
 }
@@ -512,6 +518,9 @@ unsigned char openThings_discover(unsigned char iTimeOut, char *devices )
 
     printf("openthings_discover(): called\n");
 
+    /* check if radio initialised */
+
+
 /* PYTHON
     radio.receiver(fsk=True)
     timeout = time.time() + receive_time
@@ -541,6 +550,9 @@ unsigned char openThings_discover(unsigned char iTimeOut, char *devices )
 */
     // reset devices response JSON
     strcpy(devices,"{\"devices\":[");
+
+    // mutex access radio adaptor (for a while!)
+    pthread_mutex_lock(&radio_mutex);
 
     // Set FSK mode receive for OpenThings devices
     radio_receiver(RADIO_MODULATION_FSK);
@@ -585,13 +597,16 @@ unsigned char openThings_discover(unsigned char iTimeOut, char *devices )
             //printf("openthings_discover(%d): radio_is_receive waiting=FALSE\n",iTimeOut);
         }
     } while (iTimeOut-- > 0);
+
+    //unlock mutex
+    pthread_mutex_unlock(&radio_mutex);
    
     // Close JSON array
     sprintf(deviceStr, "],\"numDevices\":%d}", ret);
     strcat(devices, deviceStr);
     printf("Returning:\n%s\n",devices);
 
-    radio_standby();
+    //radio_standby();
 
     return ret;
 }

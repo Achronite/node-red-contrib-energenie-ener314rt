@@ -176,6 +176,8 @@ typedef struct
 
 RADIO_DATA radio_data;
 
+/* radio lock for multi-threading */
+pthread_mutex_t radio_mutex;
 
 /***** PRIVATE ***************************************************************/
 
@@ -265,40 +267,51 @@ void radio_init(void)
 {
     TRACE_OUTS("radio_init\n");
 
-    //gpio_init(); done by spi_init at moment
-    spi_init(&radioConfig);
+    //initialise mutex
+    if (pthread_mutex_init(&radio_mutex, NULL) != 0){
+        TRACE_OUTS("radio_init: mutex init failed\n");        
+    } else {
+        //lock mutex
+        pthread_mutex_lock(&radio_mutex);
 
-    gpio_setout(RESET);
-    gpio_low(RESET);
-    gpio_setout(LED_RED);
-    gpio_setout(LED_GREEN);
+        //gpio_init(); done by spi_init at moment
+        spi_init(&radioConfig);
 
-    // flash both LEDs to show initialise working
-    gpio_high(LED_GREEN);
-    gpio_high(LED_RED);
+        gpio_setout(RESET);
+        gpio_low(RESET);
+        gpio_setout(LED_RED);
+        gpio_setout(LED_GREEN);
 
-    TRACE_OUTS("reset...\n");
-    radio_reset();
+        // flash both LEDs to show initialise working
+        gpio_high(LED_GREEN);
+        gpio_high(LED_RED);
 
-    TRACE_OUTS("reading radiover...\n");
-    uint8_t rv = radio_get_ver();
-    TRACE_OUTN(rv);
-    TRACE_NL();
-    if (rv < EXPECTED_RADIOVER) //TODO: make this ASSERT()
-    {
-        TRACE_OUTS("warning:unexpected radio ver<min\n");
-        //TRACE_FAIL("unexpected radio ver<min\n");
+        TRACE_OUTS("reset...\n");
+        radio_reset();
+
+        TRACE_OUTS("reading radiover...\n");
+        uint8_t rv = radio_get_ver();
+        TRACE_OUTN(rv);
+        TRACE_NL();
+        if (rv < EXPECTED_RADIOVER) //TODO: make this ASSERT()
+        {
+            TRACE_OUTS("warning:unexpected radio ver<min\n");
+            //TRACE_FAIL("unexpected radio ver<min\n");
+        }
+        else if (rv > EXPECTED_RADIOVER)
+        {
+            TRACE_OUTS("warning:unexpected radio ver>exp\n");
+        }
+
+        radio_standby();
+
+        // switch off both LEDs
+        gpio_low(LED_GREEN);
+        gpio_low(LED_RED);
+
+        //unlock mutex
+        pthread_mutex_unlock(&radio_mutex);
     }
-    else if (rv > EXPECTED_RADIOVER)
-    {
-        TRACE_OUTS("warning:unexpected radio ver>exp\n");
-    }
-
-    radio_standby();
-
-    // switch off both LEDs
-    gpio_low(LED_GREEN);
-    gpio_low(LED_RED);
 }
 
 

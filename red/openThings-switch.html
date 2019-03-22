@@ -1,11 +1,34 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openThings-switch',{
+        category: 'Energenie 314RT',
+        color: '#82529e',
+        defaults: {
+            name: {value:"Adaptor Plus"},
+            device: {type:"openThings-device", required: true}
+        },
+        inputs:1,
+        outputs:1,
+        align: "right",
+        icon: "Adaptor.png",
+        paletteLabel: 'Control FSK',
+        label: function() {
+            return (this.name || this.label || this.paletteLabel);
+        },
+        // Update the label to the select device on save (displayed if node name is undefined)
+        oneditsave: function(){
+            this.label = $('#node-input-device option:selected').text();
+        }        
+    });
+</script>
+
 <script type="text/x-red" data-template-name="openThings-switch">
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label><i class="fa fa-plug"></i> Device</label>
-        <input type="text" id="node-input-device" placeholder="0" style="width: 100%"/>
+        <label for="node-input-device"><i class="fa fa-plug"></i> Device</label>
+        <input type="text" id="node-input-device"/>
     </div>
 </script>
 
@@ -62,26 +85,4 @@
     "deviceId": 8294,
     "powerOn": true
 }</pre>
-</script>
-
-<script type="text/javascript">
-    RED.nodes.registerType('openThings-switch',{
-        category: 'ENER314-RT',
-        color: '#82529e',
-        defaults: {
-            name: {value:"Adaptor Plus"},
-            device: {type:"openThings-device", required: true}
-        },
-        inputs:1,
-        outputs:1,
-        align: "right",
-        icon: "Adaptor.png",
-        paletteLabel: 'Control & Monitor',
-        label: function() {
-            return (this.name || this.label || this.paletteLabel);
-        },
-        oneditsave: function(){
-            this.label = $('#node-input-device option:selected').text();
-        }        
-    });
 </script>

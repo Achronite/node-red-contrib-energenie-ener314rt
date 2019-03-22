@@ -2,7 +2,7 @@
     RED.nodes.registerType('openThings-device',{
         category: 'config',
         defaults: {
-            name: {value:"MiHome Adapter Plus"},
+            name: {value:"MiHome Adapter+"},
             productId: {required:true,validate:RED.validators.number()},
             deviceId:  {required:true,validate:RED.validators.number()},
         },
@@ -26,7 +26,7 @@
                             $('#node-config-input-device').append("<option value='' selected>"+resp.numDevices + " device found</option>")
                         else
                             $('#node-config-input-device').append("<option value='' selected>"+resp.numDevices + " devices found</option>");
-                            
+
                         if (!resp || resp.numDevices <= 0) {
                             $('#node-config-input-device').append("<option value='' selected>No Devices</option>")
                             RED.notify("No devices found.", "error");

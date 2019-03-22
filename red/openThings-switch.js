@@ -1,6 +1,6 @@
 /*
 ** Node-red control of Energenie ENER314-RT board for remote control of radio sockets
-** Author: Achronite, December 2019 - January 2019
+** Author: Achronite, December 2018 - January 2019
 **
 ** v0.1 Alpha
 **
@@ -18,9 +18,6 @@ module.exports = function(RED) {
 
         var device = RED.nodes.getNode(config.device);
 
-        // Initialise radio
-        libradio.radio_init();
-
         node.on('input', function(msg) {
             this.status({fill:"yellow",shape:"ring",text:"Sending"});
             var deviceId = Number(device.deviceId) || 0;
@@ -33,7 +30,6 @@ module.exports = function(RED) {
             if ( deviceId == 0 || isNaN(deviceId) ) {
                 this.error("DeviceId err: " + deviceId + " (" + typeof(deviceId) + ")");
             }
-
 
             // Check Switch State (default to off=0)
             var switchState = 0;
@@ -51,7 +47,13 @@ module.exports = function(RED) {
             this.warn("Switching " +productId +":"+ deviceId + " switchState:" + switchState + " xmits:" + xmits+" device:"+device);
 
             // Send payload
-            var res = libradio.openThings_switch(productId, deviceId, switchState, xmits);
+            //var res = libradio.openThings_switch(productId, deviceId, switchState, xmits);
+            libradio.openThings_switch.async(productId, deviceId, switchState, xmits, function(err,res) {
+                // callback
+                if (err) console.log("openThings_switch err: " + err);
+                //this.warn("openThings_switch returned res:" + res);
+                //.catch(error)
+            });
 
             // Set the node status in the GUI
             switch (switchState) {

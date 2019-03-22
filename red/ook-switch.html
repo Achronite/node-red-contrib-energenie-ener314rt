@@ -1,6 +1,6 @@
 <script type="text/javascript">
     RED.nodes.registerType('ook-switch',{
-        category: 'ENER314-RT',
+        category: 'Energenie 314RT',
         color: '#3ebbeb',
         defaults: {
             name: {value:""},
@@ -11,7 +11,7 @@
         outputs:1,
         align: "right",
         icon: "Adaptor.png",
-        paletteLabel: 'Control Only',
+        paletteLabel: 'Control OOK',
         label: function() { return this.name || ("Control "+ this.zone + ":" + this.switchNum) || this.paletteLabel; },
     });
 </script>
