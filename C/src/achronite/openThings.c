@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "openThings.h"
+#include "init_loop.h"
 #include "../energenie/radio.h"
 #include "../energenie/trace.h"
 
@@ -472,7 +473,7 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
     */
 
     // mutex access radio adaptor (for a while!)
-    pthread_mutex_lock(&radio_mutex);
+    lock_ener314rt();
 
     // Set FSK mode for OpenThings devices
     radio_modulation(RADIO_MODULATION_FSK);
@@ -481,7 +482,7 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
     radio_transmit(radio_msg,OTS_MSGLEN,xmits);
 
     // release mutex lock
-    pthread_mutex_unlock(&radio_mutex);
+    unlock_ener314rt();
 
     // place radio into standby mode, this may need to change to support receive mode
     //radio_standby();
@@ -513,7 +514,7 @@ unsigned char openThings_discover(unsigned char iTimeOut, char *devices )
     struct OTrecord OTrecs[OT_MAX_RECS];
     unsigned char mfrId, productId;
     unsigned int iDeviceId;
-    int records, i;
+    int records;
     char deviceStr[50];
 
     printf("openthings_discover(): called\n");
@@ -552,7 +553,7 @@ unsigned char openThings_discover(unsigned char iTimeOut, char *devices )
     strcpy(devices,"{\"devices\":[");
 
     // mutex access radio adaptor (for a while!)
-    pthread_mutex_lock(&radio_mutex);
+    lock_ener314rt();
 
     // Set FSK mode receive for OpenThings devices
     radio_receiver(RADIO_MODULATION_FSK);
@@ -599,7 +600,7 @@ unsigned char openThings_discover(unsigned char iTimeOut, char *devices )
     } while (iTimeOut-- > 0);
 
     //unlock mutex
-    pthread_mutex_unlock(&radio_mutex);
+    unlock_ener314rt();
    
     // Close JSON array
     sprintf(deviceStr, "],\"numDevices\":%d}", ret);

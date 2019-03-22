@@ -7,7 +7,6 @@
 #ifndef _RADIO_H
 #define _RADIO_H
 
-#include <pthread.h>
 #include "system.h"
 
 typedef uint8_t RADIO_RESULT;
@@ -40,8 +39,5 @@ extern RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen);
 extern void radio_finished(void);
 
 #endif
-
-//globals
-extern pthread_mutex_t radio_mutex;
 
 /***** END OF FILE *****/

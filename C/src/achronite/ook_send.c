@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "ook_send.h"
+#include "init_loop.h"
 #include "../energenie/radio.h"
 #include "../energenie/trace.h"
 
@@ -104,8 +105,8 @@ unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned cha
         radio_msg[INDEX_SC+1] += 6;
     }
 
-    // mutex access radio adaptor
-    pthread_mutex_lock(&radio_mutex);
+    // lock adaptor
+    lock_ener314rt();
 
     // Set OOK mode for receive only devices, always set before transmit as we want to support FSK in the future
     radio_modulation(RADIO_MODULATION_OOK);
@@ -113,8 +114,8 @@ unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned cha
     // Transmit encoded payload 26ms per payload * xmits
     radio_transmit(radio_msg,OOK_MSGLEN,xmits);
 
-    //unlock mutex
-    pthread_mutex_unlock(&radio_mutex);
+    //unlock adaptor
+    unlock_ener314rt();
 
     // place radio into standby mode, this may need to change to support FSK or receive mode
     //radio_standby();

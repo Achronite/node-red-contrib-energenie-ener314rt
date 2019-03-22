@@ -17,7 +17,7 @@ module.exports = function(RED) {
         var node = this;
 
         // Initialise radio
-        libradio.radio_init();
+        //libradio.radio_init();
 
         node.on('input', function(msg) {
             this.status({fill:"yellow",shape:"ring",text:"Sending"});
