@@ -44,28 +44,29 @@ module.exports = function(RED) {
             if (Number(msg.payload.repeat))
                 xmits = Number(msg.payload.repeat);
 
-            this.warn("Switching " +productId +":"+ deviceId + " switchState:" + switchState + " xmits:" + xmits+" device:"+device);
+//            this.warn("Switching " +productId +":"+ deviceId + " switchState:" + switchState + " xmits:" + xmits+" device:"+device);
 
             // Send payload
             //var res = libradio.openThings_switch(productId, deviceId, switchState, xmits);
             libradio.openThings_switch.async(productId, deviceId, switchState, xmits, function(err,res) {
                 // callback
-                if (err) node.error("openThings_switch err: " + err);
-                //this.warn("openThings_switch returned res:" + res);
-                //.catch(error)
+                if (err) {
+                    node.error("openThings_switch err: " + err);
+                    node.status({fill:"red",shape:"dot",text:"ERROR" });
+                } else {
+                    // Set the node status in the GUI
+                    switch (switchState) {
+                        case 1:
+                            node.status({fill:"green",shape:"dot",text:"ON"});
+                            break;
+                        case 0:            
+                            node.status({fill:"red",shape:"ring",text:"OFF"});
+                            break;
+                    }
 
-                // Set the node status in the GUI
-                switch (switchState) {
-                    case 1:
-                        node.status({fill:"green",shape:"dot",text:"ON"});
-                        break;
-                    case 0:            
-                        node.status({fill:"red",shape:"ring",text:"OFF"});
-                        break;
+                    // return payload unchanged
+                    node.send(msg);
                 }
-
-                // return payload unchanged
-                node.send(msg);
             });
         });
     }

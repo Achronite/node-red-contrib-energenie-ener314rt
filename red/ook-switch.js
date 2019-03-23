@@ -59,8 +59,6 @@ module.exports = function(RED) {
             if (Number(msg.payload.repeat))
                 xmits = Number(msg.payload.repeat);
 
-            this.warn("xmits="+ xmits);
-
             // Invoke C function to do the send
             libradio.OokSend.async(zone, switchNum, Number(switchState), xmits, function(err,res) {
                 // callback

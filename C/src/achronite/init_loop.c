@@ -23,36 +23,37 @@ int init_ener314rt(void){
 
     int ret = 0;
 
-// Changed to always do init
-    //if (!initialised){
+    printf("init_ener314(): called\n");
+    if (!initialised){
         //initialise mutex
-        printf("init_ener314()\n");
-
+        printf("init_ener314(): initialising\n");
         if ((ret = pthread_mutex_init(&radio_mutex, NULL)) != 0){
             // ignore errors, we could just be reinitialisng already inited var
             TRACE_OUTS("radio_init: mutex init failed err=");
             TRACE_OUTN(ret);
             TRACE_NL();
-        };
+        } else {
+            if ((ret = pthread_mutex_lock(&radio_mutex)) == 0){
+                initialised = true;
+                radio_init();
+                // place radio into standby mode, this may need to change to support FSK or receive mode
+                radio_standby();
 
-        ret = pthread_mutex_lock(&radio_mutex);
-        radio_init();
-        // place radio into standby mode, this may need to change to support FSK or receive mode
-        radio_standby();
-        initialised = true;
-//    }
+                ret = pthread_mutex_unlock(&radio_mutex);
+            }
+        }
+
+    }
     return ret;
 }
 
 int lock_ener314rt(void){
     // Always check that the adaptor & mutex have been initialised, and if not do it
     if (!initialised){
-        //this also locks
-        return init_ener314rt();
-    } else {
-        // mutex access radio adaptor
-        return pthread_mutex_lock(&radio_mutex);
+        init_ener314rt();
     }
+    // mutex access radio adaptor
+    return pthread_mutex_lock(&radio_mutex);
 }
 
 int unlock_ener314rt(void){

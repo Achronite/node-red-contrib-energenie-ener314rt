@@ -59,7 +59,9 @@ unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned cha
 {
     int ret = 0;
     unsigned char radio_msg[OOK_MSGLEN] = {PREAMBLE, DEFAULT_HC, 0x00, 0x00};
-    
+
+    printf("ook_switch: Zone=%d, Switch=%d, state=%d\n",iZone,iSwitchNum,bSwitchState);
+      
     // encode the zone / house code if not using the default
     if (iZone != USE_DEFAULT_ZONE ) {
         encodeDecimal(iZone, ZONE_BITS, &radio_msg[INDEX_HC]);
