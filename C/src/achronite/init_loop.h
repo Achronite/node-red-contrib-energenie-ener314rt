@@ -7,9 +7,13 @@
 
 #include <pthread.h>
 
+// function prototypes
 int init_ener314rt(void);
 int lock_ener314rt(void);
 int unlock_ener314rt(void);
+
+// Variable types
+
 
 #endif
 

@@ -17,10 +17,15 @@ module.exports = function(RED) {
         var iTimeOut = 10; // 10 seconds
 
         // Call discovery function
-        var ret = libradio.openThings_discover(iTimeOut, buf );
+//        libradio.openThings_discover(iTimeOut, buf );
+        libradio.openThings_discover.async(iTimeOut, buf, function(err,res) {
+            // callback
+            if (err) console.log("openThings_switch err: " + err);
+            //this.warn("openThings_switch returned res:" + res);
+            //.catch(error)
+            var devices = JSON.parse(ref.readCString(buf, 0));        
+            res.end(JSON.stringify(devices));
+        });
 
-        var devices = JSON.parse(ref.readCString(buf, 0));
-        
-        res.end(JSON.stringify(devices));
     });
 }

@@ -62,25 +62,27 @@ module.exports = function(RED) {
             this.warn("xmits="+ xmits);
 
             // Invoke C function to do the send
-            var y = libradio.OokSend(zone, switchNum, Number(switchState), xmits);
-
-            if (y != 0 ) {
-                this.status({fill:"red",shape:"dot",text:"ERROR: " + y});
-                this.error("ENER314-RT Send failed, status=" + y);
-            } else {
-                // Set the node status in the GUI
-                switch (switchState) {
-                    case true:
-                        this.status({fill:"green",shape:"dot",text:"ON " + zone + ":" + switchNum });
-                        break;
-                    case false:            
-                        this.status({fill:"red",shape:"ring",text:"OFF " + zone + ":" + switchNum});
-                        break;
+            libradio.OokSend.async(zone, switchNum, Number(switchState), xmits, function(err,res) {
+                // callback
+                if (err) {
+                    node.error("ookSend err: " + err);
+                    node.status({fill:"red",shape:"dot",text:"ERROR" });
+                //this.warn("openThings_switch returned res:" + res);
+                //.catch(error)
+                } else {
+                    // Set the node status in the GUI
+                    switch (switchState) {
+                        case true:
+                            node.status({fill:"green",shape:"dot",text:"ON " + zone + ":" + switchNum });
+                            break;
+                        case false:            
+                            node.status({fill:"red",shape:"ring",text:"OFF " + zone + ":" + switchNum});
+                            break;
+                    }
                 }
-            }
-
-            // return payload unchanged
-            node.send(msg);
+                // return payload unchanged
+                node.send(msg);
+            });
         });
     }
     RED.nodes.registerType("ook-switch",OokSwitchNode);

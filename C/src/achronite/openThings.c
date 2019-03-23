@@ -472,7 +472,7 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
     ** Transmit via radio adaptor, using mutex to block the radio
     */
 
-    // mutex access radio adaptor (for a while!)
+    // mutex access radio adaptor
     lock_ener314rt();
 
     // Set FSK mode for OpenThings devices
