@@ -5,6 +5,7 @@
 #include "openThings.h"
 #include "init_loop.h"
 #include "../energenie/radio.h"
+#include "../energenie/hrfm69.h"
 #include "../energenie/trace.h"
 
 /*
@@ -473,13 +474,13 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
     */
 
     // mutex access radio adaptor
-    lock_ener314rt();
+    lock_ener314rt(DT_CONTROL);
 
     // Set FSK mode for OpenThings devices
-    radio_modulation(RADIO_MODULATION_FSK);
+    //radio_modulation(RADIO_MODULATION_FSK);
 
     // Transmit encoded payload 26ms per payload * xmits
-    radio_transmit(radio_msg,OTS_MSGLEN,xmits);
+    radio_mod_transmit(RADIO_MODULATION_FSK,radio_msg,OTS_MSGLEN,xmits);
 
     // release mutex lock
     unlock_ener314rt();
@@ -519,44 +520,15 @@ unsigned char openThings_discover(unsigned char iTimeOut, char *devices )
 
     printf("openthings_discover(): called\n");
 
-    /* check if radio initialised */
-
-
-/* PYTHON
-    radio.receiver(fsk=True)
-    timeout = time.time() + receive_time
-    handled = False
-
-    while True:
-        if radio.is_receive_waiting():
-            payload = radio.receive_cbp()
-            now = time.time()
-            try:
-                msg        = OpenThings.decode(payload, receive_timestamp=now)
-                hdr        = msg["header"]
-                mfr_id     = hdr["mfrid"]
-                product_id = hdr["productid"]
-                device_id  = hdr["sensorid"]
-                address    = (mfr_id, product_id, device_id)
-
-                registry.fsk_router.incoming_message(address, msg)
-                handled = True
-            except OpenThings.OpenThingsException:
-                print("Can't decode payload:%s" % payload)
-
-        now = time.time()
-        if now > timeout: break
-
-    return handled
-*/
     // reset devices response JSON
     strcpy(devices,"{\"devices\":[");
 
     // mutex access radio adaptor (for a while!)
-    lock_ener314rt();
+    lock_ener314rt(DT_DISCOVER);
 
     // Set FSK mode receive for OpenThings devices
-    radio_receiver(RADIO_MODULATION_FSK);
+    // TODO - need to ensure we dont set to monitor mode here
+    radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
 
     // Loop until timeout
     do {
@@ -610,4 +582,114 @@ unsigned char openThings_discover(unsigned char iTimeOut, char *devices )
     //radio_standby();
 
     return ret;
+}
+/*
+** openThings_receive()
+** =======
+** Receive a single FSK OpenThings message (if one waiting)
+** Currently this covers the 'HiHome Adaptor Plus', 'MiHome Heating' TRV, ++++
+**
+** The OpenThings messages are comprised of 3 parts:
+**  Header  - msgLength, manufacturerId, productId, encryptionPIP, and deviceId
+**  Records - The body of the message, in this case a single command to switch the state
+**  Footer  - CRC
+**
+** Functions performed include:
+**    Setting radio to receive mode
+**    receiving data via the ENER314-RT device
+**    formatting and decoding the OpenThings FSK radio responses
+**    returning array of returned parameters for a deviceId
+*/
+char openThings_receive(unsigned char iTimeOut, char *OTmsg )
+{
+    //int ret = 0;
+    uint8_t buf[MAX_FIFO_BUFFER];
+    struct OTrecord OTrecs[OT_MAX_RECS];
+    unsigned char mfrId, productId;
+    unsigned int iDeviceId;
+    int records, i;
+    char OTrecord[50];
+    bool OTMsgReceived = false;
+    bool locked = true;
+
+    printf("openthings_receive(): called\n");
+
+    // set default message for timeout value returned
+    strcpy(OTmsg,"{\"deviceId\": 0}");
+
+    // Clear data
+    records = -3;
+    iDeviceId = 0;    
+
+    // mutex access radio adaptor to set mode
+    lock_ener314rt(DT_MONITOR);
+
+    // Set FSK mode receive for OpenThings devices
+    radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
+
+    //unlock_ener314rt();
+
+    // Loop until timeout
+
+    do {
+        if ( radio_is_receive_waiting() ){
+            //printf("openthings_discover(): radio_is_receive waiting\n");
+            if (!locked) lock_ener314rt(DT_MONITOR);
+            if ( radio_get_payload_cbp(buf, MAX_FIFO_BUFFER) == RADIO_RESULT_OK){
+                // Received a valid payload, decode it
+                unlock_ener314rt();
+                records = openThings_decode(buf, &mfrId, &productId, &iDeviceId, OTrecs);
+                if (records > 0){
+                    OTMsgReceived = true;
+                    printf("Valid OpenThings Message. deviceId:%d mfrId:%d productId:%d records:%d\n", iDeviceId, mfrId, productId, records);
+                    // build response JSON
+                    sprintf(OTmsg,"{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"records\":%d,\"record\":[", iDeviceId, mfrId, productId, records );
+
+                    // add records not worring about types (with training , for now)
+                    for (i=0; i<records; i++){
+                        switch(OTrecs[i].typeIndex){
+                            case 1:  //CHAR
+                                sprintf(OTrecord, "{ \"wr\":%d, \"paramId\": %d, \"param\":\"%s\"}", OTrecs[i].wr, OTrecs[i].paramId,OTrecs[i].retChar);
+                                break;
+                            default:
+                                sprintf(OTrecord, "{ \"wr\":%d, \"paramId\": %d, \"param\":%d}", OTrecs[i].wr, OTrecs[i].paramId,OTrecs[i].retInt);
+                        }
+
+                        strcat(OTmsg,OTrecord);
+                        if ((i+1)<records){
+                            // not last record add a ,
+                            strcat(OTmsg,",");
+                        }
+                    }
+
+                // close record array
+                strcat(OTmsg,"]}");
+
+                } else {
+                    printf("openThings_receive: Invalid OT Payload, skipping \n");
+                }
+            } else {
+                // problem receiving let's discard this message
+                unlock_ener314rt();
+                sleep(1); // pause 1 second to allow for message to come in
+            }
+            
+        } else {
+            // No messages waiting
+            if (locked){
+                // first time round we lock for a while, unlock here
+                unlock_ener314rt();
+                locked = false;
+            }
+            sleep(1); // pause 1 second to allow for message to come in
+
+        }
+
+    } while ((iTimeOut-- > 0) && (!OTMsgReceived));
+
+    printf("openThings_receive: %d Returning:\n%s\n",iTimeOut, OTmsg);
+
+    //radio_standby();
+
+    return records;
 }

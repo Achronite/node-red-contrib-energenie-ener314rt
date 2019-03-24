@@ -16,21 +16,11 @@ module.exports = function(RED) {
 
         var iTimeOut = 10; // 10 seconds
 
-        // Call discovery function (GUI is async anyway - so dont bother here)
+        // Call discovery function
         var ret = libradio.openThings_discover(iTimeOut, buf );
-        var devices = JSON.parse(ref.readCString(buf, 0));        
+
+        var devices = JSON.parse(ref.readCString(buf, 0));
+        
         res.end(JSON.stringify(devices));
-
-        /* async version
-        libradio.openThings_discover.async(iTimeOut, buf, function(err,res) {
-            // callback
-            if (err) node.error("openThings_discover err: " + err);
-            //this.warn("openThings_switch returned res:" + res);
-            //.catch(error)
-            var devices = JSON.parse(ref.readCString(buf, 0));        
-            res.end(JSON.stringify(devices));
-        });
-        */
-
     });
 }

@@ -125,6 +125,7 @@ struct OTrecord {
 //extern void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
 extern unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits);
 extern unsigned char openThings_discover(unsigned char iTimeOut, char *devices );
+extern char openThings_receive(unsigned char iTimeOut, char *OTmsg );
 
 #endif
 

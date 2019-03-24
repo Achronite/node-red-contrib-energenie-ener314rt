@@ -19,7 +19,7 @@ module.exports = function(RED) {
         // Initialise radio
         //libradio.radio_init();
 
-        node.on('input', function(msg) {
+        this.on('input', function(msg) {
             this.status({fill:"yellow",shape:"ring",text:"Sending"});
             var zone = config.zone || 0;
             var switchNum = Number(config.switchNum) || 1;
@@ -81,6 +81,11 @@ module.exports = function(RED) {
                 // return payload unchanged
                 node.send(msg);
             });
+        });
+
+        this.on('close', function(){
+            // tidy up state
+            libradio.close_ener314rt();
         });
     }
     RED.nodes.registerType("ook-switch",OokSwitchNode);

@@ -192,7 +192,7 @@ static void _config(HRF_CONFIG_REC* config, uint8_t count)
 
 
 /*---------------------------------------------------------------------------*/
-// Change the operating mode of the HRF radio
+// Change the operating mode of the HRF radio (includes standby)
 
 static void _change_mode(uint8_t mode)
 {
@@ -264,7 +264,6 @@ void radio_init(void)
 {
     TRACE_OUTS("radio_init\n");
 
-
     //gpio_init(); done by spi_init at moment
     spi_init(&radioConfig);
 
@@ -295,11 +294,6 @@ void radio_init(void)
     }
 
     radio_standby();
-
-    // switch off both LEDs
-    gpio_low(LED_GREEN);
-    gpio_low(LED_RED);
-
 }
 
 
@@ -383,6 +377,8 @@ void radio_transmit(uint8_t* payload, uint8_t len, uint8_t times)
 
     if (radio_data.mode != prevmode)
     {
+        // This does not work when switching between OOK & FSK, as it only changes the mode without reloading registers
+        // use radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode) instead
        _change_mode(prevmode);
     }
 }
@@ -531,5 +527,67 @@ void radio_finished(void)
     gpio_finished();
 }
 
+/* @Achronite - March 2019
+** New function that performs all mode switching of radio modulation and mode
+** This version only writes HRF changes when required by using the previous state
+** It allows switch between OOK Tx and FSK Rx unlike radio_transmit() above
+*/ 
+void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode)
+{
+    // Only switch modulation if required
+    if (mod != radio_data.modu )
+    {
+        // modulation change
+        if (mod == RADIO_MODULATION_OOK)
+        {
+            _config(config_OOK, CONFIG_OOK_COUNT);
+            radio_data.modu = mod;
+        }
+        else if (mod == RADIO_MODULATION_FSK)
+        {
+            _config(config_FSK, CONFIG_FSK_COUNT);
+            radio_data.modu = mod;
+        }
+        else //TODO: make this ASSERT()
+        {
+            TRACE_FAIL("Unknown modulation\n");
+        }
+    radio_data.modu = mod;
+    }
 
+    // Only switch mode if required
+    if (mode != radio_data.mode){
+        // mode change
+        _change_mode(mode);
+        radio_data.mode = mode;  
+    }  
+
+}
+
+/* radio_modu_transmit()
+**
+** New function that caters for previous modulation switching when transmitting data
+** cloned from radio_transmit() to add extra modulation param
+**
+** @Achronite - March 2019
+**/
+
+void radio_mod_transmit(RADIO_MODULATION mod, uint8_t* payload, uint8_t len, uint8_t times)
+{
+    TRACE_OUTS("radio_mod_transmit\n");
+
+    // preserve previous mode & modulation
+    uint8_t prevmod = radio_data.modu;
+    uint8_t prevmode = radio_data.mode;
+
+    if (prevmode != HRF_MODE_TRANSMITTER || prevmod != mod)
+    {
+        radio_setmode(mod, HRF_MODE_TRANSMITTER);
+        radio_send_payload(payload, len, times);
+        radio_setmode(prevmod, prevmode);
+    } else {
+        radio_send_payload(payload, len, times);
+    }
+
+}
 /***** END OF FILE *****/

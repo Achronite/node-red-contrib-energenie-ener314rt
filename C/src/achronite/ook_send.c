@@ -108,13 +108,13 @@ unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned cha
     }
 
     // lock adaptor
-    lock_ener314rt();
+    lock_ener314rt(DT_CONTROL);
 
     // Set OOK mode for receive only devices, always set before transmit as we want to support FSK in the future
-    radio_modulation(RADIO_MODULATION_OOK);
+    //radio_setmode(RADIO_MODULATION_OOK, RADIO_TRANSMITTER);
 
-    // Transmit encoded payload 26ms per payload * xmits
-    radio_transmit(radio_msg,OOK_MSGLEN,xmits);
+    // Transmit OOK encoded payload 26ms per payload * xmits
+    radio_mod_transmit(RADIO_MODULATION_OOK,radio_msg,OOK_MSGLEN,xmits);
 
     //unlock adaptor
     unlock_ener314rt();
