@@ -1,36 +1,35 @@
 <script type="text/javascript">
-    RED.nodes.registerType('openThings-device',{
+    RED.nodes.registerType('energenie-board',{
         category: 'config',
         defaults: {
-            name: {value:"MiHome Adapter+"},
-            productId: {required:true,validate:RED.validators.number()},
-            deviceId:  {required:true,validate:RED.validators.number()}
+            name: {value:"ENER314-RT",required:true},
+            id: {value:0, default:0, required:true}
         },
         label: function() {
-            return (this.name || (this.productId+":"+this.deviceId) || ("C+ "+ this.deviceId) || this.paletteLabel); },
-
+            return (this.name); },
+/*
         oneditprepare: function() {
-            
+           
             function scanForDevices(selected_device){
                 $('#node-config-input-scan').addClass('disabled')
                 $('#node-config-input-device').attr('disabled', 'disabled')
                 $('#node-config-input-device').append("<option value='' selected>Scanning for devices...</option>")
-                $.get('board/devices')
+                $.get('energenie/devices')
                     .done(function (data) {
                         var resp = JSON.parse(data);
                         //RED.notify("scan devices: "+resp.numDevices, "warn" );
 
                         // Clear down select array
                         $('#node-config-input-device').empty()
-                        if (!resp || resp.numDevices == 0) {
-                            $('#node-config-input-device').append("<option value='' selected>No Devices found</option>")
+                        if (resp.numDevices=1)
+                            $('#node-config-input-device').append("<option value='' selected>"+resp.numDevices + " device found</option>")
+                        else
+                            $('#node-config-input-device').append("<option value='' selected>"+resp.numDevices + " devices found</option>");
+
+                        if (!resp || resp.numDevices <= 0) {
+                            $('#node-config-input-device').append("<option value='' selected>No Devices</option>")
                             RED.notify("No devices found.", "error");
                         } else {
-                            if (resp.numDevices==1)
-                                $('#node-config-input-device').append("<option value='' selected>"+resp.numDevices + " device found</option>")
-                            else
-                                $('#node-config-input-device').append("<option value='' selected>"+resp.numDevices + " devices found</option>");
-
                             // add devices to drop down
                             resp.devices.forEach(function (device) {
                                 $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.productId + ":" + device.deviceId + '</option>');
@@ -51,7 +50,7 @@
                     })
             }
 
-            scanForDevices(this.deviceId);   // scan on entry to form
+            //scanForDevices(this.deviceId);   // scan on entry to form
             $('#node-config-input-scan').click(function () {
                 if (!$('#node-config-input-scan').hasClass('disabled')) {
                     scanForDevices(this.deviceId)
@@ -68,28 +67,21 @@
                     //$('#node-config-input-productId').val = deviceName;
                 }
             })
-        }
-    });
-</script>
+        }  //oneditprepare()
 
-<script type="text/x-red" data-template-name="openThings-device">
-    <div class="form-row" width="100%">
-        <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-config-input-name">
-    </div>
-    <hr/>
     <div class="form-row">
         <label for="node-config-input-device"><i class="fa fa-server"></i> Devices</label>
         <select id="node-config-input-device" style="width: 60%;"></select>
         <a id="node-config-input-scan" class="editor-button"><i class="fa fa-search"></i></a>
     </div>
-    <div class="form-row">
-        <label for="node-config-input-productId"><i class="fa fa-plug"></i> Product</label>
-        <input type="text" id="node-config-input-productId" disabled>
-    </div>  
-    <div class="form-row">
-        <label for="node-config-input-deviceId"><i class="fa fa-plug"></i> Device ID</label>
-        <input type="text" id="node-config-input-deviceId" disabled>
-    </div>  
+*/
 
+    });
+</script>
+
+<script type="text/x-red" data-template-name="energenie-board">
+    <div class="form-row" width="100%">
+        <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name">
+    </div>
 </script>

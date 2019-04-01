@@ -5,7 +5,6 @@
  * https://energenie4u.co.uk/index.phpcatalogue/product/ENER314-RT
  */
 
-
 /* TODO (rx)
 DONE: decide interface for: HRF_readfifo_burst(uint8_t* buf, uint8_t len)
 DONE: Knit in the payload check
@@ -13,7 +12,6 @@ DONE: Knit in the get_payload
 
 TODO: test with monitor.py (receive only mode, FSK)
 */
-
 
 /* TODO (OOK rx)
 TODO: Write a tester legacy_rx.py to exercise 16 byte OOK receive
@@ -24,7 +22,6 @@ TODO: Might need to set the sync bytes on OOK receive to prevent false trigger
   But we don't want to be manually looking for sync bits, and we don't want
   to use the preamble generator on tx as it doesn't work too well.
 */
-
 
 /*
 TODO: Harden up the payload receiver
@@ -46,7 +43,6 @@ TODO: Harden up the payload receiver
   and should not be interpreted, that packet should be junked.
 */
 
-
 /* TODO: DUTY CYCLE PROTECTION REQUIREMENT
  *
  * See page 3 of this app note: http://www.ti.com/lit/an/swra090/swra090.pdf
@@ -66,7 +62,6 @@ TODO: Harden up the payload receiver
  * 10 %        36                        3.6
  */
 
-
 /***** INCLUDES *****/
 
 #include "system.h"
@@ -77,92 +72,86 @@ TODO: Harden up the payload receiver
 #include "hrfm69.h"
 #include "trace.h"
 
-
 /***** CONFIGURATION *****/
 
 #define EXPECTED_RADIOVER 36
-#define MAX_FIFO_BUFFER   66
-
+#define MAX_FIFO_BUFFER 66
 
 // Energenie specific radio config values
-#define RADIO_VAL_SYNCVALUE1FSK          0x2D	// 1st byte of Sync word
-#define RADIO_VAL_SYNCVALUE2FSK          0xD4	// 2nd byte of Sync word
-#define RADIO_VAL_SYNCVALUE1OOK          0x80	// 1nd byte of Sync word
+#define RADIO_VAL_SYNCVALUE1FSK 0x2D // 1st byte of Sync word
+#define RADIO_VAL_SYNCVALUE2FSK 0xD4 // 2nd byte of Sync word
+#define RADIO_VAL_SYNCVALUE1OOK 0x80 // 1nd byte of Sync word
 //#define RADIO_VAL_PACKETCONFIG1FSK       0xA2	// Variable length, Manchester coding, Addr must match NodeAddress
-#define RADIO_VAL_PACKETCONFIG1FSKNO     0xA0	// Variable length, Manchester coding
+#define RADIO_VAL_PACKETCONFIG1FSKNO 0xA0 // Variable length, Manchester coding
 
 //TODO: Not sure, might pass this in? What about on Arduino?
 //What about if we have multiple chip selects on same SPI?
 //What about if we have multiple spi's on different pins?
 
 /* GPIO assignments for Raspberry Pi using BCM numbering */
-#define RESET     25
+#define RESET 25
 // GREEN used for RX, RED used for TX
-#define LED_GREEN 27   // (not B rev1)
-#define LED_RED   22
+#define LED_GREEN 27 // (not B rev1)
+#define LED_RED 22
 
-#define CS        7    // CE1
-#define SCLK      11
-#define MOSI      10
-#define MISO      9
-#define TSETTLE (1)     /* us settle */
-#define THOLD   (1)     /* us hold */
-#define TFREQ   (1)     /* us half clock */
+#define CS 7 // CE1
+#define SCLK 11
+#define MOSI 10
+#define MISO 9
+#define TSETTLE (1) /* us settle */
+#define THOLD (1)   /* us hold */
+#define TFREQ (1)   /* us half clock */
 
 SPI_CONFIG radioConfig = {CS, SCLK, MOSI, MISO, SPI_SPOL0, SPI_CPOL0, SPI_CPHA0, TSETTLE, THOLD, TFREQ};
-
 
 /***** LOCAL FUNCTION PROTOTYPES *****/
 
 static void _change_mode(uint8_t mode);
 static void _wait_ready(void);
 static void _wait_txready(void);
-static void _config(HRF_CONFIG_REC* config, uint8_t len);
+static void _config(HRF_CONFIG_REC *config, uint8_t len);
 static int _payload_waiting(void);
-
 
 //----- ENERGENIE SPECIFIC CONFIGURATIONS --------------------------------------
 
 static HRF_CONFIG_REC config_FSK[] = {
-     {HRF_ADDR_REGDATAMODUL,       HRF_VAL_REGDATAMODUL_FSK},         // modulation scheme FSK
-     {HRF_ADDR_FDEVMSB,            HRF_VAL_FDEVMSB30},                // frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
-     {HRF_ADDR_FDEVLSB,            HRF_VAL_FDEVLSB30},                // frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
-     {HRF_ADDR_FRMSB,              HRF_VAL_FRMSB434},                 // carrier freq -> 434.3MHz 0x6C9333
-     {HRF_ADDR_FRMID,              HRF_VAL_FRMID434},                 // carrier freq -> 434.3MHz 0x6C9333
-     {HRF_ADDR_FRLSB,              HRF_VAL_FRLSB434},                 // carrier freq -> 434.3MHz 0x6C9333
-     {HRF_ADDR_AFCCTRL,            HRF_VAL_AFCCTRLS},                 // standard AFC routine
-     {HRF_ADDR_LNA,                HRF_VAL_LNA50},                    // 200ohms, gain by AGC loop -> 50ohms
-     {HRF_ADDR_RXBW,               HRF_VAL_RXBW60},                   // channel filter bandwidth 10kHz -> 60kHz  page:26
-     {HRF_ADDR_BITRATEMSB,         0x1A},                             // 4800b/s
-     {HRF_ADDR_BITRATELSB,         0x0B},                             // 4800b/s
-     {HRF_ADDR_SYNCCONFIG,         HRF_VAL_SYNCCONFIG2},              // Size of the Synch word = 2 (SyncSize + 1)
-     {HRF_ADDR_SYNCVALUE1,         RADIO_VAL_SYNCVALUE1FSK},          // 1st byte of Sync word
-     {HRF_ADDR_SYNCVALUE2,         RADIO_VAL_SYNCVALUE2FSK},          // 2nd byte of Sync word
-     {HRF_ADDR_PACKETCONFIG1,      RADIO_VAL_PACKETCONFIG1FSKNO},     // Variable length, Manchester coding
-     {HRF_ADDR_PAYLOADLEN,         HRF_VAL_PAYLOADLEN66},             // max Length in RX, not used in Tx
-     {HRF_ADDR_NODEADDRESS,        0x06},                             // Node address used in address filtering (not used)
+    {HRF_ADDR_REGDATAMODUL, HRF_VAL_REGDATAMODUL_FSK},      // modulation scheme FSK
+    {HRF_ADDR_FDEVMSB, HRF_VAL_FDEVMSB30},                  // frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
+    {HRF_ADDR_FDEVLSB, HRF_VAL_FDEVLSB30},                  // frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
+    {HRF_ADDR_FRMSB, HRF_VAL_FRMSB434},                     // carrier freq -> 434.3MHz 0x6C9333
+    {HRF_ADDR_FRMID, HRF_VAL_FRMID434},                     // carrier freq -> 434.3MHz 0x6C9333
+    {HRF_ADDR_FRLSB, HRF_VAL_FRLSB434},                     // carrier freq -> 434.3MHz 0x6C9333
+    {HRF_ADDR_AFCCTRL, HRF_VAL_AFCCTRLS},                   // standard AFC routine
+    {HRF_ADDR_LNA, HRF_VAL_LNA50},                          // 200ohms, gain by AGC loop -> 50ohms
+    {HRF_ADDR_RXBW, HRF_VAL_RXBW60},                        // channel filter bandwidth 10kHz -> 60kHz  page:26
+    {HRF_ADDR_BITRATEMSB, 0x1A},                            // 4800b/s
+    {HRF_ADDR_BITRATELSB, 0x0B},                            // 4800b/s
+    {HRF_ADDR_SYNCCONFIG, HRF_VAL_SYNCCONFIG2},             // Size of the Synch word = 2 (SyncSize + 1)
+    {HRF_ADDR_SYNCVALUE1, RADIO_VAL_SYNCVALUE1FSK},         // 1st byte of Sync word
+    {HRF_ADDR_SYNCVALUE2, RADIO_VAL_SYNCVALUE2FSK},         // 2nd byte of Sync word
+    {HRF_ADDR_PACKETCONFIG1, RADIO_VAL_PACKETCONFIG1FSKNO}, // Variable length, Manchester coding
+    {HRF_ADDR_PAYLOADLEN, HRF_VAL_PAYLOADLEN66},            // max Length in RX, not used in Tx
+    {HRF_ADDR_NODEADDRESS, 0x06},                           // Node address used in address filtering (not used)
 };
-#define CONFIG_FSK_COUNT (sizeof(config_FSK)/sizeof(HRF_CONFIG_REC))
-
+#define CONFIG_FSK_COUNT (sizeof(config_FSK) / sizeof(HRF_CONFIG_REC))
 
 static HRF_CONFIG_REC config_OOK[] = {
-    {HRF_ADDR_REGDATAMODUL,   HRF_VAL_REGDATAMODUL_OOK},  // modulation scheme OOK
-    {HRF_ADDR_FDEVMSB,        0},                         // frequency deviation:0kHz
-    {HRF_ADDR_FDEVLSB,        0},                         // frequency deviation:0kHz
-    {HRF_ADDR_FRMSB,          HRF_VAL_FRMSB433},          // carrier freq:433.92MHz 0x6C7AE1
-    {HRF_ADDR_FRMID,          HRF_VAL_FRMID433},          // carrier freq:433.92MHz 0x6C7AE1
-    {HRF_ADDR_FRLSB,          HRF_VAL_FRLSB433},          // carrier freq:433.92MHz 0x6C7AE1
-    {HRF_ADDR_RXBW,           HRF_VAL_RXBW120},           // channel filter bandwidth:120kHz
-    {HRF_ADDR_BITRATEMSB,     0x1A},                      // bitrate:4800b/s
-    {HRF_ADDR_BITRATELSB,     0x0B},                      // bitrate:4800b/s
-    {HRF_ADDR_PREAMBLELSB, 	  0},                         // preamble size LSB
-    {HRF_ADDR_SYNCCONFIG,     HRF_VAL_SYNCCONFIG0},       // Size of sync word (disabled)
-    {HRF_ADDR_PACKETCONFIG1,  0x80},                      // Tx Variable length, no Manchester coding
-    {HRF_ADDR_PAYLOADLEN,     0}                          // no payload length
+    {HRF_ADDR_REGDATAMODUL, HRF_VAL_REGDATAMODUL_OOK}, // modulation scheme OOK
+    {HRF_ADDR_FDEVMSB, 0},                             // frequency deviation:0kHz
+    {HRF_ADDR_FDEVLSB, 0},                             // frequency deviation:0kHz
+    {HRF_ADDR_FRMSB, HRF_VAL_FRMSB433},                // carrier freq:433.92MHz 0x6C7AE1
+    {HRF_ADDR_FRMID, HRF_VAL_FRMID433},                // carrier freq:433.92MHz 0x6C7AE1
+    {HRF_ADDR_FRLSB, HRF_VAL_FRLSB433},                // carrier freq:433.92MHz 0x6C7AE1
+    {HRF_ADDR_RXBW, HRF_VAL_RXBW120},                  // channel filter bandwidth:120kHz
+    {HRF_ADDR_BITRATEMSB, 0x1A},                       // bitrate:4800b/s
+    {HRF_ADDR_BITRATELSB, 0x0B},                       // bitrate:4800b/s
+    {HRF_ADDR_PREAMBLELSB, 0},                         // preamble size LSB
+    {HRF_ADDR_SYNCCONFIG, HRF_VAL_SYNCCONFIG0},        // Size of sync word (disabled)
+    {HRF_ADDR_PACKETCONFIG1, 0x80},                    // Tx Variable length, no Manchester coding
+    {HRF_ADDR_PAYLOADLEN, 0}                           // no payload length
 
 };
-#define CONFIG_OOK_COUNT (sizeof(config_OOK)/sizeof(HRF_CONFIG_REC))
-
+#define CONFIG_OOK_COUNT (sizeof(config_OOK) / sizeof(HRF_CONFIG_REC))
 
 /***** MODULE STATE *****/
 
@@ -170,8 +159,8 @@ typedef uint8_t RADIO_MODE; // Stores HRF_MODE_xxx
 
 typedef struct
 {
-  RADIO_MODULATION modu;
-  RADIO_MODE       mode;
+    RADIO_MODULATION modu;
+    RADIO_MODE mode;
 } RADIO_DATA;
 
 RADIO_DATA radio_data;
@@ -181,7 +170,7 @@ RADIO_DATA radio_data;
 /*---------------------------------------------------------------------------*/
 // Load a table of configuration values into HRF registers
 
-static void _config(HRF_CONFIG_REC* config, uint8_t count)
+static void _config(HRF_CONFIG_REC *config, uint8_t count)
 {
     while (count-- != 0)
     {
@@ -189,7 +178,6 @@ static void _config(HRF_CONFIG_REC* config, uint8_t count)
         config++;
     }
 }
-
 
 /*---------------------------------------------------------------------------*/
 // Change the operating mode of the HRF radio (includes standby)
@@ -204,7 +192,7 @@ static void _change_mode(uint8_t mode)
     if (mode == HRF_MODE_TRANSMITTER)
     {
         _wait_txready();
-        gpio_high(LED_RED);   // TX ON
+        gpio_high(LED_RED); // TX ON
     }
     else if (mode == HRF_MODE_RECEIVER)
     {
@@ -212,7 +200,6 @@ static void _change_mode(uint8_t mode)
     }
     radio_data.mode = mode;
 }
-
 
 /*---------------------------------------------------------------------------*/
 // Wait for HRF to be ready after last command
@@ -223,16 +210,14 @@ static void _wait_ready(void)
     HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
 }
 
-
 /*---------------------------------------------------------------------------*/
 // Wait for the HRF to be ready, and ready for tx, after last command
 
 static void _wait_txready(void)
 {
     TRACE_OUTS("_wait_txready\n");
-    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
+    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY | HRF_MASK_TXREADY, HRF_MASK_MODEREADY | HRF_MASK_TXREADY);
 }
-
 
 /*---------------------------------------------------------------------------*/
 // Check if there is a payload in the FIFO waiting to be processed
@@ -242,7 +227,6 @@ static int _payload_waiting(void)
     uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
     return (irqflags2 & HRF_MASK_PAYLOADRDY) == HRF_MASK_PAYLOADRDY;
 }
-
 
 /***** PUBLIC ****************************************************************/
 
@@ -256,7 +240,6 @@ void radio_reset(void)
     gpio_low(RESET);
     delayus(100);
 }
-
 
 /*---------------------------------------------------------------------------*/
 
@@ -296,14 +279,12 @@ void radio_init(void)
     radio_standby();
 }
 
-
 /*---------------------------------------------------------------------------*/
 
 uint8_t radio_get_ver(void)
 {
-  return HRF_readreg(HRF_ADDR_VERSION);
+    return HRF_readreg(HRF_ADDR_VERSION);
 }
-
 
 /*---------------------------------------------------------------------------*/
 
@@ -325,7 +306,6 @@ void radio_modulation(RADIO_MODULATION mod)
     }
 }
 
-
 /*---------------------------------------------------------------------------*/
 // Put radio into transmit mode for chosen modulation scheme
 
@@ -336,7 +316,6 @@ void radio_transmitter(RADIO_MODULATION mod)
     radio_modulation(mod);
     _change_mode(HRF_MODE_TRANSMITTER);
 }
-
 
 /*---------------------------------------------------------------------------*/
 // Put radio into receive mode for chosen modulation scheme
@@ -351,7 +330,6 @@ void radio_receiver(RADIO_MODULATION mod)
     _change_mode(HRF_MODE_RECEIVER);
 }
 
-
 /*---------------------------------------------------------------------------*/
 
 void radio_standby(void)
@@ -360,10 +338,9 @@ void radio_standby(void)
     _change_mode(HRF_MODE_STANDBY);
 }
 
-
 /*---------------------------------------------------------------------------*/
 
-void radio_transmit(uint8_t* payload, uint8_t len, uint8_t times)
+void radio_transmit(uint8_t *payload, uint8_t len, uint8_t times)
 {
     TRACE_OUTS("radio_transmit\n");
 
@@ -379,15 +356,14 @@ void radio_transmit(uint8_t* payload, uint8_t len, uint8_t times)
     {
         // This does not work when switching between OOK & FSK, as it only changes the mode without reloading registers
         // use radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode) instead
-       _change_mode(prevmode);
+        _change_mode(prevmode);
     }
 }
-
 
 /*---------------------------------------------------------------------------*/
 // Send a payload of data
 
-void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
+void radio_send_payload(uint8_t *payload, uint8_t len, uint8_t times)
 {
     TRACE_OUTS("radio_send_payload\n");
 
@@ -417,14 +393,13 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
     // level triggers when it 'strictly exceeds' level (i.e. 16 bytes starts tx,
     // and <=15 bytes triggers fifolevel irqflag to be cleared)
     // We already know from earlier that payloadlen<=32 (which fits into half a FIFO)
-    HRF_writereg(HRF_ADDR_FIFOTHRESH, len-1);
-
+    HRF_writereg(HRF_ADDR_FIFOTHRESH, len - 1);
 
     /* TRANSMIT: Transmit a number of payloads back to back */
     TRACE_OUTS("tx multiple payloads in a single burst\n");
 
     // send a number of payload repeats for the whole packet burst
-    for (i=0; i<times; i++)
+    for (i = 0; i < times; i++)
     {
         HRF_writefifo_burst(payload, len);
         // Tx will auto start when fifolevel is exceeded by loading the payload
@@ -436,7 +411,6 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 
     // wait for FIFO empty, to indicate transmission completed
     HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_FIFONOTEMPTY, 0);
-
 
     /* CONFIRM: Was the transmit ok? */
     // Check final flags in case of overruns etc
@@ -457,7 +431,6 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 #endif
 }
 
-
 /*---------------------------------------------------------------------------*/
 // Check to see if a payload is waiting in the receive buffer
 
@@ -470,15 +443,14 @@ RADIO_RESULT radio_is_receive_waiting(void)
     return RADIO_RESULT_OK_FALSE;
 }
 
-
 /*---------------------------------------------------------------------------*/
 // read a single payload from the payload buffer
 // this reads a fixed length payload
 
-RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
+RADIO_RESULT radio_get_payload_len(uint8_t *buf, uint8_t buflen)
 {
     if (buflen > MAX_FIFO_BUFFER)
-    {  /* At the moment, the receiver cannot reliably cope with payloads > 1 FIFO buffer.
+    { /* At the moment, the receiver cannot reliably cope with payloads > 1 FIFO buffer.
         * It *might* be able to in the future.
         */
         return RADIO_RESULT_ERR_LONG_PAYLOAD;
@@ -497,7 +469,7 @@ RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
 // The CBP payload always has the count byte in the first byte
 // and this is returned in the user buffer too.
 
-RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen)
+RADIO_RESULT radio_get_payload_cbp(uint8_t *buf, uint8_t buflen)
 {
     ////if (buflen > MAX_FIFO_BUFFER)
     ////{  /* At the moment, the receiver cannot reliably cope with payloads > 1 FIFO buffer.
@@ -516,7 +488,6 @@ RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen)
     return RADIO_RESULT_OK;
 }
 
-
 /*---------------------------------------------------------------------------*/
 
 void radio_finished(void)
@@ -531,11 +502,11 @@ void radio_finished(void)
 ** New function that performs all mode switching of radio modulation and mode
 ** This version only writes HRF changes when required by using the previous state
 ** It allows switch between OOK Tx and FSK Rx unlike radio_transmit() above
-*/ 
+*/
 void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode)
 {
     // Only switch modulation if required
-    if (mod != radio_data.modu )
+    if (mod != radio_data.modu)
     {
         // modulation change
         if (mod == RADIO_MODULATION_OOK)
@@ -552,16 +523,16 @@ void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode)
         {
             TRACE_FAIL("Unknown modulation\n");
         }
-    radio_data.modu = mod;
+        radio_data.modu = mod;
     }
 
     // Only switch mode if required
-    if (mode != radio_data.mode){
+    if (mode != radio_data.mode)
+    {
         // mode change
         _change_mode(mode);
-        radio_data.mode = mode;  
-    }  
-
+        radio_data.mode = mode;
+    }
 }
 
 /* radio_modu_transmit()
@@ -572,7 +543,7 @@ void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode)
 ** @Achronite - March 2019
 **/
 
-void radio_mod_transmit(RADIO_MODULATION mod, uint8_t* payload, uint8_t len, uint8_t times)
+void radio_mod_transmit(RADIO_MODULATION mod, uint8_t *payload, uint8_t len, uint8_t times)
 {
     TRACE_OUTS("radio_mod_transmit\n");
 
@@ -585,9 +556,10 @@ void radio_mod_transmit(RADIO_MODULATION mod, uint8_t* payload, uint8_t len, uin
         radio_setmode(mod, HRF_MODE_TRANSMITTER);
         radio_send_payload(payload, len, times);
         radio_setmode(prevmod, prevmode);
-    } else {
+    }
+    else
+    {
         radio_send_payload(payload, len, times);
     }
-
 }
 /***** END OF FILE *****/

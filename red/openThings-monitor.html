@@ -4,7 +4,8 @@
         color: '#82529e',
         defaults: {
             name: {value:"Adaptor Plus"},
-            device: {type:"openThings-device", required: true}
+            device: {type:"openThings-device", required: true},
+            board: {type:"energenie-board", required: true},
         },
         inputs:0,
         outputs:1,
@@ -25,6 +26,10 @@
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-board"><i class="fa fa-microchip"></i> Board</label>
+        <input type="text" id="node-input-board"/>
     </div>
     <div class="form-row">
         <label for="node-input-device"><i class="fa fa-plug"></i> Device</label>

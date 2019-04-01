@@ -17,6 +17,7 @@ module.exports = function(RED) {
         var node = this;
 
         var device = RED.nodes.getNode(config.device);
+        var board = RED.nodes.getNode(config.board);
 
         node.on('input', function(msg) {
             this.status({fill:"yellow",shape:"ring",text:"Sending"});

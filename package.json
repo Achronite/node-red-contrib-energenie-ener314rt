@@ -6,7 +6,8 @@
     "ffi": "latest",
     "ref": "latest",
     "ref-array": "latest",
-    "path": "latest"
+    "path": "latest",
+    "async": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,7 +24,8 @@
       "ener314rt-raw": "red/ener314rt-raw.js",
       "openThings-switch": "red/openThings-switch.js",
       "openThings-device": "red/openThings-device.js",
-      "openThings-monitor": "red/openThings-monitor.js"
+      "openThings-monitor": "red/openThings-monitor.js",
+      "energenie-board": "red/ener314-rt.js"
     }
   },
   "keywords": [

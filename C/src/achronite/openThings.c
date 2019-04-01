@@ -17,6 +17,8 @@
 
 // Globals - yuck
 unsigned short ran;
+struct OT_DEVICE OTdevices[MAX_DEVICES]; // should maybe make this dynamic!
+int NumDevices = 0;
 
 /*
 ** calculateCRC()- Calculate an OpenThings CRC
@@ -25,24 +27,28 @@ unsigned short ran;
 unsigned short calculateCRC(unsigned char *msg, unsigned int length)
 {
     unsigned char ch, bit;
-	unsigned short rem = 0, i;   //uint16_t
+    unsigned short rem = 0, i; //uint16_t
 
-	for (i=0; i<length; i++)
+    for (i = 0; i < length; i++)
     {
         ch = msg[i];
         //printf("%d=%d\n",i,ch);
-		rem = rem ^ (ch<<8);
-		for (bit=0; bit<8; bit++){
-			if ((rem & (1<<15)) != 0){
-				// bit is set
-				rem = ((rem<<1) ^ 0x1021);
-            } else {
-				// bit is clear
-				rem = (rem<<1);
+        rem = rem ^ (ch << 8);
+        for (bit = 0; bit < 8; bit++)
+        {
+            if ((rem & (1 << 15)) != 0)
+            {
+                // bit is set
+                rem = ((rem << 1) ^ 0x1021);
+            }
+            else
+            {
+                // bit is clear
+                rem = (rem << 1);
             }
         }
     }
-	return rem;
+    return rem;
 }
 
 /*
@@ -53,11 +59,15 @@ unsigned char cryptByte(unsigned char data)
 {
     unsigned char i;
 
-    for (i=0; i<5; i++){
-        if ((ran&0x01) != 0){
+    for (i = 0; i < 5; i++)
+    {
+        if ((ran & 0x01) != 0)
+        {
             // bit0 set
-            ran = ((ran>>1) ^ 62965);
-        }else{
+            ran = ((ran >> 1) ^ 62965);
+        }
+        else
+        {
             // bit0 clear
             ran = ran >> 1;
         }
@@ -74,8 +84,9 @@ void cryptMsg(unsigned char pid, unsigned short pip, unsigned char *msg, unsigne
 {
     unsigned char i;
 
-    ran = (((pid&0xFF)<<8) ^ pip);
-    for (i=0; i<length; i++){
+    ran = (((pid & 0xFF) << 8) ^ pip);
+    for (i = 0; i < length; i++)
+    {
         msg[i] = cryptByte(msg[i]);
     }
 }
@@ -83,41 +94,99 @@ void cryptMsg(unsigned char pid, unsigned short pip, unsigned char *msg, unsigne
 /*
 ** OTtypelen() - return the number of bits used to encode a specific OpenThings record data type
 */
-char OTtypelen(unsigned char OTtype){
+char OTtypelen(unsigned char OTtype)
+{
     char bits = 0;
 
-    switch(OTtype){
-        case OT_UINT4:
-            bits = 4;
-            break;
-        case OT_UINT8:
-        case OT_SINT8:
-            bits = 8;
-            break;
-        case OT_UINT12:
-            bits = 12;
-            break;
-		case OT_UINT16:
-        case OT_SINT16:
-            bits = 16;
-            break;
-		case OT_UINT20:
-            bits = 20;
-            break;
- 		case OT_UINT24:
-		case OT_SINT24:
-            bits = 24;
+    switch (OTtype)
+    {
+    case OT_UINT4:
+        bits = 4;
+        break;
+    case OT_UINT8:
+    case OT_SINT8:
+        bits = 8;
+        break;
+    case OT_UINT12:
+        bits = 12;
+        break;
+    case OT_UINT16:
+    case OT_SINT16:
+        bits = 16;
+        break;
+    case OT_UINT20:
+        bits = 20;
+        break;
+    case OT_UINT24:
+    case OT_SINT24:
+        bits = 24;
     }
     return bits;
 }
 
-/* convertBytes() - Convert a byte array into a given OpenThings single value
-**
-** uint8_t:  unsigned char
-** uint16_t: unsigned short
-** uint32_t: unsigned int
-** uint64_t: unsigned long long
+/* finds the product code in the OTproducts array and returns index
 */
+int openThings_getProductIndex(const char id)
+{
+    for (size_t i = 1; i < NUM_OT_PRODUCTS; i++)
+    {
+        if (OTproducts[i].productId == id)
+            return i;
+    }
+    return 0; // unknown
+}
+
+/* finds the param code in the OTparams array and returns index
+*/
+int openThings_getParamIndex(const char id)
+{
+    for (size_t i = 1; i < NUM_OT_PARAMS; i++)
+    {
+        if (OTparams[i].paramId == id)
+            return i;
+    }
+    return 0; // unknown
+}
+
+/* openThings_getDeviceIndex() - finds the id in the OTdevices array and returns index if it exists, otherwise return -1
+*/
+int openThings_getDeviceIndex(unsigned int id)
+{
+    for (int i = 0; i < NumDevices; i++)
+    {
+        if (OTdevices[i].deviceId == id)
+            return i;
+    }
+    return -1;
+}
+
+/*
+** openThings_devicePut() - add device to deviceList if it is not already there
+*/
+void openThings_devicePut(unsigned int iDeviceId, unsigned char mfrId, unsigned char productId)
+{
+    int OTpi;
+
+    if (openThings_getDeviceIndex(iDeviceId) < 0)
+    {
+        // new device
+        OTdevices[NumDevices].mfrId = mfrId;
+        OTdevices[NumDevices].productId = productId;
+        OTdevices[NumDevices].deviceId = iDeviceId;
+
+        // add product characteristics
+        OTpi = openThings_getProductIndex(productId);
+        OTdevices[NumDevices].control = OTproducts[OTpi].control;
+        strcpy(OTdevices[NumDevices].product, OTproducts[OTpi].product);
+
+        printf("openThings_devicePut() device %d(%d) added\n", NumDevices, iDeviceId);
+        NumDevices++;
+    }
+    // else
+    // {
+    //     printf("openThings_devicePut() device %d already exist\n", iDeviceId);
+    // }
+}
 
 /*
 ** openThings_decode()
@@ -155,45 +224,49 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
         return -1;
     } else {
     */
-        // DECODE HEADER
-        *mfrId      = payload[1];
-        *productId  = payload[2];
-        pip = (payload[3]<<8) + payload[4];
+    // DECODE HEADER
+    *mfrId = payload[1];
+    *productId = payload[2];
+    pip = (payload[3] << 8) + payload[4];
 
-        //struct sOTHeader = { length, mfrId, productId, pip };
-        
-        // decode body
-        cryptMsg(CRYPT_PID, pip, &payload[5], (length-4));
-        *iDeviceId = (payload[5]<<16) + (payload[6]<<8) + payload[7];
+    //struct sOTHeader = { length, mfrId, productId, pip };
 
-        // CHECK CRC from last 2 bytes of message
-	    crca  = (payload[length-1]<<8) + payload[length];
-        crc = calculateCRC(&payload[5], (length-6));
+    // decode body
+    cryptMsg(CRYPT_PID, pip, &payload[5], (length - 4));
+    *iDeviceId = (payload[5] << 16) + (payload[6] << 8) + payload[7];
 
+    // CHECK CRC from last 2 bytes of message
+    crca = (payload[length - 1] << 8) + payload[length];
+    crc = calculateCRC(&payload[5], (length - 6));
 
-	    if (crc != crca) {
-            // CRC does not match
-	        printf("openThings_decode(): ERROR crc actual:%d expected:%d\n", crca, crc);
-            return -2;
-        } else {
-            // CRC OK
-            
-            //DECODE RECORDS
-            i = 8;  // start at the 1st record
-	        printf("openThings_decode(): length:%d\n", length);
+    if (crc != crca)
+    {
+        // CRC does not match
+        printf("openThings_decode(): ERROR crc actual:%d expected:%d\n", crca, crc);
+        return -2;
+    }
+    else
+    {
+        // CRC OK
 
-            while ((i < length) && (payload[i] != 0) && (record < OT_MAX_RECS)){
-                // reset values
-                memset(recs[record].retChar, '\0', 15);
-                result = 0;
-                
-                // PARAM
-                param = payload[i++];
-                recs[record].wr = ((param & 0x80) == 0x80);
-                recs[record].paramId = param & 0x7F;
+        //DECODE RECORDS
+        i = 8; // start at the 1st record
+        printf("openThings_decode(): length:%d\n", length);
 
-                // no equivalent of 'in' for C, probably messy to code this here anyway as they are strings; do it in calling function instead (javascript in my case)
-                /*
+        while ((i < length) && (payload[i] != 0) && (record < OT_MAX_RECS))
+        {
+            // reset values
+            memset(recs[record].retChar, '\0', 15);
+            result = 0;
+
+            // PARAM
+            param = payload[i++];
+            recs[record].wr = ((param & 0x80) == 0x80);
+            recs[record].paramId = param & 0x7F;
+            strcpy(recs[record].paramName, OTparams[openThings_getParamIndex(recs[record].paramId)].paramName);
+
+            // no equivalent of 'in' for C, probably messy to code this here anyway as they are strings; do it in calling function instead (javascript in my case)
+            /*
                 if paramid in param_info:
                     paramname = (param_info[paramid])["n"] # name
                     paramunit = (param_info[paramid])["u"] # units
@@ -202,191 +275,85 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
                     paramunit = "UNKNOWN_UNIT"
                 */
 
-                // TYPE/LEN
-                recs[record].typeId = payload[i] & 0xF0;
-                rlen = payload[i++] & 0x0F;
-                printf("openThings_decode(): record[%d] paramid=0x%02x typeId=0x%02x values:[", record, recs[record].paramId, recs[record].typeId);
+            // TYPE/LEN
+            recs[record].typeId = payload[i] & 0xF0;
+            rlen = payload[i++] & 0x0F;
+            printf("openThings_decode(): record[%d] paramid=0x%02x typeId=0x%02x values:[", record, recs[record].paramId, recs[record].typeId);
 
-                // In C, it is not great at returning different types for a function; so we are just going to have to code it here rather than be a modular coder :(
-                switch(recs[record].typeId)
+            // In C, it is not great at returning different types for a function; so we are just going to have to code it here rather than be a modular coder :(
+            switch (recs[record].typeId)
+            {
+            case OT_CHAR:
+                for (j = 0; j < rlen; j++)
                 {
-                    case OT_CHAR:
-                        for (j=0; j<rlen; j++)
-                        {
-                            printf("%d,",payload[i+j]);
-                            recs[record].retChar[j] = payload[i+j];
-                        }
-                        recs[record].typeIndex = 1;
-                        break;
-                    case OT_UINT:
-                    case OT_UINT4:
-                    case OT_UINT8:
-                    case OT_UINT12:
-                    case OT_UINT16:
-                    case OT_UINT20:
-                    case OT_UINT24:
-                        for (j=0; j<rlen; j++)
-                        {
-                            printf("%d,",payload[i+j]);
-                            result <<= 8;
-                            result += payload[i+j];
-                        }
-                        recs[record].typeIndex = 2;
-                        break;
-                    case OT_SINT:
-                    case OT_SINT8:
-                    case OT_SINT16:
-                    case OT_SINT24:
-                        for (j=0; j<rlen; j++)
-                        {
-                            printf("%d,",payload[i+j]);
-                            result <<= 8;
-                            result += payload[i+j];
-                        }                        // turn to signed int based on high bit of MSB, 2's comp is 1's comp plus 1
-                        if ((payload[i] & 0x80) == 0x80) {
-                            // negative
-                            result = -( ((!result) & ((2^(length*8) )-1) ) + 1);
-                            //onescomp = (~result) & ((2**(length*8))-1)
-				            //result = -(onescomp + 1)
-                            // =result = -((~result) & ((2**(length*8))-1) + 1)
-                        }
-                        recs[record].typeIndex = 3;
-                        break;
-                    case OT_FLOAT:
-                        // TODO (@whaleygeek didnt do this either!)
-                        recs[record].typeIndex = -1;
-                        break;
-                    default:
-                        // TODO - are there other values?
-                        recs[record].typeIndex = -2;
+                    printf("%d,", payload[i + j]);
+                    recs[record].retChar[j] = payload[i + j];
                 }
-
-                // TODO: Binary point adjustment, which could be tricky returning a float value
-                // 			return (float(result)) / (2**Value.typebits(typeid))
-                f = (float)result / (2 ^ OTtypelen(recs[record].typeId));
-                // always store the integer result in the record
-                recs[record].retInt = result;
-
-                printf("] typeIndex:%d Int:%d Float:%f Char:%s\n", recs[record].typeIndex, recs[record].retInt, f, recs[record].retChar);
-
-                // move arrays on
-                i+=rlen;
-                record++;
+                recs[record].typeIndex = 1;
+                break;
+            case OT_UINT:
+            case OT_UINT4:
+            case OT_UINT8:
+            case OT_UINT12:
+            case OT_UINT16:
+            case OT_UINT20:
+            case OT_UINT24:
+                for (j = 0; j < rlen; j++)
+                {
+                    printf("%d,", payload[i + j]);
+                    result <<= 8;
+                    result += payload[i + j];
+                }
+                recs[record].typeIndex = 2;
+                break;
+            case OT_SINT:
+            case OT_SINT8:
+            case OT_SINT16:
+            case OT_SINT24:
+                for (j = 0; j < rlen; j++)
+                {
+                    printf("%d,", payload[i + j]);
+                    result <<= 8;
+                    result += payload[i + j];
+                } // turn to signed int based on high bit of MSB, 2's comp is 1's comp plus 1
+                if ((payload[i] & 0x80) == 0x80)
+                {
+                    // negative
+                    result = -(((!result) & ((2 ^ (length * 8)) - 1)) + 1);
+                    //onescomp = (~result) & ((2**(length*8))-1)
+                    //result = -(onescomp + 1)
+                    // =result = -((~result) & ((2**(length*8))-1) + 1)
+                }
+                recs[record].typeIndex = 3;
+                break;
+            case OT_FLOAT:
+                // TODO (@whaleygeek didnt do this either!)
+                recs[record].typeIndex = -1;
+                break;
+            default:
+                // TODO - are there other values?
+                recs[record].typeIndex = -2;
             }
+
+            // TODO: Binary point adjustment, which could be tricky returning a float value
+            // 			return (float(result)) / (2**Value.typebits(typeid))
+            f = (float)result / (2 ^ OTtypelen(recs[record].typeId));
+            // always store the integer result in the record
+            recs[record].retInt = result;
+
+            printf("] typeIndex:%d Int:%d Float:%f Char:%s\n", recs[record].typeIndex, recs[record].retInt, f, recs[record].retChar);
+
+            // move arrays on
+            i += rlen;
+            record++;
         }
-        
+    }
+
     //}
 
     // return the number of records
     return record;
-
 }
-/* PYTHON
-def decode(payload, decrypt=True, receive_timestamp=None):
-	"""Decode a raw buffer into an OpenThings pydict"""
-	#Note, decrypt must already have run on this for it to work
-	length = payload[0]
-
-	# CHECK LENGTH
-	if length+1 != len(payload) or length < 10:
-		raise OpenThingsException("bad payload length")
-		##return {
-		##	"type":         "BADLEN",
-		##	"len_actual":   len(payload),
-		##	"len_expected": length,
-		##	"payload":      payload[1:]
-		##}
-
-	# DECODE HEADER
-	mfrId      = payload[1]
-	productId  = payload[2]
-	encryptPIP = (payload[3]<<8) + payload[4]
-	header = {
-		"mfrid"     : mfrId,
-		"productid" : productId,
-		"encryptPIP": encryptPIP
-	}
-
-
-	if decrypt:
-		# DECRYPT PAYLOAD
-		# [0]len,mfrid,productid,pipH,pipL,[5]
-		crypto.init(crypt_pid, encryptPIP)
-		crypto.cryptPayload(payload, 5, len(payload)-5) # including CRC
-		##printhex(payload)
-	# sensorId is in encrypted region
-	sensorId = (payload[5]<<16) + (payload[6]<<8) + payload[7]
-	header["sensorid"] = sensorId
-
-
-	# CHECK CRC
-	crc_actual  = (payload[-2]<<8) + payload[-1]
-	crc_expected = calcCRC(payload, 5, len(payload)-(5+2))
-	##trace("crc actual:%s, expected:%s" %(hex(crc_actual), hex(crc_expected)))
-
-	if crc_actual != crc_expected:
-		raise OpenThingsException("bad CRC")
-		##return {
-		##	"type":         "BADCRC",
-		##	"crc_actual":   crc_actual,
-		##	"crc_expected": crc_expected,
-		##	"payload":      payload[1:],
-		##}
-
-
-	# DECODE RECORDS
-	i = 8
-	recs = []
-	while i < length and payload[i] != 0:
-		# PARAM
-		param = payload[i]
-		wr = ((param & 0x80) == 0x80)
-		paramid = param & 0x7F
-		if paramid in param_info:
-			paramname = (param_info[paramid])["n"] # name
-			paramunit = (param_info[paramid])["u"] # unit
-		else:
-			paramname = "UNKNOWN_" + hex(paramid)
-			paramunit = "UNKNOWN_UNIT"
-		i += 1
-
-		# TYPE/LEN
-		typeid = payload[i] & 0xF0
-		plen = payload[i] & 0x0F
-		i += 1
-
-		rec = {
-			"wr":         wr,
-			"paramid":    paramid,
-			"paramname":  paramname,
-			"paramunit":  paramunit,
-			"typeid":     typeid,
-			"length":     plen
-		}
-
-		if plen != 0:
-			# VALUE
-			valuebytes = []
-			for x in range(plen):
-				valuebytes.append(payload[i])
-				i += 1
-			value = Value.decode(valuebytes, typeid, plen)
-			rec["valuebytes"] = valuebytes
-			rec["value"] = value
-
-		# store rec
-		recs.append(rec)
-
-	m = {
-		"type":    "OK",
-		"header":  header,
-		"recs":    recs
-	}
-	if receive_timestamp != None:
-		m["rxtimestamp"] = receive_timestamp
-	return Message(m)
-*/
-
 
 /*
 ** openThings_switch()
@@ -409,7 +376,7 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
 {
     int ret = 0;
     unsigned short crc;
-/*
+    /*
 	payload.append(0) # length, fixup later when known
 	payload.append(header["mfrid"])
 	payload.append(header["productid"])
@@ -428,9 +395,9 @@ un: [13, 4, 2, 1, 0,   0,  32, 102, 243,   1,  1,   0, 225, 193]
 enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
 
 */
-    unsigned char radio_msg[OTS_MSGLEN] = {OTS_MSGLEN-1, ENERGENIE_MFRID, PRODUCTID_MIHO005, OT_DEFAULT_PIP, OT_DEFAULT_DEVICEID, OTC_SWITCH_OFF, 0x00, 0x00};
+    unsigned char radio_msg[OTS_MSGLEN] = {OTS_MSGLEN - 1, ENERGENIE_MFRID, PRODUCTID_MIHO005, OT_DEFAULT_PIP, OT_DEFAULT_DEVICEID, OTC_SWITCH_OFF, 0x00, 0x00};
 
-    printf("openThings_switch: productId=%d, deviceId=%d, state=%d\n",iProductId, iDeviceId,bSwitchState);
+    printf("openThings_switch: productId=%d, deviceId=%d, state=%d\n", iProductId, iDeviceId, bSwitchState);
 
     /*
     ** OpenThings HEADER
@@ -442,11 +409,12 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
     ** OpenThings RECORDS (Commands)
     */
     // deviceId
-    radio_msg[OTH_INDEX_DEVICEID]   = (iDeviceId>>16) & 0xFF; //MSB
-    radio_msg[OTH_INDEX_DEVICEID+1] = (iDeviceId>>8) & 0xFF;  //MID
-    radio_msg[OTH_INDEX_DEVICEID+2] = iDeviceId & 0xFF;       //LSB
+    radio_msg[OTH_INDEX_DEVICEID] = (iDeviceId >> 16) & 0xFF;    //MSB
+    radio_msg[OTH_INDEX_DEVICEID + 1] = (iDeviceId >> 8) & 0xFF; //MID
+    radio_msg[OTH_INDEX_DEVICEID + 2] = iDeviceId & 0xFF;        //LSB
 
-    if (bSwitchState){
+    if (bSwitchState)
+    {
         // We already have the switch off command in the message, just override the switch value to on
         radio_msg[OT_INDEX_R1_VALUE] = 1;
     }
@@ -454,11 +422,11 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
     /*
     ** OpenThings FOOTER (CRC)
     */
-    crc = calculateCRC(&radio_msg[5], (OTS_MSGLEN-7));
-    radio_msg[OTS_MSGLEN-2] = ((crc>>8) & 0xFF);  // MSB
-	radio_msg[OTS_MSGLEN-1] = (crc&0xFF); // LSB
+    crc = calculateCRC(&radio_msg[5], (OTS_MSGLEN - 7));
+    radio_msg[OTS_MSGLEN - 2] = ((crc >> 8) & 0xFF); // MSB
+    radio_msg[OTS_MSGLEN - 1] = (crc & 0xFF);        // LSB
 
-/*
+    /*
     printf("openThings_switch: unencrypted msg: [");
     for (ret=0; ret<OTS_MSGLEN;ret++){
         printf("%3d,",radio_msg[ret]);
@@ -467,7 +435,7 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
 */
 
     // encrypt body of message
-    cryptMsg(CRYPT_PID, CRYPT_PIP, &radio_msg[5], (OTS_MSGLEN-5));
+    cryptMsg(CRYPT_PID, CRYPT_PIP, &radio_msg[5], (OTS_MSGLEN - 5));
 
     /*
     ** Transmit via radio adaptor, using mutex to block the radio
@@ -480,14 +448,14 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
     //radio_modulation(RADIO_MODULATION_FSK);
 
     // Transmit encoded payload 26ms per payload * xmits
-    radio_mod_transmit(RADIO_MODULATION_FSK,radio_msg,OTS_MSGLEN,xmits);
+    radio_mod_transmit(RADIO_MODULATION_FSK, radio_msg, OTS_MSGLEN, xmits);
 
     // release mutex lock
     unlock_ener314rt();
 
     // place radio into standby mode, this may need to change to support receive mode
     //radio_standby();
-  
+
     return ret;
 }
 /*
@@ -508,81 +476,79 @@ enc:[13, 4, 2, 1, 0, 194, 188, 161,  12, 245, 66, 241, 225,  10]
 **    formatting and decoding the OpenThings FSK radio responses
 **    returning array of discovered devices as [productId:deviceId]
 */
-unsigned char openThings_discover(unsigned char iTimeOut, char *devices )
+unsigned char openThings_discover(unsigned char iTimeOut, char *devices)
 {
     int ret = 0;
     uint8_t buf[MAX_FIFO_BUFFER];
     struct OTrecord OTrecs[OT_MAX_RECS];
+    int OTpi;
     unsigned char mfrId, productId;
     unsigned int iDeviceId;
     int records;
-    char deviceStr[50];
+    char deviceStr[100];
 
     printf("openthings_discover(): called\n");
 
     // reset devices response JSON
-    strcpy(devices,"{\"devices\":[");
+    strcpy(devices, "{\"devices\":[");
 
     // mutex access radio adaptor (for a while!)
     lock_ener314rt(DT_DISCOVER);
 
     // Set FSK mode receive for OpenThings devices
-    // TODO - need to ensure we dont set to monitor mode here
     radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
 
+    // TODO - unlock
+
     // Loop until timeout
-    do {
+    do
+    {
         sleep(1); // pause 1 second
-        if ( radio_is_receive_waiting() ){
+        if (radio_is_receive_waiting())
+        {
             //printf("openthings_discover(): radio_is_receive waiting\n");
-            if ( radio_get_payload_cbp(buf, MAX_FIFO_BUFFER) == RADIO_RESULT_OK){
+            if (radio_get_payload_cbp(buf, MAX_FIFO_BUFFER) == RADIO_RESULT_OK)
+            {
                 // Received a valid payload, decode it
                 records = openThings_decode(buf, &mfrId, &productId, &iDeviceId, OTrecs);
-                if (records > 0){
+                if (records > 0)
+                {
                     printf("Valid OpenThings Message. mfrId:%d productId:%d deviceId:%d records:%d\n", mfrId, productId, iDeviceId, records);
 
+                    OTpi = openThings_getProductIndex(productId);
+
                     // Add to discovered devices
-                    sprintf(deviceStr, "{\"mfrId\":%d,\"productId\":%d,\"deviceId\":%d}", mfrId, productId, iDeviceId);
+                    sprintf(deviceStr, "{\"mfrId\":%d,\"productId\":%d,\"deviceId\":%d,\"control\":%d,\"product\":\"%s\"}", mfrId, productId, iDeviceId, OTproducts[OTpi].control, OTproducts[OTpi].product);
                     strcat(devices, deviceStr);
 
                     // add 1 to devices discovered
                     ret++;
-
-                    // print records for now, we will need them later when we implement receive mode
-                    /*
-                    for (i=0; i<records; i++){
-                        printf("record %d: [wr:%d, paramId:0x%02x, typeId:0x%02x, typeIndex:%d, integer:%d, chars:%s]\n",
-                            i,
-                            OTrecs[i].wr,
-                            OTrecs[i].paramId,
-                            OTrecs[i].typeId,
-                            OTrecs[i].typeIndex,
-                            OTrecs[i].retInt,
-                            OTrecs[i].retChar);
-                    }
-                    */
-
-                } else {
-                    printf("Invalid OT Payload, return=%d\n",records);
+                }
+                else
+                {
+                    printf("Invalid OT Payload, return=%d\n", records);
                 }
             }
-        } else {
+        }
+        else
+        {
             //printf("openthings_discover(%d): radio_is_receive waiting=FALSE\n",iTimeOut);
         }
     } while (iTimeOut-- > 0);
 
     //unlock mutex
     unlock_ener314rt();
-   
+
     // Close JSON array
     sprintf(deviceStr, "],\"numDevices\":%d}", ret);
     strcat(devices, deviceStr);
-    printf("Returning:\n%s\n",devices);
+    printf("Returning:\n%s\n", devices);
 
     //radio_standby();
 
     return ret;
 }
+
 /*
 ** openThings_receive()
 ** =======
@@ -600,7 +566,7 @@ unsigned char openThings_discover(unsigned char iTimeOut, char *devices )
 **    formatting and decoding the OpenThings FSK radio responses
 **    returning array of returned parameters for a deviceId
 */
-char openThings_receive(unsigned char iTimeOut, char *OTmsg )
+char openThings_receive(unsigned char iTimeOut, char *OTmsg)
 {
     //int ret = 0;
     uint8_t buf[MAX_FIFO_BUFFER];
@@ -608,18 +574,18 @@ char openThings_receive(unsigned char iTimeOut, char *OTmsg )
     unsigned char mfrId, productId;
     unsigned int iDeviceId;
     int records, i;
-    char OTrecord[50];
+    char OTrecord[100];
     bool OTMsgReceived = false;
     bool locked = true;
 
     printf("openthings_receive(): called\n");
 
     // set default message for timeout value returned
-    strcpy(OTmsg,"{\"deviceId\": 0}");
+    strcpy(OTmsg, "{\"deviceId\": 0}");
 
     // Clear data
     records = -3;
-    iDeviceId = 0;    
+    iDeviceId = 0;
 
     // mutex access radio adaptor to set mode
     lock_ener314rt(DT_MONITOR);
@@ -631,65 +597,130 @@ char openThings_receive(unsigned char iTimeOut, char *OTmsg )
 
     // Loop until timeout
 
-    do {
-        if ( radio_is_receive_waiting() ){
+    do
+    {
+        if (radio_is_receive_waiting())
+        {
             //printf("openthings_discover(): radio_is_receive waiting\n");
-            if (!locked) lock_ener314rt(DT_MONITOR);
-            if ( radio_get_payload_cbp(buf, MAX_FIFO_BUFFER) == RADIO_RESULT_OK){
+            if (!locked)
+                lock_ener314rt(DT_MONITOR);
+            if (radio_get_payload_cbp(buf, MAX_FIFO_BUFFER) == RADIO_RESULT_OK)
+            {
                 // Received a valid payload, decode it
                 unlock_ener314rt();
                 records = openThings_decode(buf, &mfrId, &productId, &iDeviceId, OTrecs);
-                if (records > 0){
+                if (records > 0)
+                {
                     OTMsgReceived = true;
-                    printf("Valid OpenThings Message. deviceId:%d mfrId:%d productId:%d records:%d\n", iDeviceId, mfrId, productId, records);
+
+                    // Add to deviceList
+                    openThings_devicePut(iDeviceId, mfrId, productId);
+
+                    printf("Valid OpenThings Message. deviceId:%d mfrId:%d productId:%d recs:%d\n", iDeviceId, mfrId, productId, records);
                     // build response JSON
-                    sprintf(OTmsg,"{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"records\":%d,\"record\":[", iDeviceId, mfrId, productId, records );
+                    sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"recCount\":%d", iDeviceId, mfrId, productId, records);
 
-                    // add records not worring about types (with training , for now)
-                    for (i=0; i<records; i++){
-                        switch(OTrecs[i].typeIndex){
-                            case 1:  //CHAR
-                                sprintf(OTrecord, "{ \"wr\":%d, \"paramId\": %d, \"param\":\"%s\"}", OTrecs[i].wr, OTrecs[i].paramId,OTrecs[i].retChar);
-                                break;
-                            default:
-                                sprintf(OTrecord, "{ \"wr\":%d, \"paramId\": %d, \"param\":%d}", OTrecs[i].wr, OTrecs[i].paramId,OTrecs[i].retInt);
+                    // add records
+                    for (i = 0; i < records; i++)
+                    {
+                        switch (OTrecs[i].typeIndex)
+                        {
+                        case 1: //CHAR
+                            //sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%s\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retChar);
+                            sprintf(OTrecord, ",\"%s\":\"%s\"", OTrecs[i].paramName, OTrecs[i].retChar);
+                            break;
+                        default:
+                            // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
+                            sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
                         }
 
-                        strcat(OTmsg,OTrecord);
-                        if ((i+1)<records){
-                            // not last record add a ,
-                            strcat(OTmsg,",");
-                        }
+                        strcat(OTmsg, OTrecord);
+                        // if ((i+1)<records){
+                        //     // not last record add a ,
+                        //     strcat(OTmsg,",");
+                        // }
                     }
 
-                // close record array
-                strcat(OTmsg,"]}");
-
-                } else {
+                    // close record array
+                    strcat(OTmsg, "}");
+                    // printf("openThings_receive: Returning\n%s",OTmsg);
+                }
+                else
+                {
                     printf("openThings_receive: Invalid OT Payload, skipping \n");
                 }
-            } else {
+            }
+            else
+            {
                 // problem receiving let's discard this message
                 unlock_ener314rt();
                 sleep(1); // pause 1 second to allow for message to come in
             }
-            
-        } else {
+        }
+        else
+        {
             // No messages waiting
-            if (locked){
+            if (locked)
+            {
                 // first time round we lock for a while, unlock here
                 unlock_ener314rt();
                 locked = false;
             }
             sleep(1); // pause 1 second to allow for message to come in
-
         }
 
     } while ((iTimeOut-- > 0) && (!OTMsgReceived));
 
-    printf("openThings_receive: %d Returning:\n%s\n",iTimeOut, OTmsg);
+    printf("openThings_receive: %d Returning:\n%s\n", iTimeOut, OTmsg);
 
     //radio_standby();
 
     return records;
+}
+
+/*
+** openThings_deviceList() - return list of known openThings devices
+**
+** deviceList is built up automatically by
+**  - receive an OT payload
+**  - learn a new device
+**  - or by a manual poll if empty
+**
+*/
+unsigned char openThings_deviceList(unsigned char iTimeOut, char *devices)
+{
+    int ret = 0;
+    int i;
+    char deviceStr[100];
+
+    printf("openthings_deviceList(): called\n");
+
+    if (NumDevices == 0)
+    {
+        // do discovery
+
+        // TODO
+    }
+
+    sprintf(devices, "{\"numDevices\":%d, \"devices\":[\n", NumDevices);
+
+    for (i = 0; i < NumDevices; i++)
+    {
+        // add device to JSON
+        sprintf(deviceStr, "{\"mfrId\":%d,\"productId\":%d,\"deviceId\":%d,\"control\":%d,\"product\":\"%s\"}",
+                OTdevices[i].mfrId, OTdevices[i].productId, OTdevices[i].deviceId, OTdevices[i].control, OTdevices[i].product);
+        strcat(devices, deviceStr);
+        if (i + 1 < NumDevices)
+        {
+            // more records to come add a ',' to JSON array
+            strcat(devices, ",\n");
+        }
+    }
+
+    // close message
+    strcat(devices, "]}");
+
+    printf("Returning:\n%s\n", devices);
+
+    return ret;
 }
