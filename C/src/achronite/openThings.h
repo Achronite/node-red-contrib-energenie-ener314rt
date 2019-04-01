@@ -126,10 +126,15 @@ struct OTrecord {
     unsigned char paramId;
     char paramName[15];
     unsigned char typeId;
-    char typeIndex;
-    int  retInt;                // I'm hoping this deals with signed and unsigned values
-    char retChar[15];            // Length max is 15 for a record
+    char  typeIndex;
+    int   retInt;                // I'm hoping this deals with signed and unsigned values
+    float retFloat;
+    char  retChar[15];            // Length max is 15 for a record
 };
+
+#define OTR_INT 1
+#define OTR_FLOAT 2
+#define OTR_CHAR 3
 
 struct OT_DEVICE {
     unsigned int  deviceId;

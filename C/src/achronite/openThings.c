@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 #include "openThings.h"
 #include "init_loop.h"
 #include "../energenie/radio.h"
@@ -206,7 +207,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
     unsigned short pip, crc, crca;
     int result = 0;
     int record = 0;
-    float f;
+    // float f;
 
     //struct openThingsHeader sOTHeader;
 
@@ -289,9 +290,17 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
                     printf("%d,", payload[i + j]);
                     recs[record].retChar[j] = payload[i + j];
                 }
-                recs[record].typeIndex = 1;
+                recs[record].typeIndex = OTR_CHAR;
                 break;
             case OT_UINT:
+                for (j = 0; j < rlen; j++)
+                {
+                    printf("%d,", payload[i + j]);
+                    result <<= 8;
+                    result += payload[i + j];
+                }
+                recs[record].typeIndex = OTR_INT;
+                break;
             case OT_UINT4:
             case OT_UINT8:
             case OT_UINT12:
@@ -304,7 +313,8 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
                     result <<= 8;
                     result += payload[i + j];
                 }
-                recs[record].typeIndex = 2;
+                // adjust BP
+                recs[record].typeIndex = OTR_FLOAT;
                 break;
             case OT_SINT:
             case OT_SINT8:
@@ -324,7 +334,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
                     //result = -(onescomp + 1)
                     // =result = -((~result) & ((2**(length*8))-1) + 1)
                 }
-                recs[record].typeIndex = 3;
+                recs[record].typeIndex = OTR_INT;
                 break;
             case OT_FLOAT:
                 // TODO (@whaleygeek didnt do this either!)
@@ -335,13 +345,13 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
                 recs[record].typeIndex = -2;
             }
 
-            // TODO: Binary point adjustment, which could be tricky returning a float value
-            // 			return (float(result)) / (2**Value.typebits(typeid))
-            f = (float)result / (2 ^ OTtypelen(recs[record].typeId));
             // always store the integer result in the record
             recs[record].retInt = result;
 
-            printf("] typeIndex:%d Int:%d Float:%f Char:%s\n", recs[record].typeIndex, recs[record].retInt, f, recs[record].retChar);
+            // Binary point adjustment (float)
+            recs[record].retFloat = (float)result / pow(2, OTtypelen(recs[record].typeId));
+
+            printf("] typeIndex:%d Int:%d Float:%f Char:%s\n", recs[record].typeIndex, recs[record].retInt, recs[record].retFloat, recs[record].retChar);
 
             // move arrays on
             i += rlen;
@@ -625,13 +635,17 @@ char openThings_receive(unsigned char iTimeOut, char *OTmsg)
                     {
                         switch (OTrecs[i].typeIndex)
                         {
-                        case 1: //CHAR
+                        case OTR_CHAR: //CHAR
                             //sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%s\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retChar);
                             sprintf(OTrecord, ",\"%s\":\"%s\"", OTrecs[i].paramName, OTrecs[i].retChar);
                             break;
-                        default:
+                        case OTR_INT:
                             // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
                             sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
+                            break;
+                        case OTR_FLOAT:
+                            // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
+                            sprintf(OTrecord, ",\"%s\":%f", OTrecs[i].paramName, OTrecs[i].retFloat);
                         }
 
                         strcat(OTmsg, OTrecord);
