@@ -407,6 +407,7 @@ void radio_send_payload(uint8_t *payload, uint8_t len, uint8_t times)
         // otherwise transmit will never start.
         /* wait for FIFO to not exceed threshold level */
         HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_FIFOLEVEL, 0);
+        TRACE_OUTC('|');
     }
 
     // wait for FIFO empty, to indicate transmission completed

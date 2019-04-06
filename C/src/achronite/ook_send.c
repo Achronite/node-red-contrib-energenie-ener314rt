@@ -66,7 +66,7 @@ unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned cha
     int ret = 0;
     unsigned char radio_msg[OOK_MSGLEN] = {PREAMBLE, DEFAULT_HC, 0x00, 0x00};
 
-    printf("ook_switch: Zone=%d, Switch=%d, state=%d\n", iZone, iSwitchNum, bSwitchState);
+    printf("ookSend: Zone=%d, Switch=%d, state=%d\n", iZone, iSwitchNum, bSwitchState);
 
     // encode the zone / house code if not using the default
     if (iZone != USE_DEFAULT_ZONE)
@@ -116,17 +116,14 @@ unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned cha
         radio_msg[INDEX_SC + 1] += 6;
     }
 
-    /*
-    ** Empty Rx buffer if required
-    */
-    ret = empty_radio_Rx_buffer();
-    printf("ookSend(): Rx buffer emptied of %d msg(s)", ret);
-
     // lock adaptor
     if ((ret = lock_ener314rt()) == 0)
     {
-        // Set OOK mode for receive only devices, always set before transmit as we want to support FSK in the future
-        //radio_setmode(RADIO_MODULATION_OOK, RADIO_TRANSMITTER);
+        /*
+        ** flush Rx buffer if required
+        */
+        ret = empty_radio_Rx_buffer();
+        printf("ookSend(%d): Rx buffer", ret);
 
         // Transmit OOK encoded payload 26ms per payload * xmits
         radio_mod_transmit(RADIO_MODULATION_OOK, radio_msg, OOK_MSGLEN, xmits);

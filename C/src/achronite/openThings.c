@@ -246,7 +246,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
     if (crc != crca)
     {
         // CRC does not match
-        printf("openThings_decode(): ERROR crc actual:%d expected:%d\n", crca, crc);
+        printf("openThings_decode(%d): ERROR crc actual:%d expected:%d", (int)iDeviceId, crca, crc);
         return -2;
     }
     else
@@ -427,26 +427,26 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
     /*
     ** Stage 2: Empty Rx buffer if required
     */
-    ret = empty_radio_Rx_buffer();
 
-    /*
-    ** Stage 3: Transmit via radio adaptor, using mutex to block the radio
-    */
-
-    // mutex access radio adaptor
+    // mutex access radio adaptor to set mode
     if ((ret = lock_ener314rt()) != 0)
     {
-        printf("openthings_switch(): error %d getting lock\n", ret);        
-        return ret;
+        printf("openthings_switch(): error %d getting lock\n", ret);
+        return -1;
+    }
+    else
+    {
+        ret = empty_radio_Rx_buffer();
+        printf("openThings_switch(%d): Rx_Buffer ", ret);
 
-    } else {
-
+        /*
+        ** Stage 3: Transmit via radio adaptor, using mutex to block the radio
+        */
         // Transmit encoded payload 26ms per payload * xmits
         radio_mod_transmit(RADIO_MODULATION_FSK, radio_msg, OTS_MSGLEN, xmits);
 
         // release mutex lock
         unlock_ener314rt();
-
     }
 
     return ret;
@@ -585,12 +585,22 @@ char openThings_receive(unsigned char iTimeOut, char *OTmsg)
     /*
     ** Stage 1 - always clear the Rx buffer on the radio device (with locking)
     */
-    i = empty_radio_Rx_buffer();
-    printf("openThings_receive(): Rx buffer emptied of %d msg(s)", i);
+    if ((i = lock_ener314rt()) != 0)
+    {
+        printf("openthings_switch(): error %d getting lock\n", i);
+        return -1;
+    }
+    else
+    {
+        i = empty_radio_Rx_buffer();
+        unlock_ener314rt();
+        printf("openThings_receive(%d) ", i);
+    }
 
     /*
     ** Stage 2 - decode and process next message in RxMsgs buffer
     */
+    printf("<%d-%d>",pRxMsgHead, pRxMsgTail);
     while (pRxMsgHead != pRxMsgTail)
     {
         {
@@ -606,7 +616,7 @@ char openThings_receive(unsigned char iTimeOut, char *OTmsg)
                 // Add to deviceList
                 openThings_devicePut(iDeviceId, mfrId, productId);
 
-                printf("Valid OpenThings Message. deviceId:%d mfrId:%d productId:%d recs:%d\n", iDeviceId, mfrId, productId, records);
+                printf("Valid OT: deviceId:%d mfrId:%d productId:%d recs:%d", iDeviceId, mfrId, productId, records);
                 // build response JSON
                 sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)RxMsgs[pRxMsgTail].t);
 
@@ -643,10 +653,9 @@ char openThings_receive(unsigned char iTimeOut, char *OTmsg)
                 break;
             }
         }
+    }
 
-    } 
-
-    //printf("openThings_receive: %d Returning:\n%s\n", iTimeOut, OTmsg);
+    printf("openThings_receive: %d Returning:\n%s\n", iTimeOut, OTmsg);
 
     return records;
 }
@@ -701,9 +710,8 @@ unsigned char openThings_deviceList(unsigned char iTimeOut, char *devices)
 /*
 ** empty_radio_Rx_buffer() - empties the radio receive buffer of any messages into RxMsgs as quickly as possible
 **
-** Perform any locking required
-** Always leave the radio in receive mode, as this could have been the first time we have been called
-** unlock on completion
+** Need to mutex lock before calling
+** Leave the radio in receive mode if monitoring, as this could have been the first time we have been called
 **
 ** returns the # of messages read, -1 if error getting lock
 **
@@ -715,40 +723,31 @@ int empty_radio_Rx_buffer()
 {
     int i, recs = 0;
 
-    // mutex access radio adaptor to set mode
-    if ((i = lock_ener314rt()) != 0)
-    {
-        printf("empty_radio_Rx_buffer(): error %d getting lock\n", i);
-        return -1;
-    }
-    else
-    {
-        // Set FSK mode receive for OpenThings devices (Energenie OOK devices dont generally transmit!)
-        radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
+    // Set FSK mode receive for OpenThings devices (Energenie OOK devices dont generally transmit!)
+    radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
 
-        i = 0;
-        // do we have any messages waiting?
-        while (radio_is_receive_waiting() && (i++ < RX_MSGS))
+    i = 0;
+    // do we have any messages waiting?
+    while (radio_is_receive_waiting() && (i++ < RX_MSGS))
+    {
+        if (radio_get_payload_cbp(RxMsgs[pRxMsgHead].msg, MAX_FIFO_BUFFER) == RADIO_RESULT_OK)
         {
-            if (radio_get_payload_cbp(RxMsgs[pRxMsgHead].msg, MAX_FIFO_BUFFER) == RADIO_RESULT_OK)
-            {
-                recs++;
-                // TODO: Only store valid OpenThings messages?
+            recs++;
+            // TODO: Only store valid OpenThings messages?
 
-                // record message timestamp
-                RxMsgs[pRxMsgHead].t = time(0);
+            // record message timestamp
+            RxMsgs[pRxMsgHead].t = time(0);
 
-                // wrap round buffer for next Rx
-                if (++pRxMsgHead == RX_MSGS)
-                    pRxMsgHead = 0;
-            }
-            else
-            {
-                printf("empty_radio_Rx_buffer(): error getting payload\n");
-                break;
-            }
+            // wrap round buffer for next Rx
+            if (++pRxMsgHead == RX_MSGS)
+                pRxMsgHead = 0;
+        }
+        else
+        {
+            printf("empty_radio_Rx_buffer(): error getting payload\n");
+            break;
         }
     }
-    unlock_ener314rt();
+    //unlock_ener314rt();
     return recs;
 };

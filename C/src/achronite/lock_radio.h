@@ -12,9 +12,9 @@ enum deviceTypes{DT_CONTROL = 1, DT_MONITOR, DT_LEARN};
 
 // function prototypes
 extern int init_ener314rt(int lock);
+extern void close_ener314rt(void);
 int lock_ener314rt();
 int unlock_ener314rt(void);
-extern void close_ener314rt(void);
 
 #endif
 

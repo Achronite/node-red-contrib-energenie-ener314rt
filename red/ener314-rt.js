@@ -22,6 +22,7 @@ module.exports = function (RED) {
         var events = require('events');
         this.events = new events.EventEmitter();
         var scope = this;
+        var myInterval;
 
         this.nodeActive = true;
 
@@ -31,6 +32,7 @@ module.exports = function (RED) {
 
             // Initialise radio
             let ret = libradio.init_ener314rt(false);
+ 
             if (ret != 0)
                 // can also happen if something else has beat us to it!
                 node.error(`Unable to initialise Energenie ENER314-RT board error: ${ret}`);
@@ -41,11 +43,14 @@ module.exports = function (RED) {
 
         getMonitorMsg = () => {
             //console.log("ENER314-RT: getMonitorMsg()");
-            var buf = Buffer.alloc(500);
+            process.stdout.write("\n<");
+            const buf = Buffer.alloc(500);
             //res =
+            process.stdout.write("{");
             var recs = libradio.openThings_receive(20, buf);
+            console.log("}");
             if (recs > 0) {
-                //console.log("ENER314-RT: got message recs=" + recs);
+                console.log("ENER314-RT: got message recs=" + recs);
                 var payload = ref.readCString(buf, 0);
                 var msg = JSON.parse(payload);
 
@@ -54,16 +59,17 @@ module.exports = function (RED) {
                 scope.events.emit('monitor', msg);
             } else {
                 // no messages
-                process.stdout.write(".");
             }
+            console.log(`ENER314-RT: getMonitorMsg() done`);
 
-            // RECHECK if we have listeners
-            if (scope.nodeActive) {
-                //console.log(`ENER314-RT: setTimeout(${config.interval})`);
-                setTimeout(function () { getMonitorMsg(); }, config.interval);
-            } else
-                console.log("ENER314-RT: no listeners, monitoring stopped");
-            return true;
+            // // RECHECK if we have listeners
+            // if (scope.nodeActive) {
+            //     console.log(`ENER314-RT: setTimeout(${config.interval})`);
+            //     //setTimeout(function () { getMonitorMsg(); }, config.interval);
+            // } else
+            //     console.log("ENER314-RT: no listeners, monitoring stopped");
+            // console.log(`ENER314-RT: done`);
+            // return true;
         }
 
         // Monitor_loop: Receive radio transmissions for valid incoming OpenThings messages
@@ -111,15 +117,15 @@ module.exports = function (RED) {
             if (event === 'monitor') {
                 console.log("ENER314-RT: monitor listener detected, starting monitor loop");
                 // Do monitoring as we have listeners!
-                getMonitorMsg();
+                myInterval = setInterval(getMonitorMsg, config.interval);
             }
         });
 
         // Close node, stop radio
         this.on('close', function (done) {
-            console.log("ENER314-RT: close");
-            scope.nodeActive = false;
-            close_ener314rt();
+            clearInterval(myInterval);
+            libradio.close_ener314rt();            
+            console.log("ENER314-RT: radio closed");
             done();
         });
 

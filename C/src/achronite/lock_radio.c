@@ -99,7 +99,7 @@ int init_ener314rt(int lock)
 */
 int lock_ener314rt()
 {
-    int ret = 0;
+    int ret = -1;
 
     // Always check that the adaptor & mutex have been initialised, and if not do it
     if (!initialised)
@@ -119,18 +119,28 @@ int lock_ener314rt()
         };
     }
     else
-    {       
+    {
         // lock radio now
-        printf("$$$lock(%d)",(int)pthread_self());
+        printf("[lock(%d", (int)pthread_self());
+        fflush(stdout);
         ret = pthread_mutex_lock(&radio_mutex);
+        printf("-%d-", (int)pthread_self());
+        fflush(stdout);
 
         // cater for if we already have the lock
-        if (ret == EDEADLK)
+        if (ret != 0)
         {
-            printf("lock_ener314rt(): mutex already locked!\n");
-            ret = 0;
+            if (ret == EDEADLK)
+            {
+                printf("ERROR lock_ener314rt(%d): mutex already locked!\n", ret);
+                ret = 0;
+            }
+            else
+            {
+                printf("ERROR lock_ener314rt(%d): failed\n", ret);
+            }
+            //printf("lock_ener314rt(%d): mutex got\n",deviceMode);
         }
-        //printf("lock_ener314rt(%d): mutex got\n",deviceMode);
     }
 
     return ret;
@@ -138,9 +148,16 @@ int lock_ener314rt()
 
 int unlock_ener314rt(void)
 {
+    int ret = 0;
     //unlock mutex
-    printf("$$$unlock(%d)\n",(int)pthread_self());
-    return pthread_mutex_unlock(&radio_mutex);
+    printf("%d)]", (int)pthread_self());
+    fflush(stdout);
+    ret = pthread_mutex_unlock(&radio_mutex);
+    if (ret != 0)
+    {
+        printf("ERROR unlock_ener314rt(%d)\n", ret);
+    }
+    return ret;
 
     // TODO: Place radio back into the correct mode, or standby
 }
@@ -159,10 +176,10 @@ void close_ener314rt(void)
         initialised = false;
         pthread_mutex_destroy(&radio_mutex);
         printf("close_ener314(): done\n");
-    } else
-    {
-            printf("close_ener314(): couldnt get lock\n");
+        fflush(stdout);
     }
-    
+    else
+    {
+        printf("close_ener314(): couldnt get lock\n");
+    }
 }
-

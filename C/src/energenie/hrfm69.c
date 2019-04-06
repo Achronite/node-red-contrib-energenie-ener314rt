@@ -4,6 +4,7 @@
  */
 
 #include <stdlib.h>
+#include <time.h>
 
 #include "system.h"
 #include "hrfm69.h"
@@ -163,6 +164,10 @@ void HRF_pollreg(uint8_t addr, uint8_t mask, uint8_t value)
     {
       // busy wait
       //TODO: No timeout or error recovery? Can cause permanent lockup
+      TRACE_OUTC('*');
+
+      // added the best sleep function for linux OS, transmit usually takes 40-60ms, sleep 20ms = 20,000,000ns
+      nanosleep((const struct timespec[]){{0, 20000000L}}, NULL);
     }
 }
 

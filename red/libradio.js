@@ -23,7 +23,7 @@ var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
   'openThings_switch':   [ 'uint8', ['uint8', 'uint32', 'uint8', 'uint8'] ],
   'openThings_deviceList': [ 'int8',  ['uint8', 'string'] ],
   'openThings_receive':  [ 'int8',  ['uint8', 'string'] ],
-  'close_ener314rt':     [ 'void',  ['void'] ]
+  'close_ener314rt':     [ 'void',  [] ]
   });
 /*
 var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
