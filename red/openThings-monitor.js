@@ -5,7 +5,7 @@
 ** v0.1 Alpha
 **
 ** File: OpenThings-monitor.js
-** Purpose: Node-Red wrapper for call to monitor node for ENER314-RT FSK/OpenThings (aka Monitor) devices
+** Purpose: Node-Red wrapper for call to monitor only node for ENER314-RT FSK/OpenThings (aka Monitor) devices
 **
 */
 var ref = require('ref');
@@ -33,28 +33,25 @@ module.exports = function (RED) {
 
             board.events.on('monitor', function (OTmsg) {
                 if (OTmsg.deviceId == deviceId) {
-                    console.log("@@@OT-monitor: received monitor event for me! recs=" + OTmsg.recCount);
-                    //     // received event for me
+                    // received event for me
+                    
+                    //console.log("@@@OT-monitor: received monitor event for me! recs=" + OTmsg.recCount);
 
-                    // 
                     if (OTmsg.SWITCH_STATE) {
                         node.status({ fill: "green", shape: "dot", text: "ON" });
                     } else {
                         node.status({ fill: "red", shape: "ring", text: "OFF" });
                     }
 
-                    //     msg.payload = "TO DO";
-
-                    //     // return payload
-                    node.send(OTmsg);
+                    // send on decoded OpenThings message as is
+                    node.send({'payload':OTmsg});
                 }
             });
 
-            //board.events.on('error', new Error('whoops!'));
+            board.events.on('error', function () { node.error("Board event error")});
 
             this.on('close', function () {
                 // tidy up state
-                libradio.close_ener314rt();
             });
         }
 

@@ -22,13 +22,7 @@ typedef uint8_t RADIO_MODULATION;
 #define RADIO_MODULATION_OOK 0
 #define RADIO_MODULATION_FSK 1
 
-
 typedef uint8_t RADIO_MODE;
-/* decided to use HRF values instead to avoid translation
-#define RADIO_STANDBY     0
-#define RADIO_TRANSMITTER 1
-#define RADIO_RECEIVER    2
-*/ 
 
 //extern void radio_init(void);
 extern void radio_reset(void);

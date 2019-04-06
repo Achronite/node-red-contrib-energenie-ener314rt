@@ -502,6 +502,8 @@ void radio_finished(void)
 ** New function that performs all mode switching of radio modulation and mode
 ** This version only writes HRF changes when required by using the previous state
 ** It allows switch between OOK Tx and FSK Rx unlike radio_transmit() above
+**
+** Please ensure that the radio device is mutex locked in multithreaded environment before calling
 */
 void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode)
 {
@@ -523,7 +525,6 @@ void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode)
         {
             TRACE_FAIL("Unknown modulation\n");
         }
-        radio_data.modu = mod;
     }
 
     // Only switch mode if required
@@ -539,6 +540,8 @@ void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode)
 **
 ** New function that caters for previous modulation switching when transmitting data
 ** cloned from radio_transmit() to add extra modulation param
+**
+** Please ensure that the radio device is mutex locked in multithreaded environment before calling
 **
 ** @Achronite - March 2019
 **/
@@ -559,6 +562,7 @@ void radio_mod_transmit(RADIO_MODULATION mod, uint8_t *payload, uint8_t len, uin
     }
     else
     {
+        // already in correct transmit mode
         radio_send_payload(payload, len, times);
     }
 }

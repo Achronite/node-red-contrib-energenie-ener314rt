@@ -18,6 +18,7 @@ var IntArray = ArrayType(int);
 
 // link the C shared object file
 var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
+  'init_ener314rt':      [ 'int8',  ['int8'] ],
   'OokSend':             [ 'uint8', ['uint32', 'uint8', 'uint8', 'uint8'] ],
   'openThings_switch':   [ 'uint8', ['uint8', 'uint32', 'uint8', 'uint8'] ],
   'openThings_deviceList': [ 'int8',  ['uint8', 'string'] ],

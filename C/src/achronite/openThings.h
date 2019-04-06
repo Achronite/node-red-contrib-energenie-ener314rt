@@ -166,12 +166,20 @@ static struct OT_PRODUCT OTproducts[NUM_OT_PRODUCTS] = {
     {4, 0x00, true,  "Thermostat",  }   // I dont know the productId of this yet
 };
 
+// Rx Message
+struct RADIO_MSG {
+    time_t t;
+    unsigned char msg[MAX_FIFO_BUFFER];
+};
+#define RX_MSGS 5
 
 /***** FUNCTION PROTOTYPES *****/
 //extern void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
 extern unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits);
 extern unsigned char openThings_deviceList(unsigned char iTimeOut, char *devices );
 extern char openThings_receive(unsigned char iTimeOut, char *OTmsg );
+int empty_radio_Rx_buffer();
+//unsigned char openThings_learn(unsigned char iTimeOut, char *devices)
 
 #endif
 

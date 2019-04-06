@@ -15,11 +15,13 @@ module.exports = function(RED) {
     function OokSwitchNode(config) {
         RED.nodes.createNode(this,config);
         var node = this;
+        var board = RED.nodes.getNode(config.board);
 
         // Initialise radio
         //libradio.radio_init();
 
         this.on('input', function(msg) {
+
             this.status({fill:"yellow",shape:"ring",text:"Sending"});
             var zone = config.zone || 0;
             var switchNum = Number(config.switchNum) || 1;
@@ -84,8 +86,7 @@ module.exports = function(RED) {
         });
 
         this.on('close', function(){
-            // tidy up state
-            libradio.close_ener314rt();
+            // TODO: tidy up state
         });
     }
     RED.nodes.registerType("ook-switch",OokSwitchNode);

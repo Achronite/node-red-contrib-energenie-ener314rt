@@ -3,7 +3,11 @@
         category: 'config',
         defaults: {
             name: {value:"ENER314-RT",required:true},
-            id: {value:0, default:0, required:true}
+            id: {value:0, default:0, required:true},
+            interval: {value:5000, default:5000, required:true,
+                validate: function(v) {
+					return (/^[0-9]+/.test(v) && parseInt(v,10) >= 500);
+				}}
         },
         label: function() {
             return (this.name); },
@@ -84,4 +88,8 @@
         <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-config-input-name">
     </div>
+    <div class="form-row">
+		<label for="node-config-input-interval"><i class="fa fa-clock-o"></i> Poll interval (ms)</label>
+		<input type="text" placeholder="1000" id="node-config-input-interval">
+	</div>
 </script>

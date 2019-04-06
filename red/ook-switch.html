@@ -6,6 +6,7 @@
             name: {value:""},
             zone: {value:0},
             switchNum: {value:1},
+            board: {type:"energenie-board", required: true}
         },
         inputs:1,
         outputs:1,
@@ -20,6 +21,11 @@
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <hr/>
+    <div class="form-row">
+        <label for="node-input-board"><i class="fa fa-microchip"></i> Board</label>
+        <input type="text" id="node-input-board"/>
     </div>
     <div class="form-row">
         <label for="node-input-zone"><i class="fa fa-home"></i> Zone</label>
