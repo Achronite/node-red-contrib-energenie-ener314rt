@@ -32,7 +32,7 @@ module.exports = function (RED) {
 
             // Initialise radio
             let ret = libradio.init_ener314rt(false);
- 
+
             if (ret != 0)
                 // can also happen if something else has beat us to it!
                 node.error(`Unable to initialise Energenie ENER314-RT board error: ${ret}`);
@@ -41,9 +41,35 @@ module.exports = function (RED) {
 
         RED.nodes.createNode(this, config);
 
+        // async version, failing to read buf on return
+        // getMonitorMsg = () => {
+        //     //console.log("ENER314-RT: getMonitorMsg()");
+        //     const buf = Buffer.alloc(500);
+        //     //res =
+        //     process.stdout.write("{");
+        //     var recs = libradio.openThings_receive(20, buf);
+        //     libradio.openThings_receive.async(20, buf, function (err, recs) {
+        //         console.log("}");
+        //         if (err) {
+        //             console.log("!!! got message err= " + err);
+        //         } else {
+        //             console.log("### got message recs=" + recs);
+        //             if (recs > 0) {
+        //                 var payload = ref.readCString(buf, 0);
+        //                 var msg = JSON.parse(payload);
+
+        //                 // inform the monitor devices that we have a message
+        //                 scope.events.emit('monitor', msg);
+        //             }
+        //         }
+        //     });
+        //     console.log(`ENER314-RT: getMonitorMsg() done`);
+        // }
+
+
+        // non-async version - this works, but does seem to use the main thread loop
         getMonitorMsg = () => {
             //console.log("ENER314-RT: getMonitorMsg()");
-            process.stdout.write("\n<");
             const buf = Buffer.alloc(500);
             //res =
             process.stdout.write("{");
@@ -55,22 +81,13 @@ module.exports = function (RED) {
                 var msg = JSON.parse(payload);
 
                 // inform the monitor devices that we have a message
-                // TODO: filter on deviceId here?
                 scope.events.emit('monitor', msg);
             } else {
-                // no messages
+                // no message
             }
             console.log(`ENER314-RT: getMonitorMsg() done`);
-
-            // // RECHECK if we have listeners
-            // if (scope.nodeActive) {
-            //     console.log(`ENER314-RT: setTimeout(${config.interval})`);
-            //     //setTimeout(function () { getMonitorMsg(); }, config.interval);
-            // } else
-            //     console.log("ENER314-RT: no listeners, monitoring stopped");
-            // console.log(`ENER314-RT: done`);
-            // return true;
         }
+
 
         // Monitor_loop: Receive radio transmissions for valid incoming OpenThings messages
         // TODO: this code does work, but has a tendancy to block things, replace with non-async version
@@ -124,7 +141,7 @@ module.exports = function (RED) {
         // Close node, stop radio
         this.on('close', function (done) {
             clearInterval(myInterval);
-            libradio.close_ener314rt();            
+            libradio.close_ener314rt();
             console.log("ENER314-RT: radio closed");
             done();
         });

@@ -6,7 +6,6 @@
 #include "openThings.h"
 #include "lock_radio.h"
 #include "../energenie/radio.h"
-#include "../energenie/hrfm69.h"
 #include "../energenie/trace.h"
 
 /*
@@ -20,9 +19,6 @@
 unsigned short ran;
 struct OT_DEVICE OTdevices[MAX_DEVICES]; // should maybe make this dynamic!
 static int NumDevices = 0;
-static struct RADIO_MSG RxMsgs[RX_MSGS];
-static int pRxMsgHead = 0; // pointer to the next slot to load a Rx msg into in our Rx Msg FIFO
-static int pRxMsgTail = 0; // pointer to the next msg to read from Rx Msg FIFO, if head=tail the buffer is empty
 
 /*
 ** calculateCRC()- Calculate an OpenThings CRC
@@ -219,25 +215,27 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
      * which looking at the spec is max 24bits (excluding FLOAT), so 3-17 bytes / record; so max would be 56/3=18 records
      */
 
+    //printf("openThings_decode(): called\n");
     length = payload[0];
 
-    // ignore double check on length for now, as hrfm function does not return this
-    /*
-    if ((length+1 != len(payload)) || (length < 10)){
-        // broken
+    // A good indication this is an OpenThings msg, is to check the length first, abort if too long or short
+    if (length > MAX_FIFO_BUFFER || length < 10){
+        printf("ERROR openThings_decode(): invalid length=%d\n",length);
         return -1;
-    } else {
-    */
+    }
+
     // DECODE HEADER
     *mfrId = payload[1];
     *productId = payload[2];
     pip = (payload[3] << 8) + payload[4];
 
     //struct sOTHeader = { length, mfrId, productId, pip };
+    printf("openThings_decode(): length=%d, mfrId=%d, productId=%d, pip=%d",length,*mfrId,*productId,pip);
 
-    // decode body
+    // decode encrypted body (destructive - watch for length errors!)
     cryptMsg(CRYPT_PID, pip, &payload[5], (length - 4));
     *iDeviceId = (payload[5] << 16) + (payload[6] << 8) + payload[7];
+    printf(", deviceId=%d\n",*iDeviceId);
 
     // CHECK CRC from last 2 bytes of message
     crca = (payload[length - 1] << 8) + payload[length];
@@ -282,7 +280,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
             // TYPE/LEN
             recs[record].typeId = payload[i] & 0xF0;
             rlen = payload[i++] & 0x0F;
-            // printf("openThings_decode(): record[%d] paramid=0x%02x typeId=0x%02x values:[", record, recs[record].paramId, recs[record].typeId);
+            //printf("openThings_decode(): record[%d] paramid=0x%02x typeId=0x%02x values:[", record, recs[record].paramId, recs[record].typeId);
 
             // In C, it is not great at returning different types for a function; so we are just going to have to code it here rather than be a modular coder :(
             switch (recs[record].typeId)
@@ -354,7 +352,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
             // Binary point adjustment (float)
             recs[record].retFloat = (float)result / pow(2, OTtypelen(recs[record].typeId));
 
-            // printf("] typeIndex:%d Int:%d Float:%f Char:%s\n", recs[record].typeIndex, recs[record].retInt, recs[record].retFloat, recs[record].retChar);
+            //printf("] typeIndex:%d Int:%d Float:%f Char:%s\n", recs[record].typeIndex, recs[record].retInt, recs[record].retFloat, recs[record].retChar);
 
             // move arrays on
             i += rlen;
@@ -436,7 +434,7 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
     }
     else
     {
-        ret = empty_radio_Rx_buffer();
+        ret = empty_radio_Rx_buffer(DT_CONTROL);
         printf("openThings_switch(%d): Rx_Buffer ", ret);
 
         /*
@@ -493,7 +491,7 @@ unsigned char openThings_learn(unsigned char iTimeOut, char *devices)
     }
 
     // Set FSK mode receive for OpenThings devices
-    radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
+    //radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
 
     // TODO - unlock
 
@@ -563,7 +561,7 @@ unsigned char openThings_learn(unsigned char iTimeOut, char *devices)
 **    formatting and decoding the OpenThings FSK radio responses
 **    returning array of returned parameters for a deviceId
 */
-char openThings_receive(unsigned char iTimeOut, char *OTmsg)
+char openThings_receive(char *OTmsg)
 {
     //int ret = 0;
     //uint8_t buf[MAX_FIFO_BUFFER];
@@ -572,10 +570,11 @@ char openThings_receive(unsigned char iTimeOut, char *OTmsg)
     unsigned int iDeviceId;
     int records, i;
     char OTrecord[100];
+    struct RADIO_MSG rxMsg;
 
     //printf("openthings_receive(): called, msgPtr=%d\n", pRxMsgHead);
 
-    // set default message for timeout value returned
+    // set default message if no message available
     strcpy(OTmsg, "{\"deviceId\": 0}");
 
     // Clear data
@@ -592,7 +591,7 @@ char openThings_receive(unsigned char iTimeOut, char *OTmsg)
     }
     else
     {
-        i = empty_radio_Rx_buffer();
+        i = empty_radio_Rx_buffer(DT_MONITOR);
         unlock_ener314rt();
         printf("openThings_receive(%d) ", i);
     }
@@ -600,62 +599,57 @@ char openThings_receive(unsigned char iTimeOut, char *OTmsg)
     /*
     ** Stage 2 - decode and process next message in RxMsgs buffer
     */
-    printf("<%d-%d>",pRxMsgHead, pRxMsgTail);
-    while (pRxMsgHead != pRxMsgTail)
+    //printf("<%d-%d>",pRxMsgHead, pRxMsgTail);
+    while (pop_RxMsg(&rxMsg) >= 0)
     {
+        // message avaiable
+        printf("openThings_receive(): msg popped, ts=%d\n",(int)rxMsg.t);
+        records = openThings_decode(rxMsg.msg, &mfrId, &productId, &iDeviceId, OTrecs);
+
+        if (records > 0)
         {
-            // message avaiable
-            records = openThings_decode(RxMsgs[pRxMsgTail].msg, &mfrId, &productId, &iDeviceId, OTrecs);
+            // Add to deviceList
+            openThings_devicePut(iDeviceId, mfrId, productId);
 
-            // move tail to next msg in buffer
-            if (++pRxMsgTail == RX_MSGS)
-                pRxMsgTail = 0;
+            printf("openThings_receive(): Valid OT: deviceId:%d mfrId:%d productId:%d recs:%d\n", iDeviceId, mfrId, productId, records);
+            // build response JSON
+            sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
 
-            if (records > 0)
+            // add records
+            for (i = 0; i < records; i++)
             {
-                // Add to deviceList
-                openThings_devicePut(iDeviceId, mfrId, productId);
-
-                printf("Valid OT: deviceId:%d mfrId:%d productId:%d recs:%d", iDeviceId, mfrId, productId, records);
-                // build response JSON
-                sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)RxMsgs[pRxMsgTail].t);
-
-                // add records
-                for (i = 0; i < records; i++)
+                switch (OTrecs[i].typeIndex)
                 {
-                    switch (OTrecs[i].typeIndex)
-                    {
-                    case OTR_CHAR: //CHAR
-                        //sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%s\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retChar);
-                        sprintf(OTrecord, ",\"%s\":\"%s\"", OTrecs[i].paramName, OTrecs[i].retChar);
-                        break;
-                    case OTR_INT:
-                        // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
-                        sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
-                        break;
-                    case OTR_FLOAT:
-                        // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
-                        sprintf(OTrecord, ",\"%s\":%f", OTrecs[i].paramName, OTrecs[i].retFloat);
-                    }
-
-                    strcat(OTmsg, OTrecord);
-                    // if ((i+1)<records){
-                    //     // not last record add a ,
-                    //     strcat(OTmsg,",");
-                    // }
+                case OTR_CHAR: //CHAR
+                    //sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%s\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retChar);
+                    sprintf(OTrecord, ",\"%s\":\"%s\"", OTrecs[i].paramName, OTrecs[i].retChar);
+                    break;
+                case OTR_INT:
+                    // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
+                    sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
+                    break;
+                case OTR_FLOAT:
+                    // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
+                    sprintf(OTrecord, ",\"%s\":%f", OTrecs[i].paramName, OTrecs[i].retFloat);
                 }
 
-                // close record array
-                strcat(OTmsg, "}");
-                // printf("openThings_receive: Returning\n%s",OTmsg);
-
-                // valid message, break while loop
-                break;
+                strcat(OTmsg, OTrecord);
+                // if ((i+1)<records){
+                //     // not last record add a ,
+                //     strcat(OTmsg,",");
+                // }
             }
+
+            // close record array
+            strcat(OTmsg, "}");
+            // printf("openThings_receive: Returning\n%s",OTmsg);
+
+            // valid message, break while loop
+            break;
         }
     }
 
-    printf("openThings_receive: %d Returning:\n%s\n", iTimeOut, OTmsg);
+    printf("openThings_receive: Returning:\n%s\n", OTmsg);
 
     return records;
 }
@@ -669,7 +663,7 @@ char openThings_receive(unsigned char iTimeOut, char *OTmsg)
 **  - or by a manual poll if empty
 **
 */
-unsigned char openThings_deviceList(unsigned char iTimeOut, char *devices)
+unsigned char openThings_deviceList(char *devices)
 {
     int ret = 0;
     int i;
@@ -706,48 +700,3 @@ unsigned char openThings_deviceList(unsigned char iTimeOut, char *devices)
 
     return ret;
 }
-
-/*
-** empty_radio_Rx_buffer() - empties the radio receive buffer of any messages into RxMsgs as quickly as possible
-**
-** Need to mutex lock before calling
-** Leave the radio in receive mode if monitoring, as this could have been the first time we have been called
-**
-** returns the # of messages read, -1 if error getting lock
-**
-** TODO: Buffer is currently cyclic and destructive, we could loose messages, but I've made the assumption we always need
-**       the latest messages
-**
-*/
-int empty_radio_Rx_buffer()
-{
-    int i, recs = 0;
-
-    // Set FSK mode receive for OpenThings devices (Energenie OOK devices dont generally transmit!)
-    radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
-
-    i = 0;
-    // do we have any messages waiting?
-    while (radio_is_receive_waiting() && (i++ < RX_MSGS))
-    {
-        if (radio_get_payload_cbp(RxMsgs[pRxMsgHead].msg, MAX_FIFO_BUFFER) == RADIO_RESULT_OK)
-        {
-            recs++;
-            // TODO: Only store valid OpenThings messages?
-
-            // record message timestamp
-            RxMsgs[pRxMsgHead].t = time(0);
-
-            // wrap round buffer for next Rx
-            if (++pRxMsgHead == RX_MSGS)
-                pRxMsgHead = 0;
-        }
-        else
-        {
-            printf("empty_radio_Rx_buffer(): error getting payload\n");
-            break;
-        }
-    }
-    //unlock_ener314rt();
-    return recs;
-};

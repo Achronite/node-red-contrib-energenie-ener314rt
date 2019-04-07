@@ -4,9 +4,11 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
+#include <string.h>
 #include "lock_radio.h"
 #include "openThings.h"
 #include "../energenie/radio.h"
+#include "../energenie/hrfm69.h"
 #include "../energenie/trace.h"
 
 /*
@@ -23,6 +25,10 @@ pthread_mutex_t radio_mutex;
 static bool initialised = false;
 
 enum deviceTypes deviceType = DT_CONTROL; // types of devices in use to control loop behaviour
+
+static struct RADIO_MSG RxMsgs[RX_MSGS];
+static int pRxMsgHead = 0; // pointer to the next slot to load a Rx msg into in our Rx Msg FIFO
+static int pRxMsgTail = 0; // pointer to the next msg to read from Rx Msg FIFO, if head=tail the buffer is empty
 
 /* init_ener314rt() - initialise radio adaptor in a multi-threaded environment
 **
@@ -174,6 +180,7 @@ void close_ener314rt(void)
         // we have the lock, do all the tidying
         radio_finished();
         initialised = false;
+        deviceType = DT_CONTROL;    // set back to control mode only
         pthread_mutex_destroy(&radio_mutex);
         printf("close_ener314(): done\n");
         fflush(stdout);
@@ -182,4 +189,92 @@ void close_ener314rt(void)
     {
         printf("close_ener314(): couldnt get lock\n");
     }
+}
+
+/*
+** empty_radio_Rx_buffer() - empties the radio receive buffer of any messages into RxMsgs as quickly as possible
+**
+** Need to mutex lock before calling
+** Leave the radio in receive mode if monitoring, as this could have been the first time we have been called
+**
+** returns the # of messages read, -1 if error getting lock
+**
+** TODO: Buffer is currently cyclic and destructive, we could loose messages, but I've made the assumption we always need
+**       the latest messages
+**
+*/
+int empty_radio_Rx_buffer(enum deviceTypes rxMode)
+{
+    int i, recs = 0;
+
+    // Put us into monitor as soon as we know about it
+    if (rxMode == DT_MONITOR)
+        deviceType = DT_MONITOR;
+
+
+    if (deviceType == DT_MONITOR  || rxMode == DT_LEARN)
+    {
+        // only receive data if we are in monitor mode
+        // Set FSK mode receive for OpenThings devices (Energenie OOK devices dont generally transmit!)
+        radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
+
+        i = 0;
+        // do we have any messages waiting?
+        while (radio_is_receive_waiting() && (i++ < RX_MSGS))
+        {
+            if (radio_get_payload_cbp(RxMsgs[pRxMsgHead].msg, MAX_FIFO_BUFFER) == RADIO_RESULT_OK)
+            {
+                recs++;
+                // TODO: Only store valid OpenThings messages?
+
+                // record message timestamp
+                RxMsgs[pRxMsgHead].t = time(0);
+
+                // wrap round buffer for next Rx
+                if (++pRxMsgHead == RX_MSGS)
+                    pRxMsgHead = 0;
+            }
+            else
+            {
+                printf("empty_radio_Rx_buffer(): error getting payload\n");
+                break;
+            }
+        }
+    }
+    //unlock_ener314rt();
+    return recs;
+};
+
+/*
+** pop_msg() - returns next unread message from Rx queue
+**
+** returns -1 if no messages, or # of msg remaining in FIFO
+*/
+int pop_RxMsg(struct RADIO_MSG *rxMsg)
+{
+    int ret = -1;
+
+    printf("<%d-%d>", pRxMsgHead, pRxMsgTail);
+    if (pRxMsgHead != pRxMsgTail)
+    {
+        memcpy(rxMsg->msg, RxMsgs[pRxMsgTail].msg, sizeof(rxMsg->msg));
+        rxMsg->t = RxMsgs[pRxMsgTail].t;
+
+        // move tail to next msg in buffer
+        if (++pRxMsgTail == RX_MSGS)
+            pRxMsgTail = 0;
+
+        if (pRxMsgHead >= pRxMsgTail)
+        {
+            ret = pRxMsgHead - pRxMsgTail;
+        }
+        else
+        {
+            ret = pRxMsgHead + RX_MSGS - pRxMsgTail;
+        }
+    }
+
+    printf("pop_RxMsg(%d): %d\n", ret, (int)rxMsg->t);
+
+    return ret;
 }

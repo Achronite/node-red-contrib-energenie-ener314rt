@@ -497,6 +497,11 @@ void radio_finished(void)
     //spi_finished();
     radio_standby();
     gpio_finished();
+
+    // clear globals
+    radio_data.modu = 99;
+    radio_data.mode = 99;
+
 }
 
 /* @Achronite - March 2019
@@ -537,7 +542,7 @@ void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode)
     }
 }
 
-/* radio_modu_transmit()
+/* radio_mod_transmit()
 **
 ** New function that caters for previous modulation switching when transmitting data
 ** cloned from radio_transmit() to add extra modulation param
@@ -563,8 +568,11 @@ void radio_mod_transmit(RADIO_MODULATION mod, uint8_t *payload, uint8_t len, uin
     }
     else
     {
-        // already in correct transmit mode
+        // already in correct transmit only mode
         radio_send_payload(payload, len, times);
+
+        // place radio into standby after sending payload
+        radio_standby();
     }
 }
 /***** END OF FILE *****/

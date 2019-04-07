@@ -122,7 +122,7 @@ unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned cha
         /*
         ** flush Rx buffer if required
         */
-        ret = empty_radio_Rx_buffer();
+        ret = empty_radio_Rx_buffer(DT_CONTROL);
         printf("ookSend(%d): Rx buffer", ret);
 
         // Transmit OOK encoded payload 26ms per payload * xmits
