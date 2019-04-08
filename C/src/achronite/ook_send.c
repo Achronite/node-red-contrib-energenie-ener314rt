@@ -61,7 +61,7 @@ void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char *enc
 **    formatting and encoding an OOK radio request
 **    sending the radio request via the ENER314-RT RaspberryPi adaptor
 */
-unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned char bSwitchState, unsigned char xmits)
+unsigned char OokSend(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits)
 {
     int ret = 0;
     unsigned char radio_msg[OOK_MSGLEN] = {PREAMBLE, DEFAULT_HC, 0x00, 0x00};
@@ -75,33 +75,41 @@ unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned cha
     }
 
     /* Encode the 2 byte switch code for OFF, minimising calculations */
+    /* allow for ASCII values for switchNum (weird node/FFI bug) 48=0 */
     switch (iSwitchNum)
     {
     case 0: // switch all in zone
+    case 48:
         radio_msg[INDEX_SC] = 238;
         radio_msg[INDEX_SC + 1] = 136;
         break;
     case 1:
+    case 49:
         radio_msg[INDEX_SC] = 238;
         radio_msg[INDEX_SC + 1] = 232;
         break;
     case 2:
+    case 50:
         radio_msg[INDEX_SC] = 142;
         radio_msg[INDEX_SC + 1] = 232;
         break;
     case 3:
+    case 51:
         radio_msg[INDEX_SC] = 232;
         radio_msg[INDEX_SC + 1] = 232;
         break;
     case 4:
+    case 52:
         radio_msg[INDEX_SC] = 136;
         radio_msg[INDEX_SC + 1] = 232;
         break;
     case 5: // undocumented
+    case 53:
         radio_msg[INDEX_SC] = 142;
         radio_msg[INDEX_SC + 1] = 136;
         break;
     case 6: // undocumented
+    case 54:
         radio_msg[INDEX_SC] = 232;
         radio_msg[INDEX_SC + 1] = 136;
         break;

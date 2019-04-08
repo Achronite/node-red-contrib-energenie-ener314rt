@@ -90,4 +90,15 @@ module.exports = function(RED) {
         });
     }
     RED.nodes.registerType("ook-switch",OokSwitchNode);
+
+
+    RED.httpAdmin.get("/ook/teach", function (req, res) {
+        var zone = req.query.zone || 0;
+        var switchNum = req.query.switchNum;
+        console.log(`zone: ${zone} switchNum: ${switchNum}`);
+        if (libradio.OokSend(zone, switchNum, 1, 20) == 0)
+            res.sendStatus(200);
+        else
+            res.sendStatus(500);
+    });
 }

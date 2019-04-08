@@ -26,7 +26,7 @@
 
 /***** FUNCTION PROTOTYPES *****/
 extern void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
-extern unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned char bSwitchState, unsigned char xmits);
+extern unsigned char OokSend(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits);
 
 
 #endif

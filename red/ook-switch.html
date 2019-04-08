@@ -1,20 +1,46 @@
 <script type="text/javascript">
-    RED.nodes.registerType('ook-switch',{
+    RED.nodes.registerType('ook-switch', {
         category: 'Energenie 314RT',
         color: '#3ebbeb',
         defaults: {
-            name: {value:""},
-            zone: {value:0},
-            switchNum: {value:1},
-            board: {type:"energenie-board", required: true}
+            name: { value: "" },
+            zone: { value: 0 },
+            switchNum: { value: 1 },
+            board: { type: "energenie-board", required: true }
         },
-        inputs:1,
-        outputs:1,
+        inputs: 1,
+        outputs: 1,
         align: "right",
         icon: "Adaptor.png",
         paletteLabel: 'Control OOK',
-        label: function() { return this.name || ("Control "+ this.zone + ":" + this.switchNum) || this.paletteLabel; },
+        label: function () { return this.name || ("Control " + this.zone + ":" + this.switchNum) || this.paletteLabel; },
+
+
+        oneditprepare: function () {
+
+            function teachOOK(selected_device) {
+                var tZone = $('#node-input-zone').val();
+                var tSwitchNum = $('#node-input-switchNum').val();
+                $.get('ook/teach', {'zone': tZone, 'switchNum': tSwitchNum})
+                    .done(function (data) {
+                        $('#node-config-teach').removeClass('disabled');
+                    })
+
+                    .fail(function () {
+                        RED.notify("Something went wrong teaching the device", "error")
+                    })
+            }
+
+            $('#node-config-teach').click(function () {
+                if (!$('#node-config-teach').hasClass('disabled')) {
+                    // $('#node-config-teach').addClass('disabled');
+                    teachOOK(this.deviceId);
+                }
+            })
+
+        }
     });
+
 </script>
 
 <script type="text/x-red" data-template-name="ook-switch">
@@ -29,19 +55,24 @@
     </div>
     <div class="form-row">
         <label for="node-input-zone"><i class="fa fa-home"></i> Zone</label>
-        <input type="number" id="node-input-zone" placeholder="default">
+        <input type="number" id="node-input-zone" placeholder="default" title="0-1048575">
     </div>
     <div class="form-row">
         <label for="node-input-switchNum"><i class="fa fa-plug"></i> Switch #</label>
         <select id="node-input-switchNum">
-            <option value='1'>1</option>
-            <option value='2'>2</option>
-            <option value='3'>3</option>
-            <option value='4'>4</option>
-            <option value='5'>5</option>
-            <option value='6'>6</option>
-            <option value='0'>0 (all in zone)</option>
+            <option value=1>1</option>
+            <option value=2>2</option>
+            <option value=3>3</option>
+            <option value=4>4</option>
+            <option value=5>5</option>
+            <option value=6>6</option>
+            <option value=0>0 (all in zone)</option>
         </select>
+        <a id="node-config-teach" class="editor-button" title="Press this button to teach a device this zone and switch combination."><i class="fa fa-graduation-cap"></i></a>
+    </div>
+    <div class="form-tips">
+        Tip: You can teach a 'control only' energenie device this <strong>Zone</strong> and <strong>Switch #</strong>.</br>
+        Hold down the power button until the power light flashes on the device, then pressing the 'mortar board' button above which sends a 'power on' signal to the device, and the light will flashing faster and then stop when taught.
     </div>
 </script>
 
@@ -91,7 +122,7 @@
         </dl>
 
     <h3>Details</h3>
-        <p>Node that switches on/off the OOK 'Receive only' devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>Node that switches on/off the MiHome 'Control' aka 'OOK Receive only' devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
         <p>This includes:</p>
         <ul>
             <li>Green Button Adaptors</li>
@@ -99,8 +130,7 @@
             <li>Light switches</li>
             <li>Double Sockets</li>
         </ul>
-        <p>This node cannot control the monitor devices that also transmit, such as the 'Pink' Monitor Plug, 'Purple' Smart Plug+, TRVs or PIRs. 
-            These devices use FSK and OpenThings protocols which are currently not supported.</p>
+        <p>Use the pink and purple nodes for the 'monitor' devices that also transmit.</p>
             
         <p>Example <code>msg.payload</code>:</p>
 <pre>{
