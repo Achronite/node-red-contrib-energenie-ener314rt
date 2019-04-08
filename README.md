@@ -13,8 +13,7 @@ Currently supported devices includes the green button devices, and the receive o
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
-This module does not currently support the older 'Pi-mote' board, the MiHome hub or the MiHome 'monitor' devices that also transmit
-(see below for the full supported list).
+This module does not currently support the older 'Pi-mote' ENER314 board, the MiHome hub or the MiHome 'monitor' devices that also transmit  (see below for the full supported list).
 
 
 ## Getting Started
@@ -86,15 +85,16 @@ TIP: If you already know the house/zone code assigned, for example to an RF hand
 Please note that there are two different radio standards supported by the Energenie and MiHome range of devices. 
 This node currently only works with the OOK (On-Off Keying) based devices.  Generally speaking all of
 the energenie radio & MiHome devices that are '1-way' or 'receive only' are supported, whereas any devices that also
-transmit or monitor are not.  This is because the '2-way' devices use the MiHome FSK OpenThings protocol.  I do not
-currently own any of the '2-way' monitoring devices, so I am unable to support them at present.
+transmit or monitor are not.  This is because the '2-way' devices use the MiHome FSK OpenThings protocol.
+
+I am currently working on support for '2-way' monitoring devices in the 'develop' branch.
 
 Here is a list of what I believe this node **should** be compatible with:
 
-* ENER002 Green Button Socket (tested OK)
+* ENER002 Green Button Socket (tested)
 * ENER010 4 Gang Extension lead
 * MIHO002 Smart Plug with Blue Text
-* MIHO007 Double Wall Socket White
+* MIHO007 Double Wall Socket White (tested)
 * MIHO008 Single Light Switch White
 * MIHO014 In-line Controller
 * MIHO015 In-line Relay
@@ -112,9 +112,10 @@ Here is a list of what I believe this node **should** be compatible with:
 
 ## Authors
 
+* **Achronite** - *Node-Red wrappers and additional C code* - [Achronite](https://github.com/Achronite/node-red-contrib-energenie-ener314rt)
 * **Energenie** - *Radio C library* - [Energenie](https://github.com/Energenie)
 * **David Whale** - *Python implementation* - [whaleygeek](https://github.com/whaleygeek/pyenergenie)
-* **Achronite** - *Node-Red wrappers, javascript and OOK-Send C code* - [Achronite](https://github.com/Achronite/node-red-contrib-energenie-ener314)
+
 
 ## License
 
