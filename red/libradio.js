@@ -21,8 +21,9 @@ var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
   'init_ener314rt':      [ 'int8',  ['int8'] ],
   'OokSend':             [ 'uint8', ['uint32', 'uint8', 'uint8', 'uint8'] ],
   'openThings_switch':   [ 'uint8', ['uint8', 'uint32', 'uint8', 'uint8'] ],
-  'openThings_deviceList': [ 'int8',  ['string'] ],
+  'openThings_deviceList': [ 'int8',  ['string', 'bool'] ],
   'openThings_receive':  [ 'int8',  ['string'] ],
+//  'openThings_learn':    [ 'uint8', ['uint8', 'string' ] ],
   'close_ener314rt':     [ 'void',  [] ]
   });
 /*

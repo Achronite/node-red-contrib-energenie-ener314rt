@@ -36,44 +36,17 @@ module.exports = function (RED) {
             if (ret != 0)
                 // can also happen if something else has beat us to it!
                 node.error(`Unable to initialise Energenie ENER314-RT board error: ${ret}`);
-
         };
 
         RED.nodes.createNode(this, config);
 
-        // async version, failing to read buf on return
-        // getMonitorMsg = () => {
-        //     //console.log("ENER314-RT: getMonitorMsg()");
-        //     const buf = Buffer.alloc(500);
-        //     //res =
-        //     process.stdout.write("{");
-        //     var recs = libradio.openThings_receive(20, buf);
-        //     libradio.openThings_receive.async(20, buf, function (err, recs) {
-        //         console.log("}");
-        //         if (err) {
-        //             console.log("!!! got message err= " + err);
-        //         } else {
-        //             console.log("### got message recs=" + recs);
-        //             if (recs > 0) {
-        //                 var payload = ref.readCString(buf, 0);
-        //                 var msg = JSON.parse(payload);
-
-        //                 // inform the monitor devices that we have a message
-        //                 scope.events.emit('monitor', msg);
-        //             }
-        //         }
-        //     });
-        //     console.log(`ENER314-RT: getMonitorMsg() done`);
-        // }
-
-
-        // non-async version - this works, but does seem to use the main thread loop
+        // monitor mode - non-async version - this works, but does seem to use the main thread loop
         getMonitorMsg = () => {
             //console.log("ENER314-RT: getMonitorMsg()");
             const buf = Buffer.alloc(500);
             //res =
             process.stdout.write("{");
-            var recs = libradio.openThings_receive(20, buf);
+            var recs = libradio.openThings_receive(buf);
             console.log("}");
             if (recs > 0) {
                 console.log("ENER314-RT: got message recs=" + recs);
@@ -88,48 +61,7 @@ module.exports = function (RED) {
             console.log(`ENER314-RT: getMonitorMsg() done`);
         }
 
-
-        // Monitor_loop: Receive radio transmissions for valid incoming OpenThings messages
-        // TODO: this code does work, but has a tendancy to block things, replace with non-async version
-        // monitorLoop = async () => {
-        //     do {
-        //         let promiseOfData = getOpenThingsMessage();
-        //         try {
-        //             var msg = await promiseOfData;
-        //             console.log(`### promise returned: ${msg.deviceId}`);
-
-        //             // inform the monitor devices that we have a message
-        //             // TODO: filter on deviceId here?
-        //             scope.events.emit('monitor', msg);
-
-        //         } catch (err) {
-        //             console.log(`ENER314-RT: caught error ${err}`);
-        //         }
-        //     } while (scope.events.listenerCount('monitor') > 0)
-
-        //     // all listeners gone, stop loop
-        //     console.log(`ENER314-RT: monitoring stopped, no listeners`);
-        // }
-
-        // // receive an OpenThings radio message (called as an async function so we do not block the node.js event loop)
-        // getOpenThingsMessage = () => {
-        //     return new Promise((resolve, reject) => {
-        //         var buf = Buffer.alloc(500);
-        //         //res =
-        //         libradio.openThings_receive.async(20, buf, function (err, recs) {
-        //             if (err) {
-        //                 console.log("!!! got message err= " + err);
-        //                 reject(err);
-        //             } else {
-        //                 console.log("### got message recs=" + recs);
-        //                 var payload = ref.readCString(buf, 0);
-        //                 resolve(JSON.parse(payload));
-        //             }
-        //         });
-        //     })
-        // }
-
-        // start the monitoring loop if we have listeners
+        // start the monitoring loop when we have listeners
         this.events.once('newListener', (event, listener) => {
             if (event === 'monitor') {
                 console.log("ENER314-RT: monitor listener detected, starting monitor loop");
@@ -155,15 +87,24 @@ module.exports = function (RED) {
         // allocate the return buffer here for the JSON response, C routine does not do malloc()
         var buf = Buffer.alloc(500);
 
-        var iTimeOut = 10; // 10 seconds
-
         // Call discovery function
-        var ret = libradio.openThings_deviceList(iTimeOut, buf);
-
+        var ret = libradio.openThings_deviceList(buf, false);
         var devices = JSON.parse(ref.readCString(buf, 0));
-
         res.end(JSON.stringify(devices));
     });
 
+    // learn mode for monitor devices
+    RED.httpAdmin.get("/board/learn", function (req, res) {
+
+        // allocate the return buffer here for the JSON response, C routine does not do malloc()
+        var buf = Buffer.alloc(500);
+
+        var iTimeOut = 10; // 10 seconds
+
+        // Call discovery function
+        var ret = libradio.openThings_deviceList(buf, true);;
+        var devices = JSON.parse(ref.readCString(buf, 0));
+        res.end(JSON.stringify(devices));
+    });
 
 }

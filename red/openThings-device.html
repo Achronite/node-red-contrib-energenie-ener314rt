@@ -4,7 +4,9 @@
         defaults: {
             name: {value:"MiHome Adapter+"},
             productId: {required:true,validate:RED.validators.number()},
-            deviceId:  {required:true,validate:RED.validators.number()}
+            product:   {value:"",required:false},
+            deviceId:  {required:true,validate:RED.validators.number()},
+            control:   {value:"Control"}
         },
         label: function() {
             return (this.name || (this.productId+":"+this.deviceId) || ("C+ "+ this.deviceId) || this.paletteLabel); },
@@ -12,7 +14,7 @@
         oneditprepare: function() {
             
             function scanForDevices(selected_device){
-                $('#node-config-input-scan').addClass('disabled')
+                $('#node-config-discover').addClass('disabled')
                 $('#node-config-input-device').attr('disabled', 'disabled')
                 $('#node-config-input-device').append("<option value='' selected>Scanning for devices...</option>")
                 $.get('board/devices')
@@ -33,7 +35,7 @@
 
                             // add devices to drop down
                             resp.devices.forEach(function (device) {
-                                $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.productId + ":" + device.deviceId + '</option>');
+                                $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.product + ":" + device.productId + ":" + device.deviceId + ":" + device.control + ":" + device.joined + '</option>');
                             });
 
                             // show selected device
@@ -43,7 +45,7 @@
                             // enable dropdown
                             $('#node-config-input-device').removeAttr('disabled')
                         }
-                        $('#node-config-input-scan').removeClass('disabled');
+                        $('#node-config-discover').removeClass('disabled');
                     })
 
                     .fail(function () {
@@ -51,10 +53,51 @@
                     })
             }
 
-            scanForDevices(this.deviceId);   // scan on entry to form
-            $('#node-config-input-scan').click(function () {
-                if (!$('#node-config-input-scan').hasClass('disabled')) {
-                    scanForDevices(this.deviceId)
+            function learnDevice(selected_device){
+                 $('#node-config-discover').addClass('disabled')
+            //     $('#node-config-input-device').attr('disabled', 'disabled')
+                 $('#node-config-input-device').append("<option value='' selected>Scanning for devices...</option>")
+                $.get('board/learn')
+                    .done(function (data) {
+                        var resp = JSON.parse(data);
+                        //RED.notify("scan devices: "+resp.numDevices, "warn" );
+
+                        // Clear down select array
+                        $('#node-config-input-device').empty()
+                        if (!resp || resp.numDevices == 0) {
+                            $('#node-config-input-device').append("<option value='' selected>No Devices found</option>")
+                            RED.notify("No devices found.", "error");
+                        } else {
+                            if (resp.numDevices==1)
+                                $('#node-config-input-device').append("<option value='' selected>"+resp.numDevices + " device found</option>")
+                            else
+                                $('#node-config-input-device').append("<option value='' selected>"+resp.numDevices + " devices found</option>");
+
+                            // add devices to drop down
+                            resp.devices.forEach(function (device) {
+                                $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.product + ":" + device.productId + ":" + device.deviceId + ":" + device.control + ":" + device.joined + '</option>');
+                            });
+
+                            // show selected device
+                            if (selected_device) {
+                                $('#node-config-input-device').val(selected_device);
+                            }
+                            // enable dropdown
+                            $('#node-config-input-device').removeAttr('disabled')
+                        }
+                        $('#node-config-discover').removeClass('disabled');
+                    })
+
+                    .fail(function () {
+                        RED.notify("Something went wrong discovering OpenThing devices", "error")
+                    })
+            }
+
+            scanForDevices(this.deviceId);   // scan on entry to get already added devices (requires monitoring active)
+
+            $('#node-config-discover').click(function () {
+                if (!$('#node-config-discover').hasClass('disabled')) {
+                    learnDevice(this.deviceId)
                 }
             })
             // Store device details on 'select' (not 'change')
@@ -63,9 +106,15 @@
                 if (deviceName.length>0){
                     // Device details are stored in the text
                     var dev = deviceName.split(":");
-                    $('#node-config-input-productId').val(dev[0]);
-                    $('#node-config-input-deviceId').val(dev[1]);
-                    //$('#node-config-input-productId').val = deviceName;
+                    $('#node-config-input-product').val(dev[0]);
+                    $('#node-config-input-productId').val(dev[1]);
+                    $('#node-config-input-deviceId').val(dev[2]);
+                    if (dev[3] == 1){
+                        $('#node-config-input-control').val("Control & Monitor");
+                    } else {
+                        $('#node-config-input-control').val("Monitor");
+                    }
+                    //$('#node-config-input-product').val = deviceName;
                 }
             })
         }
@@ -81,15 +130,18 @@
     <div class="form-row">
         <label for="node-config-input-device"><i class="fa fa-server"></i> Devices</label>
         <select id="node-config-input-device" style="width: 60%;"></select>
-        <a id="node-config-input-scan" class="editor-button"><i class="fa fa-search"></i></a>
+        <a id="node-config-discover" class="editor-button"><i class="fa fa-search"></i></a>
     </div>
     <div class="form-row">
-        <label for="node-config-input-productId"><i class="fa fa-plug"></i> Product</label>
+        <label for="node-config-input-product"><i class="fa fa-plug"></i> Product</label>
+        <input type="text" id="node-config-input-product" disabled>
+    </div>  
+    <div class="form-row">
+        <label for="node-config-input-productId"><i class="fa fa-plug"></i> Product ID</label>
         <input type="text" id="node-config-input-productId" disabled>
     </div>  
     <div class="form-row">
-        <label for="node-config-input-deviceId"><i class="fa fa-plug"></i> Device ID</label>
-        <input type="text" id="node-config-input-deviceId" disabled>
+        <label for="node-config-input-control"><i class="fa fa-power-off"></i> Type</label>
+        <input type="text" id="node-config-input-control" disabled>
     </div>  
-
 </script>

@@ -74,7 +74,9 @@ int init_ener314rt(int lock)
                     initialised = true;
                     printf("init_ener314(): mutex created & locked\n");
                     radio_init();
-                    // place radio into standby mode for now, the nodes will change this later anyway
+
+                    // place radio in known modulation and mode - OOK:Standby
+                    radio_modulation(RADIO_MODULATION_OOK);
                     radio_standby();
 
                     if (!lock)
@@ -241,7 +243,6 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
             }
         }
     }
-    //unlock_ener314rt();
     return recs;
 };
 
@@ -277,4 +278,25 @@ int pop_RxMsg(struct RADIO_MSG *rxMsg)
     printf("pop_RxMsg(%d): %d\n", ret, (int)rxMsg->t);
 
     return ret;
+}
+
+/*
+** get_Rxmsg() - returns message msgNum from Rx queue
+**
+** This performs a simple memory copy, and does not perform ANY checking that message is valid
+**
+*/
+int get_RxMsg(int msgNum, struct RADIO_MSG *rxMsg)
+{
+    if (msgNum<0 || msgNum>=RX_MSGS){
+        // out of range
+        return -1;
+    }
+
+    memcpy(rxMsg->msg, RxMsgs[msgNum].msg, sizeof(rxMsg->msg));
+    rxMsg->t = RxMsgs[msgNum].t;
+
+    printf("get_RxMsg(%d): %d\n", msgNum, (int)rxMsg->t);
+
+    return (int)rxMsg->t;
 }

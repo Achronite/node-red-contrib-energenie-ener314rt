@@ -81,6 +81,7 @@ static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
 
 /* OpenThings Command Paramters - 0x80 added*/
 #define OTCP_SWITCH_STATE    0xF3
+#define OTCP_JOIN            0xEA
 
 // OpenThings record data types
 #define	OT_UINT   0x00
@@ -98,8 +99,10 @@ static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
 #define	OT_FLOAT  0xF0    // Not implemented yet
 
 /* OpenThings Commands */
+// PARAM, TYPEID, VALUE BYTES
 #define OTC_SWITCH_ON  0xF3, 0x01, 0x01, 0x00
 #define OTC_SWITCH_OFF 0xF3, 0x01, 0x00, 0x00
+#define OTC_JOIN_ACK   0x6A, 0x01             // pyenergenie says not "wr", so dont add 0x80 (0xEA) to JOIN (0x6A) - may need shortening as no value
 
 
 // Default keys for OpenThings encryption and decryption
@@ -117,6 +120,7 @@ static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
 #define OT_INDEX_R1 8
 #define OT_INDEX_R1_VALUE 10 
 
+#define OTA_MSGLEN 12       // Length with only 1 command without value
 
 
 // OpenThings record
@@ -140,6 +144,7 @@ struct OT_DEVICE {
     unsigned char mfrId;
     unsigned char productId;
     bool          control;
+    bool          joined;
     char          product[14];
 };
 
@@ -150,26 +155,28 @@ struct OT_PRODUCT {
     unsigned char mfrId;
     char productId;
     bool control;
-    char product[14];
+    char product[15];
 };
 // OpenThings FSK products (known)  [{mfrId, productId, control (boolean), product}]
 #define NUM_OT_PRODUCTS 8
 static struct OT_PRODUCT OTproducts[NUM_OT_PRODUCTS] = {
-    {4, 0x00, true,  "Unknown"      },
-    {4, 0x01, false, "Monitor Plug" },
-    {4, 0x02, true,  "Adaptor Plus" },
-    {4, 0x05, false, "House Monitor"},
-    {4, 0x03, true,  "eTRV"         },
-    {4, 0x0C, false, "Motion Sensor"},
-    {4, 0x0D, false, "Open Sensor"  },
-    {4, 0x00, true,  "Thermostat",  }   // I dont know the productId of this yet
+    {4, 0x00, true,  "Unknown"       },
+    {4, 0x01, false, "Monitor Plug"  },
+    {4, 0x02, true,  "Adapter Plus"  },
+    {4, 0x05, false, "House Monitor" },
+    {4, 0x03, true,  "Radiator Valve"},
+    {4, 0x0C, false, "Motion Sensor" },
+    {4, 0x0D, false, "Open Sensor"   },
+    {4, 0x0E, true,  "Thermostat"    }   // I dont know the productId of this yet, guessing at 0E
 };
 
 /***** FUNCTION PROTOTYPES *****/
 //extern void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
 extern unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits);
-extern unsigned char openThings_deviceList(char *devices );
+extern unsigned char openThings_deviceList(char *devices, bool scan);
 extern char openThings_receive(char *OTmsg );
+unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceId, unsigned char xmits);
+void openthings_scan(int iTimeOut);
 //unsigned char openThings_learn(unsigned char iTimeOut, char *devices)
 
 #endif

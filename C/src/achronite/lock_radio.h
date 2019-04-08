@@ -27,6 +27,7 @@ int lock_ener314rt();
 int unlock_ener314rt(void);
 int empty_radio_Rx_buffer(enum deviceTypes rxMode);
 int pop_RxMsg(struct RADIO_MSG *rxMsg);
+int get_RxMsg(int msgNum, struct RADIO_MSG *rxMsg);
 
 #endif
 
