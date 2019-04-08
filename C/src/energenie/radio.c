@@ -396,7 +396,16 @@ void radio_send_payload(uint8_t *payload, uint8_t len, uint8_t times)
     HRF_writereg(HRF_ADDR_FIFOTHRESH, len - 1);
 
     /* TRANSMIT: Transmit a number of payloads back to back */
-    TRACE_OUTS("tx multiple payloads in a single burst\n");
+    TRACE_OUTS("tx multiple payloads in a single burst, payload:\n");
+
+#if defined(TRACE)
+    for (i = 0; i < len; i++)
+    {
+        TRACE_OUTN(payload[i]);
+        TRACE_OUTC(',');
+    }
+    TRACE_NL();
+#endif
 
     // send a number of payload repeats for the whole packet burst
     for (i = 0; i < times; i++)
@@ -501,7 +510,6 @@ void radio_finished(void)
     // clear globals
     radio_data.modu = 99;
     radio_data.mode = 99;
-
 }
 
 /* @Achronite - March 2019
