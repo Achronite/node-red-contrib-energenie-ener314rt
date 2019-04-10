@@ -8,8 +8,8 @@
 ** Purpose: Node-Red wrapper for call to monitor only node for ENER314-RT FSK/OpenThings (aka Monitor) devices
 **
 */
-var ref = require('ref');
-var libradio = require('./libradio');
+// var ref = require('ref');
+// var libradio = require('./libradio');
 
 module.exports = function (RED) {
 
@@ -26,7 +26,7 @@ module.exports = function (RED) {
 
         // CHECK CONFIG
         if (!deviceId || device == null || !board || board == null) {
-            this.status({ fill: "red", shape: "ring", text: "not configured" });
+            this.status({ fill: "red", shape: "ring", text: "Not configured" });
             return false;
         } else {
             this.status({ fill: "grey", shape: "dot", text: "Waiting…" });
@@ -35,8 +35,6 @@ module.exports = function (RED) {
                 if (OTmsg.deviceId == deviceId) {
                     // received event for me
                     
-                    //console.log("@@@OT-monitor: received monitor event for me! recs=" + OTmsg.recCount);
-
                     if (OTmsg.SWITCH_STATE) {
                         node.status({ fill: "green", shape: "dot", text: "ON" });
                     } else {
