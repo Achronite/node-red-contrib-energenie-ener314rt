@@ -13,9 +13,8 @@
 
 var ref = require('ref');
 var libradio = require('./libradio');
-var async = require('async');
+//var async = require('async');
 var inited = false;
-
 
 module.exports = function (RED) {
     function ener314rtAdaptor(config) {
@@ -42,14 +41,10 @@ module.exports = function (RED) {
 
         // monitor mode - non-async version - this works, but does seem to use the main thread loop
         getMonitorMsg = () => {
-            //console.log("ENER314-RT: getMonitorMsg()");
             const buf = Buffer.alloc(500);
             //res =
-            process.stdout.write("{");
             var recs = libradio.openThings_receive(buf);
-            console.log("}");
             if (recs > 0) {
-                console.log("ENER314-RT: got message recs=" + recs);
                 var payload = ref.readCString(buf, 0);
                 var msg = JSON.parse(payload);
 
@@ -58,13 +53,12 @@ module.exports = function (RED) {
             } else {
                 // no message
             }
-            console.log(`ENER314-RT: getMonitorMsg() done`);
         }
 
         // start the monitoring loop when we have listeners
         this.events.once('newListener', (event, listener) => {
             if (event === 'monitor') {
-                console.log("ENER314-RT: monitor listener detected, starting monitor loop");
+                scope.log("Monitor listener detected, starting monitor loop");
                 // Do monitoring as we have listeners!
                 myInterval = setInterval(getMonitorMsg, config.interval);
             }
@@ -74,7 +68,6 @@ module.exports = function (RED) {
         this.on('close', function (done) {
             clearInterval(myInterval);
             libradio.close_ener314rt();
-            console.log("ENER314-RT: radio closed");
             done();
         });
 

@@ -44,7 +44,7 @@ int init_ener314rt(int lock)
     if (!initialised)
     {
         //initialise mutex
-        printf("init_ener314(): initialising\n");
+        TRACE_OUTS("init_ener314(): initialising\n");
 
         // set mutex type to not deadlock if relocking the same mutex
         if ((ret = pthread_mutexattr_init(&attr)) == 0)
@@ -54,7 +54,6 @@ int init_ener314rt(int lock)
                 if ((ret = pthread_mutex_init(&radio_mutex, NULL)) != 0)
                 {
                     // mutex failure
-                    printf("init_ener314(): mutex_init failed, ret=%d\n", ret);
                     TRACE_OUTS("init_ener314(): mutex init failed err=");
                     TRACE_OUTN(ret);
                     TRACE_NL();
@@ -62,7 +61,7 @@ int init_ener314rt(int lock)
                     if (lock && (ret == EBUSY))
                     {
                         // another process has the lock; lets spin on the lock assuming that another thread has initialised the radio & mutex
-                        printf("init_ener314(): initialised already, await lock\n");
+                        TRACE_OUTS("init_ener314(): initialised already, await lock\n");
                         return pthread_mutex_lock(&radio_mutex);
                     }
                 }
@@ -72,7 +71,7 @@ int init_ener314rt(int lock)
                 {
                     // thread safe, set initialised
                     initialised = true;
-                    printf("init_ener314(): mutex created & locked\n");
+                    TRACE_OUTS("init_ener314(): mutex created & locked\n");
                     radio_init();
 
                     // place radio in known modulation and mode - OOK:Standby
@@ -85,16 +84,7 @@ int init_ener314rt(int lock)
                         ret = pthread_mutex_unlock(&radio_mutex);
                     }
                 }
-                printf("init_ener314(): initialised, ret=%d\n", ret);
             }
-            else
-            {
-                printf("init_ener314(): settype failed ret=%d\n", ret);
-            }
-        }
-        else
-        {
-            printf("init_ener314(): exattr_init failed ret=%d\n", ret);
         }
     }
     return ret;
@@ -112,16 +102,14 @@ int lock_ener314rt()
     // Always check that the adaptor & mutex have been initialised, and if not do it
     if (!initialised)
     {
-        printf("lock_ener314rt(): attempt to lock before lock initialised, initialising lock\n");
         // init and lock
         if ((ret = init_ener314rt(true)) != 0)
         {
             // init already done, not locked
-            printf("lock_ener314rt() init failed %d, locking\n", ret);
             ret = pthread_mutex_lock(&radio_mutex);
             if (ret == EDEADLK)
             {
-                printf("lock_ener314rt(): mutex already locked!\n");
+                // Mutex already locked!
                 ret = 0;
             }
         };
@@ -129,23 +117,24 @@ int lock_ener314rt()
     else
     {
         // lock radio now
-        printf("[lock(%d", (int)pthread_self());
-        fflush(stdout);
+        TRACE_OUTS("[lock-");
+        TRACE_OUTN((int)pthread_self());
+
         ret = pthread_mutex_lock(&radio_mutex);
-        printf("-%d-", (int)pthread_self());
-        fflush(stdout);
+        //printf("-%d-", (int)pthread_self());
+        //fflush(stdout);
 
         // cater for if we already have the lock
         if (ret != 0)
         {
             if (ret == EDEADLK)
             {
-                printf("ERROR lock_ener314rt(%d): mutex already locked!\n", ret);
+                // mutex already locked!
                 ret = 0;
             }
             else
             {
-                printf("ERROR lock_ener314rt(%d): failed\n", ret);
+                //printf("ERROR lock_ener314rt(%d): failed\n", ret);
             }
             //printf("lock_ener314rt(%d): mutex got\n",deviceMode);
         }
@@ -158,8 +147,9 @@ int unlock_ener314rt(void)
 {
     int ret = 0;
     //unlock mutex
-    printf("%d)]", (int)pthread_self());
-    fflush(stdout);
+    TRACE_OUTN((int)pthread_self());
+    TRACE_OUTS("-unlock]");
+
     ret = pthread_mutex_unlock(&radio_mutex);
     if (ret != 0)
     {
@@ -176,20 +166,19 @@ int unlock_ener314rt(void)
 void close_ener314rt(void)
 {
     //Elegant shutdown of ener314rt
-    printf("close_ener314(): called\n");
+    TRACE_OUTS("close_ener314(): called\n");
     if (lock_ener314rt(DT_MONITOR) == 0)
     {
         // we have the lock, do all the tidying
         radio_finished();
         initialised = false;
-        deviceType = DT_CONTROL;    // set back to control mode only
+        deviceType = DT_CONTROL; // set back to control mode only
         pthread_mutex_destroy(&radio_mutex);
-        printf("close_ener314(): done\n");
-        fflush(stdout);
+        TRACE_OUTS("close_ener314(): done\n");
     }
     else
     {
-        printf("close_ener314(): couldnt get lock\n");
+        TRACE_OUTS("close_ener314(): couldnt get lock\n");
     }
 }
 
@@ -213,8 +202,7 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
     if (rxMode == DT_MONITOR)
         deviceType = DT_MONITOR;
 
-
-    if (deviceType == DT_MONITOR  || rxMode == DT_LEARN)
+    if (deviceType == DT_MONITOR || rxMode == DT_LEARN)
     {
         // only receive data if we are in monitor mode
         // Set FSK mode receive for OpenThings devices (Energenie OOK devices dont generally transmit!)
@@ -238,7 +226,7 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
             }
             else
             {
-                printf("empty_radio_Rx_buffer(): error getting payload\n");
+                TRACE_OUTS("empty_radio_Rx_buffer(): error getting payload\n");
                 break;
             }
         }
@@ -255,7 +243,7 @@ int pop_RxMsg(struct RADIO_MSG *rxMsg)
 {
     int ret = -1;
 
-    printf("<%d-%d>", pRxMsgHead, pRxMsgTail);
+    //printf("<%d-%d>", pRxMsgHead, pRxMsgTail);
     if (pRxMsgHead != pRxMsgTail)
     {
         memcpy(rxMsg->msg, RxMsgs[pRxMsgTail].msg, sizeof(rxMsg->msg));
@@ -275,7 +263,7 @@ int pop_RxMsg(struct RADIO_MSG *rxMsg)
         }
     }
 
-    printf("pop_RxMsg(%d): %d\n", ret, (int)rxMsg->t);
+    //printf("pop_RxMsg(%d): %d\n", ret, (int)rxMsg->t);
 
     return ret;
 }
@@ -288,7 +276,8 @@ int pop_RxMsg(struct RADIO_MSG *rxMsg)
 */
 int get_RxMsg(int msgNum, struct RADIO_MSG *rxMsg)
 {
-    if (msgNum<0 || msgNum>=RX_MSGS){
+    if (msgNum < 0 || msgNum >= RX_MSGS)
+    {
         // out of range
         return -1;
     }
@@ -296,7 +285,7 @@ int get_RxMsg(int msgNum, struct RADIO_MSG *rxMsg)
     memcpy(rxMsg->msg, RxMsgs[msgNum].msg, sizeof(rxMsg->msg));
     rxMsg->t = RxMsgs[msgNum].t;
 
-    printf("get_RxMsg(%d): %d\n", msgNum, (int)rxMsg->t);
+    //printf("get_RxMsg(%d): %d\n", msgNum, (int)rxMsg->t);
 
     return (int)rxMsg->t;
 }
