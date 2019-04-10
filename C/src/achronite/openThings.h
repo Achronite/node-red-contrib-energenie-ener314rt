@@ -26,58 +26,8 @@ struct OT_PARAM {
   char paramName[15];
   char paramId;
 };
-
 #define NUM_OT_PARAMS 46
-// OpenThings FSK paramters (known)  [{ParamName, paramId}]
-// I've moved the likely ones to the top for speed
-static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
-    {"UNKNOWN",         0x00},
-    {"FREQUENCY",       0x66},
-    {"REAL_POWER",      0x70},
-    {"REACTIVE_POWER",  0x71},
-    {"VOLTAGE",         0x76},
-    {"ALARM",           0x21},
-    {"DEBUG_OUTPUT",    0x2D},
-    {"IDENTIFY",        0x3F},
-    {"SOURCE_SELECTOR", 0x40}, // write only
-    {"WATER_DETECTOR",  0x41},
-    {"GLASS_BREAKAGE",  0x42},
-    {"CLOSURES",        0x43},
-    {"DOOR_BELL",       0x44},
-    {"ENERGY",          0x45},
-    {"FALL_SENSOR",     0x46},
-    {"GAS_VOLUME",      0x47},
-    {"AIR_PRESSURE",    0x48},
-    {"ILLUMINANCE",     0x49},
-    {"LEVEL",           0x4C},
-    {"RAINFALL",        0x4D},
-    {"APPARENT_POWER",  0x50},
-    {"POWER_FACTOR",    0x51},
-    {"REPORT_PERIOD",   0x52},
-    {"SMOKE_DETECTOR",  0x53},
-    {"TIME_AND_DATE",   0x54},
-    {"VIBRATION",       0x56},
-    {"WATER_VOLUME",    0x57},
-    {"WIND_SPEED",      0x58},
-    {"GAS_PRESSURE",    0x61},
-    {"BATTERY_LEVEL",   0x62},
-    {"CO_DETECTOR",     0x63},
-    {"DOOR_SENSOR",     0x64},
-    {"EMERGENCY",       0x65},
-    {"GAS_FLOW_RATE",   0x67},
-    {"REL_HUMIDITY",    0x68},
-    {"CURRENT",         0x69},
-    {"JOIN",            0x6A},
-    {"LIGHT_LEVEL",     0x6C},
-    {"MOTION_DETECTOR", 0x6D},
-    {"OCCUPANCY",       0x6F},
-    {"ROTATION_SPEED",  0x72},
-    {"SWITCH_STATE",    0x73},
-    {"TEMPERATURE",     0x74},
-    {"WATER_FLOW_RATE", 0x77},
-    {"WATER_PRESSURE",  0x78},
-    {"TEST",            0xAA}
-};
+
 
 /* OpenThings Command Paramters - 0x80 added*/
 #define OTCP_SWITCH_STATE    0xF3
@@ -157,18 +107,8 @@ struct OT_PRODUCT {
     bool control;
     char product[15];
 };
-// OpenThings FSK products (known)  [{mfrId, productId, control (boolean), product}]
 #define NUM_OT_PRODUCTS 8
-static struct OT_PRODUCT OTproducts[NUM_OT_PRODUCTS] = {
-    {4, 0x00, true,  "Unknown"       },
-    {4, 0x01, false, "Monitor Plug"  },
-    {4, 0x02, true,  "Adapter Plus"  },
-    {4, 0x05, false, "House Monitor" },
-    {4, 0x03, true,  "Radiator Valve"},
-    {4, 0x0C, false, "Motion Sensor" },
-    {4, 0x0D, false, "Open Sensor"   },
-    {4, 0x0E, true,  "Thermostat"    }   // I dont know the productId of this yet, guessing at 0E
-};
+
 
 /***** FUNCTION PROTOTYPES *****/
 //extern void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
