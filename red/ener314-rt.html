@@ -10,76 +10,7 @@
 				}}
         },
         label: function() {
-            return (this.name); },
-/*
-        oneditprepare: function() {
-           
-            function scanForDevices(selected_device){
-                $('#node-config-input-scan').addClass('disabled')
-                $('#node-config-input-device').attr('disabled', 'disabled')
-                $('#node-config-input-device').append("<option value='' selected>Scanning for devices...</option>")
-                $.get('energenie/devices')
-                    .done(function (data) {
-                        var resp = JSON.parse(data);
-                        //RED.notify("scan devices: "+resp.numDevices, "warn" );
-
-                        // Clear down select array
-                        $('#node-config-input-device').empty()
-                        if (resp.numDevices=1)
-                            $('#node-config-input-device').append("<option value='' selected>"+resp.numDevices + " device found</option>")
-                        else
-                            $('#node-config-input-device').append("<option value='' selected>"+resp.numDevices + " devices found</option>");
-
-                        if (!resp || resp.numDevices <= 0) {
-                            $('#node-config-input-device').append("<option value='' selected>No Devices</option>")
-                            RED.notify("No devices found.", "error");
-                        } else {
-                            // add devices to drop down
-                            resp.devices.forEach(function (device) {
-                                $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.productId + ":" + device.deviceId + '</option>');
-                            });
-
-                            // show selected device
-                            if (selected_device) {
-                                $('#node-config-input-device').val(selected_device);
-                            }
-                            // enable dropdown
-                            $('#node-config-input-device').removeAttr('disabled')
-                        }
-                        $('#node-config-input-scan').removeClass('disabled');
-                    })
-
-                    .fail(function () {
-                        RED.notify("Something went wrong discovering OpenThing devices", "error")
-                    })
-            }
-
-            //scanForDevices(this.deviceId);   // scan on entry to form
-            $('#node-config-input-scan').click(function () {
-                if (!$('#node-config-input-scan').hasClass('disabled')) {
-                    scanForDevices(this.deviceId)
-                }
-            })
-            // Store device details on 'select' (not 'change')
-            $('#node-config-input-device').on('change', function () {
-                var deviceName = $('#node-config-input-device option:selected').text()
-                if (deviceName.length>0){
-                    // Device details are stored in the text
-                    var dev = deviceName.split(":");
-                    $('#node-config-input-productId').val(dev[0]);
-                    $('#node-config-input-deviceId').val(dev[1]);
-                    //$('#node-config-input-productId').val = deviceName;
-                }
-            })
-        }  //oneditprepare()
-
-    <div class="form-row">
-        <label for="node-config-input-device"><i class="fa fa-server"></i> Devices</label>
-        <select id="node-config-input-device" style="width: 60%;"></select>
-        <a id="node-config-input-scan" class="editor-button"><i class="fa fa-search"></i></a>
-    </div>
-*/
-
+            return (this.name); }
     });
 </script>
 
