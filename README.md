@@ -27,57 +27,32 @@ NOTE: This module does not currently support the older 'Pi-mote' board or the Mi
 
 3) Perform one-time only setup to teach your 'Control' devices to operate with your selected zone code(s) switch number(s) combinations (if applicable): 
 
-* Create a simple test flow in node-red.  The simplest way is to wire an inject node with payload of boolean 'true' as an input to your new 'ook-switch' node, for example:
-```
-[
-    {
-        "id": "448bf248.0f7efc",
-        "type": "inject",
-        "z": "c914364f.3616e",
-        "name": "",
-        "topic": "",
-        "payload": "true",
-        "payloadType": "bool",
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "x": 170,
-        "y": 440,
-        "wires": [
-            [
-                "dbacbd8.6f4254"
-            ]
-        ]
-    },
-    {
-        "id": "dbacbd8.6f4254",
-        "type": "ook-switch",
-        "z": "c914364f.3616e",
-        "name": "My Switch",
-        "zone": "123456",
-        "switchNum": 1,
-        "x": 340,
-        "y": 440,
-        "wires": [
-            []
-        ]
-    }
-]
-```
-* Set the parameters in the ook-switch node to uniquely reference your device (following the rules below).
-* Deploy your flow.
+* Drag a blue node onto the canvas
+* Open the node by double clicking
+* If required, add a board config (only done once for all devices), by clicking pencil next to board, and then clicking 'add'
+* Set the parameters in the Control node that you wish to uniquely reference your device (following the zone rules below).
 * Hold the button on your device until it starts to flash. 
-* Press the button on the inject node to send the 'switch-on' (true) payload.
-* The device should then learn the zone code being broadcast by your flow, all subsequent calls using the same zone/switch number will cause your device to switch.
+* Click the teach (mortar board) icon in the control node properties.
+* The device should learn the zone code being broadcast by the teach request, the light should stop flashing when successful.
+* All subsequent calls using the same zone/switch number will cause your device to switch. Pressing the teach button again will cause the device to switch on.
 
 TIP: If you already know the house/zone code assigned, for example to an RF hand controller, you can use that in your node to make the device work with both.
 
-4) Perform one-time only setup to learn your 'Control & Monitor' devices (if applicable)
-* TBD
+4) Perform one-time only setup to discover your 'Monitor' and 'Control & Monitor' devices (if applicable)
+
+* Drag the pink or purple nodes onto the canvas
+* Open the node by double clicking
+* If required, add a board config (only done once for all devices), by clicking pencil next to board, and then clicking 'add'
+* Click 'pencil' icon to add a new device
+* The device config node will open and perform an auto-scan; after 10 seconds it returns a list of devices that it has found. I do not believe that you need to get the device to 'join' the network by holding the button.  You can click the search button if the device is not found.  If you find that it is still not working, please raise a bug request.
+* Select the device in the 'Devices' drop down
+* The Product name, ID and type will populate
+* (Optional) Change the 'Name' of the device if desired
+* Click 'Add' to finish configuration of the device
+* Click 'Done'
 
 
-## 'Control Only' OOK Devices - Zone Rules
+## 'Control Only' Zone Rules
 
 * Each Energenie 'Control only' or OOK based device can be assigned to a specifc zone (or house code) and a switch number.
 * Each zone is encoded as a 20-bit address (1-1048575 decimal).
@@ -88,27 +63,59 @@ TIP: If you already know the house/zone code assigned, for example to an RF hand
 
 ## Supported Devices
 
-This node works with all switchable (or 'Control') devices, including devices in the OOK & FSK (OpenThings) ranges.
+This node works with all radio devices. It was designed to work with all switchable devices, including devices in the OOK & FSK (OpenThings) ranges.
 
-Here is a list of what I believe this node **should** be compatible with:
+These nodes should work with all Energenie radio based devices. I only have a small selection of devices, so have only tested it with these.  Here is a list of what I believe each node **should** support:
 
-OOK Node:
-* ENER002 Green Button Socket (tested)
-* ENER010 4 Gang Extension lead
-* MIHO002 Smart Plug with Blue Text
-* MIHO007 Double Wall Socket White (tested)
-* MIHO008 Single Light Switch White
-* MIHO014 In-line Controller
-* MIHO015 In-line Relay
-* MIHO021 Double Wall Socket Nickel
-* MIHO022 Double Wall Socket Chrome
-* MIHO023 Double Wall Socket Brushed Steel
-* MIHO024 Single Light Switch Nickel
-* MIHO025 Single Light Switch Chrome
-* MIHO026 Single Light Switch Steel
+Control Node (Blue):
+* ENER002: Green Button Socket **(tested)**
+* ENER010: 4 Gang Extension lead
+* MIHO002: Smart Plug with Blue Text
+* MIHO007: Double Wall Socket White **(tested)**
+* MIHO008: Single Light Switch White
+* MIHO014: In-line Controller
+* MIHO015: In-line Relay
+* MIHO021: Double Wall Socket Nickel
+* MIHO022: Double Wall Socket Chrome
+* MIHO023: Double Wall Socket Brushed Steel
+* MIHO024: Single Light Switch Nickel
+* MIHO025: Single Light Switch Chrome
+* MIHO026: Single Light Switch Steel
 
-OpenThings Node:
-* NEW: MIHO005: MiHome Adapter Plus (switching only) (tested)
+Control & Monitor Switch Node (Purple):
+* MIHO005: Purple MiHome Adapter Plus (switching and monitoring) **(tested)**
+
+Monitor Node (Pink):
+* MIHO004: Pink MiHome Monitor Adapter
+* MIHO005: MiHome Adapter Plus (monitoring only) **(tested)**
+* MIHO006: House Monitor
+* MIHO013: MiHome Heating TRV (monitoring only)
+* MIHO032: Motion sensor
+* MIHO033: Open sensor
+
+NOT SUPPORTED:
+Specific nodes will be required to control the other 'control & monitor' devices such as the MiHome Heating TRV.  I do not own any of these devices so it is difficult to create code for them.  It *may* be possible to switch the TRV with the Control & Monitor Switch node, but this is untested.
+
+
+## Processing Monitor Messages
+
+The 'Control' & 'Control & Monitor' nodes emit messages that conform to the OpenThings standard.
+I use the *SWITCH_STATE* parameter to set the *node.status* of the node, but there are also other parameters that you can use.
+
+For example the 'Adapter Plus' returns the following parameters in the *msg.payload*:
+```
+timestamp: <numeric 'epoch based' timestamp, of when message was read from the radio adapter>
+REAL_POWER: <power in Watts being consumed>
+REACTIVE_POWER: <Power in volt-ampere reactive (VAR). Reactive power exists when the current and voltage are not in phase.>
+VOLTAGE: <Power in Volts>            
+FREQUENCY: <Radio Frequency in Hz>
+SWITCH_STATE: <Device State, 0 = off, 1 = on
+```
+Other devices may return other parameters which you can use. I have provided generic name and parameter mapping for the known values for received messages.
+Connect up a debug node to see what your specific devices output.
+
+A full parameter list can be found in C/src/achronite/openThings.c if required.
+
 
 ## Built With
 
@@ -117,9 +124,10 @@ OpenThings Node:
 
 ## Authors
 
+* **Achronite** - *Node-Red wrappers, javascript and OOK-Send C code* - [Achronite](https://github.com/Achronite/node-red-contrib-energenie-ener314)
 * **Energenie** - *Radio C library* - [Energenie](https://github.com/Energenie)
 * **David Whale** - *Python implementation* - [whaleygeek](https://github.com/whaleygeek/pyenergenie)
-* **Achronite** - *Node-Red wrappers, javascript and OOK-Send C code* - [Achronite](https://github.com/Achronite/node-red-contrib-energenie-ener314)
+
 
 ## License
 
@@ -129,11 +137,11 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 The ENER314-RT board is a full receive/transmit radio that is programmable from the SPI interface of the
 Raspberry Pi. The board and the underlying 'C' code that this modules uses is capable of supporting all 
-of the MiHome monitor devices but nodes for these have yet to be added.
+of the MiHome monitor devices.
 
 Please raise any bugs, questions or queries using the github issues link below:
 
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - January 2019
+@Achronite - April 2019
