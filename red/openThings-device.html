@@ -3,10 +3,10 @@
         category: 'config',
         defaults: {
             name: {value:"MiHome Adapter+"},
-            productId: {required:true,validate:RED.validators.number()},
+            productId: {required:true},
             product:   {value:"",required:false},
-            deviceId:  {required:true,validate:RED.validators.number()},
-            control:   {value:"Control"}
+            deviceId:  {required:true},
+            control:   {value:"Control", required:false}
         },
         label: function() {
             return (this.name || (this.productId+":"+this.deviceId) || ("C+ "+ this.deviceId) || this.paletteLabel); },
@@ -107,8 +107,8 @@
                     // Device details are stored in the text
                     var dev = deviceName.split(":");
                     $('#node-config-input-product').val(dev[0]);
-                    $('#node-config-input-productId').val(dev[1]);
-                    $('#node-config-input-deviceId').val(dev[2]);
+                    $('#node-config-input-productId').val(Number(dev[1]));
+                    $('#node-config-input-deviceId').val(Number(dev[2]));
                     if (dev[3] == 1){
                         $('#node-config-input-control').val("Control & Monitor");
                     } else {
@@ -132,6 +132,10 @@
         <select id="node-config-input-device" style="width: 60%;"></select>
         <a id="node-config-discover" class="editor-button"><i class="fa fa-search"></i></a>
     </div>
+    <div class="form-row">
+        <label for="node-config-input-deviceId"><i class="fa fa-id-card"></i> Device ID</label>
+        <input type="text" id="node-config-input-deviceId" disabled>
+    </div>  
     <div class="form-row">
         <label for="node-config-input-product"><i class="fa fa-plug"></i> Product</label>
         <input type="text" id="node-config-input-product" disabled>
