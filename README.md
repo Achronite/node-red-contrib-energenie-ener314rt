@@ -67,7 +67,7 @@ This node works with all radio devices. It was designed to work with all switcha
 
 I have a small selection of energenie devices, so have only tested it with these.  Here is a list of what I believe each node **should** support:
 
-###Control Node (Blue):
+### Control Node (Blue):
 * ENER002: Green Button Socket **(tested)**
 * ENER010: 4 Gang Extension lead
 * MIHO002: Smart Plug with Blue Text
@@ -82,10 +82,10 @@ I have a small selection of energenie devices, so have only tested it with these
 * MIHO025: Single Light Switch Chrome
 * MIHO026: Single Light Switch Steel
 
-###Control & Monitor Switch Node (Purple):
+### Control & Monitor Switch Node (Purple):
 * MIHO005: Purple MiHome Adapter Plus (switching and monitoring) **(tested)**
 
-###Monitor Node (Pink):
+### Monitor Node (Pink):
 * MIHO004: Pink MiHome Monitor Adapter
 * MIHO005: MiHome Adapter Plus (monitoring only) **(tested)**
 * MIHO006: House Monitor
@@ -93,7 +93,7 @@ I have a small selection of energenie devices, so have only tested it with these
 * MIHO032: Motion sensor
 * MIHO033: Open sensor
 
-###NOT SUPPORTED:
+### NOT SUPPORTED:
 Specific nodes will be required to control the other 'control & monitor' devices such as the MiHome Heating TRV.  I do not own any of these devices so it is difficult to create code for them.  It *may* be possible to switch the TRV with the Control & Monitor Switch node, but this is untested.
 
 
