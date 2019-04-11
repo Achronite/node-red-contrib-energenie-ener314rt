@@ -34,7 +34,7 @@ module.exports = function (RED) {
 
             if (ret != 0)
                 // can also happen if something else has beat us to it!
-                node.error(`Unable to initialise Energenie ENER314-RT board error: ${ret}`);
+                scope.error(`Unable to initialise Energenie ENER314-RT board error: ${ret}`);
         };
 
         RED.nodes.createNode(this, config);
