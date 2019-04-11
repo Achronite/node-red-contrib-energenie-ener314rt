@@ -9,14 +9,14 @@ https://energenie4u.co.uk/
 You can use this node-red module to turn on and off the Energenie smart devices such as adapters, sockets, lights and relays 
 on a Raspberry Pi with an ENER314-RT board and node-red.
 
-Currently only switching of devices is supported.  'Control' and 'Control & Monitor' devices are supported from the legacy and MiHome range.
+'Control', 'Monitor' and 'Control & Monitor' radio based devices are supported from the legacy and MiHome range.
 
 There are 2 nodes for switching devices, one is based on the OOK transmission standard which covers all 'Control only' energenie devices, the other
 supports switching of FSK/OpenThings 'Control & Monitor' devices (see below for full list).
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
-NOTE: This module does not currently support the older 'Pi-mote' board or the MiHome hub (see below for the full supported list).
+NOTE: This module does not currently support the older boards (ENER314/Pi-Mote), the Energenie Wifi sockets or the MiHome hub (see below for the full supported list).
 
 
 ## Getting Started
@@ -25,7 +25,7 @@ NOTE: This module does not currently support the older 'Pi-mote' board or the Mi
 
 2) Install this module as you would any node-red module using the 'Manage palette' option in Node-Red GUI or by using npm.
 
-3) Perform one-time only setup to teach your 'Control' devices to operate with your selected zone code(s) switch number(s) combinations (if applicable): 
+3) Perform one-time only setup to **teach** your 'Control' devices to operate with your selected zone code(s) switch number(s) combinations (if applicable): 
 
 * Drag a blue node onto the canvas
 * Open the node by double clicking
@@ -38,7 +38,7 @@ NOTE: This module does not currently support the older 'Pi-mote' board or the Mi
 
 TIP: If you already know the house/zone code assigned, for example to an RF hand controller, you can use that in your node to make the device work with both.
 
-4) Perform one-time only setup to discover your 'Monitor' and 'Control & Monitor' devices (if applicable)
+4) Perform one-time only setup to **discover** your 'Monitor' and 'Control & Monitor' devices (if applicable)
 
 * Drag the pink or purple nodes onto the canvas
 * Open the node by double clicking
@@ -65,9 +65,9 @@ TIP: If you already know the house/zone code assigned, for example to an RF hand
 
 This node works with all radio devices. It was designed to work with all switchable devices, including devices in the OOK & FSK (OpenThings) ranges.
 
-These nodes should work with all Energenie radio based devices. I only have a small selection of devices, so have only tested it with these.  Here is a list of what I believe each node **should** support:
+I have a small selection of energenie devices, so have only tested it with these.  Here is a list of what I believe each node **should** support:
 
-Control Node (Blue):
+###Control Node (Blue):
 * ENER002: Green Button Socket **(tested)**
 * ENER010: 4 Gang Extension lead
 * MIHO002: Smart Plug with Blue Text
@@ -82,10 +82,10 @@ Control Node (Blue):
 * MIHO025: Single Light Switch Chrome
 * MIHO026: Single Light Switch Steel
 
-Control & Monitor Switch Node (Purple):
+###Control & Monitor Switch Node (Purple):
 * MIHO005: Purple MiHome Adapter Plus (switching and monitoring) **(tested)**
 
-Monitor Node (Pink):
+###Monitor Node (Pink):
 * MIHO004: Pink MiHome Monitor Adapter
 * MIHO005: MiHome Adapter Plus (monitoring only) **(tested)**
 * MIHO006: House Monitor
@@ -93,7 +93,7 @@ Monitor Node (Pink):
 * MIHO032: Motion sensor
 * MIHO033: Open sensor
 
-NOT SUPPORTED:
+###NOT SUPPORTED:
 Specific nodes will be required to control the other 'control & monitor' devices such as the MiHome Heating TRV.  I do not own any of these devices so it is difficult to create code for them.  It *may* be possible to switch the TRV with the Control & Monitor Switch node, but this is untested.
 
 
@@ -104,9 +104,9 @@ I use the *SWITCH_STATE* parameter to set the *node.status* of the node, but the
 
 For example the 'Adapter Plus' returns the following parameters in the *msg.payload*:
 ```
-timestamp: <numeric 'epoch based' timestamp, of when message was read from the radio adapter>
+timestamp: <numeric 'epoch based' timestamp, of when message was read>
 REAL_POWER: <power in Watts being consumed>
-REACTIVE_POWER: <Power in volt-ampere reactive (VAR). Reactive power exists when the current and voltage are not in phase.>
+REACTIVE_POWER: <Power in volt-ampere reactive (VAR)>
 VOLTAGE: <Power in Volts>            
 FREQUENCY: <Radio Frequency in Hz>
 SWITCH_STATE: <Device State, 0 = off, 1 = on
