@@ -52,7 +52,7 @@ struct OT_PARAM {
 // PARAM, TYPEID, VALUE BYTES
 #define OTC_SWITCH_ON  0xF3, 0x01, 0x01, 0x00
 #define OTC_SWITCH_OFF 0xF3, 0x01, 0x00, 0x00
-#define OTC_JOIN_ACK   0x6A, 0x01             // pyenergenie says not "wr", so dont add 0x80 (0xEA) to JOIN (0x6A) - may need shortening as no value
+#define OTC_JOIN_ACK   0x6A, 0x01             // This does not work - pyenergenie says not "wr", so dont add 0x80 (0xEA) to JOIN (0x6A) - may need shortening as no value
 
 
 // Default keys for OpenThings encryption and decryption
