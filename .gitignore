@@ -77,3 +77,10 @@ typings/
 
 # Visual Studio Code working directory
 .vscode/
+*.d
+*.o
+*.Makefile
+*.gypi
+*.mk
+C/build/Release/obj.target/radio.so
+C/build/Makefile
