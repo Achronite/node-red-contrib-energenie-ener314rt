@@ -1,4 +1,5 @@
 /* radio.c  12/04/2016  D.J.Whale
+ *          13/04/2019  Achronite - Additional functions and fixes
  *
  * An interface to the Energenie Raspberry Pi Radio board ENER314-RT-VER01
  *
