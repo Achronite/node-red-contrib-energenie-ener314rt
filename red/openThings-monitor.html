@@ -3,13 +3,13 @@
         category: 'Energenie 314RT',
         color: '#de348c',
         defaults: {
-            name: {value:"Home Monitor"},
+            name: {value:"Monitor"},
             device: {type:"openThings-device", required: true},
             board: {type:"energenie-board", required: true}
         },
         inputs:0,
         outputs:1,
-        align: "right",
+        align: "left",
         icon: "Adaptor.png",
         paletteLabel: 'Monitor',
         label: function() {
@@ -38,7 +38,16 @@
 </script>
 
 <script type="text/x-red" data-help-name="openThings-monitor">
-               
+    <h3>Details</h3>
+        <p>Node that monitors OpenThings based devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>This includes:</p>
+        <ul>
+            <li>Pink MiHome Monitor Adapters</li>
+            <li>Purple MiHome Adapter Plus</li>
+            <li>MiHome Heating TRVs</li>
+        </ul>
+        <p>It is recommended to use the Control & Monitor nodes for the C&M devices, but this node works fine with them.</p>
+
     <h3>Outputs</h3>
         <p>Device Config</p>
         <dl class="message-properties">
@@ -59,8 +68,12 @@
             </dt>
             <dd>Date & Time the message was received</dd>
         </dl>
-        <p>Monitored Values</p>
+        <p>Monitored Values (Adapter + shown)</p>
         <dl class="message-properties">
+            <dt>payload.FREQUENCY
+                <span class="property-type">float</span>
+            </dt>
+            <dd>Radio Frequency in Hz</dd>    
             <dt>payload.REAL_POWER
                 <span class="property-type">integer</span>
             </dt>
@@ -72,24 +85,12 @@
             <dt>payload.VOLTAGE
                 <span class="property-type">integer</span>
             </dt>
-            <dd>Power in Volts</dd>            
-            <dt>payload.FREQUENCY
-                <span class="property-type">float</span>
-            </dt>
-            <dd>Radio Frequency in Hz</dd>            
+            <dd>Power in Volts</dd>                    
             <dt>payload.SWITCH_STATE
                 <span class="property-type">boolean</span>
             </dt>
             <dd>Device State, 0 = off, 1 = on</dd>
         </dl>
-
-    <h3>Details</h3>
-        <p>Node that monitors OpenThings based devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
-        <p>This includes:</p>
-        <ul>
-            <li>Pink MiHome Monitor Adapters</li>
-            <li>Purple MiHome Adapter Plus</li>
-            <li>MiHome Heating TRVs</li>
-        </ul>
-        <p>It is recommended to use the Control & Monitor nodes for the C&M devices, but this node does works fine with them.</p>
+        <p>Other devices may return other parameters which you can use. All known parameter names and values should be returned in the received messages.</p>
+        <p>Connect up a debug node to see what your specific devices output.</p>
 </script>

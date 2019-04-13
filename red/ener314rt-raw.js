@@ -3,7 +3,7 @@
 ** Use this node if you want to control devices other than those provided by energenie, if you have energenie devices use
 ** the other nodes in this module
 **
-** Author: Achronite, December 2018 - March 2019
+** Author: Achronite, December 2018 - April 2019
 **
 ** v0.1
 **
@@ -15,8 +15,8 @@
 **  control of energenie OOK devices, including house code setting.  This allows 1048575*6 devices to be controlled from one Raspberry Pi
 **
 ** To Do:
-**  Receive mode (I don't have any device to test with yet!
-**  SmartThings protocol decode/encode (used by MiHome transmitting devices)
+**  OpenThings protocol encode (used by MiHome transmitting devices)
+**  OpenThings message body encryption
 */
 var libradio = require( './libradio');
 
@@ -25,6 +25,7 @@ module.exports = function(RED) {
     function Ener314RTrawNode(config) {
         RED.nodes.createNode(this,config);
         var node = this;
+        var board = RED.nodes.getNode(config.board);
 
         // initialise the radio as part of the node constructor
         libradio.radio_init();

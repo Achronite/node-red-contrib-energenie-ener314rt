@@ -4,13 +4,15 @@
         color: '#5ab946',
         defaults: {
             name: {value:""},
-            modulation: {value:0}
+            modulation: {value:0},
+            board: { type: "energenie-board", required: true }
         },
         inputs:1,
         outputs:1,
         icon: "bridge.png",
+        paletteLabel: 'Raw Transmit',
         label: function() {
-            return this.name||"ener314rt-raw";
+            return this.name||"Raw Transmit";
         }
     });
 </script>
@@ -21,7 +23,11 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-modulation"><i class="fa fa-microchip"></i> Radio Modulation</label>
+        <label for="node-input-board"><i class="fa fa-microchip"></i> Board</label>
+        <input type="text" id="node-input-board"/>
+    </div>
+    <div class="form-row">
+        <label for="node-input-modulation"><i class="fa fa-feed"></i> Modulation</label>
         <select id="node-input-modulation">
             <option value=0>0 (OOK)</option>
             <option value=1>1 (FSK)</option>

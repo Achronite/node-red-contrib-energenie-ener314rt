@@ -3,7 +3,7 @@
         category: 'Energenie 314RT',
         color: '#3ebbeb',
         defaults: {
-            name: { value: "" },
+            name: { value: "Control" },
             zone: { value: 0 },
             switchNum: { value: 1 },
             board: { type: "energenie-board", required: true }
@@ -12,7 +12,7 @@
         outputs: 1,
         align: "right",
         icon: "Adaptor.png",
-        paletteLabel: 'Control OOK',
+        paletteLabel: 'Control',
         label: function () { return this.name || ("Control " + this.zone + ":" + this.switchNum) || this.paletteLabel; },
 
 
@@ -77,6 +77,17 @@
 </script>
 
 <script type="text/x-red" data-help-name="ook-switch">
+    <h3>Details</h3>
+        <p>Node that switches on/off the MiHome 'Control' aka 'OOK Receive only' devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>This includes:</p>
+        <ul>
+            <li>Green Button Adaptors</li>
+            <li>Blue Text Adaptor Plugs</li>
+            <li>Light switches</li>
+            <li>Double Sockets</li>
+        </ul>
+        <p>Use the pink and purple nodes for the 'monitor' devices that also transmit.</p>
+        
     <h3>Inputs</h3>
         <dl class="message-properties">
             <dt>payload
@@ -112,6 +123,12 @@
             Use this value if you wish to override the default of 20 re-transmissions (26ms each), 
             for example if you have a lot of interference or your devices are switching inconsistently.</dd>
         </dl>
+        <p>Example <code>msg.payload</code>:</p>
+        <pre>{
+            "zone": 123456,
+            "switchNum": 1,
+            "powerOn": true
+        }</pre>
             
     <h3>Outputs</h3>
         <dl class="message-properties">
@@ -121,21 +138,6 @@
             <dd>Passed unchanged</dd>
         </dl>
 
-    <h3>Details</h3>
-        <p>Node that switches on/off the MiHome 'Control' aka 'OOK Receive only' devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
-        <p>This includes:</p>
-        <ul>
-            <li>Green Button Adaptors</li>
-            <li>Blue Text Adaptor Plugs</li>
-            <li>Light switches</li>
-            <li>Double Sockets</li>
-        </ul>
-        <p>Use the pink and purple nodes for the 'monitor' devices that also transmit.</p>
             
-        <p>Example <code>msg.payload</code>:</p>
-<pre>{
-    "zone": 123456,
-    "switchNum": 1,
-    "powerOn": true
-}</pre>
+
 </script>

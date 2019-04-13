@@ -86,12 +86,14 @@ I have a small selection of energenie devices, so have only tested it with these
 * MIHO005: Purple MiHome Adapter Plus (switching and monitoring) **(tested)**
 
 ### Monitor Node (Pink):
-* MIHO004: Pink MiHome Monitor Adapter
-* MIHO005: MiHome Adapter Plus (monitoring only) **(tested)**
-* MIHO006: House Monitor
-* MIHO013: MiHome Heating TRV (monitoring only)
-* MIHO032: Motion sensor
-* MIHO033: Open sensor
+All Energenie Mi|Home 'Monitor' & 'Control & Monitor' devices:
+* MIHO004: Pink Monitor Adapter
+* MIHO005: Adapter Plus (monitoring only) **(tested)**
+* MIHO006: Whole House Monitor
+* MIHO013: Heating TRV (monitoring only)
+* MIHO032: Smart Motion sensor
+* MIHO033: Door/Window Open sensor
+* MIHO069: Thermostat (monitoring only)
 
 ### NOT SUPPORTED:
 Specific nodes will be required to control the other 'control & monitor' devices such as the MiHome Heating TRV.  I do not own any of these devices so it is difficult to create code for them.  It *may* be possible to switch the TRV with the Control & Monitor Switch node, but this is untested.
