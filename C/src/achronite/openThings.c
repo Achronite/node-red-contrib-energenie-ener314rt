@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <math.h>
 #include "openThings.h"
 #include "lock_radio.h"
 #include "../energenie/radio.h"
 #include "../energenie/trace.h"
+#include "../energenie/delay.h"
 
 /*
 ** C module addition to energenie code to simplify the FSK OpenThings interaction with the Energenie ENER314-RT
@@ -16,7 +17,7 @@
 */
 
 // OpenThings FSK paramters (known)  [{ParamName, paramId}]
-// I've moved the likely ones to the top for speed
+// I've moved the likely ones to the top for speed, and included in .c file to prevent compiler warnings
 static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
     {"UNKNOWN",         0x00},
     {"FREQUENCY",       0x66},
@@ -81,7 +82,7 @@ static struct OT_PRODUCT OTproducts[NUM_OT_PRODUCTS] = {
 // Globals - yuck
 unsigned short ran;
 struct OT_DEVICE OTdevices[MAX_DEVICES]; // should maybe make this dynamic!
-static int NumDevices = 0;
+static int NumDevices = 0;               // number of auto-discovered OpenThings devices
 
 /*
 ** calculateCRC()- Calculate an OpenThings CRC
@@ -727,7 +728,7 @@ void openthings_scan(int iTimeOut)
         }
         // wait for more messages
         if (i + 1 < iTimeOut)
-            sleep(1);
+            delaysec(1);
     }
 
     /*
