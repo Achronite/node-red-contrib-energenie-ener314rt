@@ -596,7 +596,7 @@ char openThings_receive(char *OTmsg)
         {
             //printf("openThings_receive(): Valid OT: \n");
             // build response JSON
-            //sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
+            sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
 
             // add records
             for (i = 0; i < records; i++)
