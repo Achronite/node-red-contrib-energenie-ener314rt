@@ -1,0 +1,37 @@
+<script type="text/javascript">
+    RED.nodes.registerType('energenie-board',{
+        category: 'config',
+        defaults: {
+            name: {value:"ENER314-RT",required:true},
+            id: {value:0, default:0, required:true},
+            interval: {value:5000, default:5000, required:true,
+                validate: function(v) {
+					return (/^[0-9]+/.test(v) && parseInt(v,10) >= 500);
+				}}
+        },
+        label: function() {
+            return (this.name); }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="energenie-board">
+    <div class="form-row" width="100%">
+        <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name">
+    </div>
+    <div class="form-row">
+		<label for="node-config-input-interval"><i class="fa fa-clock-o"></i> Poll interval (ms)</label>
+		<input type="text" placeholder="1000" id="node-config-input-interval">
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="energenie-board">
+    <h3>Details</h3>
+        <p>Configuration node for Energenie ENER314-RT board.</p>
+        <p>For most installations the default parameters should not be changed.</p>
+        <p>The <code>Poll interval</code> is only used when monitoring 'Control' and 'Control & Monitor' devices from the Energenie range.  The value contains how often the radio device is emptied of it's buffered contents.</p>
+        <p>The radio buffer can only hold 1 message, so it is best to keep this as short as possible, otherwise you may lose monitoring or alert data.</p>
+        <p>For example, the Adapter+ sends a signal every 10 seconds.</p>
+        <p>5000ms = 5 seconds, seemed to work best in testing with 1 device.
+        <p><code>Poll interval</code> must be set to 500 or above.</p>
+</script>

@@ -11,7 +11,7 @@
 // preamble pulse with timing violation gap
 #define PREAMBLE 0x80, 0x00, 0x00, 0x00
 
-// Energenie deafult 20 bit address is 0x6C6C6
+// Energenie default 20 bit address is 0x6C6C6
 // 0110 1100 0110 1100 0110
 // 0 encoded as 8 (1000)
 // 1 encoded as E (1110)
@@ -26,7 +26,7 @@
 
 /***** FUNCTION PROTOTYPES *****/
 extern void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
-extern unsigned char OokSend(unsigned int iZone, unsigned char iSwitchNum, unsigned char bSwitchState, unsigned char xmits);
+extern unsigned char OokSend(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits);
 
 
 #endif

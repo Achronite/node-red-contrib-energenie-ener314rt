@@ -22,6 +22,7 @@ typedef uint8_t RADIO_MODULATION;
 #define RADIO_MODULATION_OOK 0
 #define RADIO_MODULATION_FSK 1
 
+typedef uint8_t RADIO_MODE;
 
 //extern void radio_init(void);
 extern void radio_reset(void);
@@ -37,6 +38,8 @@ extern RADIO_RESULT radio_is_receive_waiting(void);
 extern RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen);
 extern RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen);
 extern void radio_finished(void);
+extern void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode);
+extern void radio_mod_transmit(RADIO_MODULATION mod, uint8_t* payload, uint8_t len, uint8_t times);
 
 #endif
 

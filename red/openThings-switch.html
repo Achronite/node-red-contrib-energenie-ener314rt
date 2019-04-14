@@ -1,0 +1,132 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openThings-switch',{
+        category: 'Energenie 314RT',
+        color: '#82529e',
+        defaults: {
+            name: {value:"Control & Monitor"},
+            device: {type:"openThings-device", required: true},
+            board: {type:"energenie-board", required: true}
+        },
+        inputs:1,
+        outputs:1,
+        align: "right",
+        icon: "Adaptor.png",
+        paletteLabel: 'Control& Monitor',
+        label: function() {
+            return (this.name || this.label || this.paletteLabel);
+        },
+        // Update the label to the select device on save (displayed if node name is undefined)
+        oneditsave: function(){
+            this.label = $('#node-input-device option:selected').text();
+        }        
+    });
+</script>
+
+<script type="text/x-red" data-template-name="openThings-switch">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-board"><i class="fa fa-microchip"></i> Board</label>
+        <input type="text" id="node-input-board"/>
+    </div>
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-plug"></i> Device</label>
+        <input type="text" id="node-input-device"/>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="openThings-switch">
+    <h3>Details</h3>
+        <p>Node that monitors and switches the OpenThings based devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>This includes:</p>
+        <ul>
+            <li>Purple Button MiHome Monitor + Switch Adaptors</li>
+        </ul>            
+        <p>Example <code>msg.payload</code>:</p>
+<pre>{
+    "deviceId": 1234,
+    "powerOn": true
+}</pre>
+    <h3>Inputs</h3>
+        <dl class="message-properties">
+            <dt>payload
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>The state that you want the switch to be in, where true=on, false=off</dd>
+        </dl>
+        <p>OR</p>
+        <dl class="message-properties">
+            <dt>payload
+                <span class="property-type">string</span>
+            </dt>
+            <dd>The state that you want the switch to be in, 'on' or 'off'</dd>
+        </dl>
+        <p>OR</p>
+        <dl class="message-properties">
+            <dt>payload.deviceId
+                <span class="property-type">Integer</span>
+            </dt>
+            <dd>deviceId should be set the MiHome deviceId of the device.</dd>
+            <dt>payload.powerOn
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>The state that you want the switch to be in, where true/'on'=on, false/'off'=off.</dd>
+            <dt>payload.repeat
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>(Optional Advanced) The number of times to send the radio transmission in a burst (range 1-255).
+            Use this value if you wish to override the default of 20 re-transmissions (26ms each), 
+            for example if you have a lot of interference or your devices are switching inconsistently.</dd>
+        </dl>
+            
+    <h3>Outputs</h3>
+        <p>Device Config</p>
+        <dl class="message-properties">
+            <dt>payload.deviceId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>The unique Id of the device</dd>
+            <dt>payload.mfrId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Usually 4 for energenie devices</dd>
+            <dt>payload.productId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Product code (2 for Adapter Plus)</dd>
+            <dt>payload.timestamp
+                <span class="property-type">timestamp</span>
+            </dt>
+            <dd>Date & Time the message was received</dd>
+        </dl>
+        <p>Monitored Values (Adapter + shown)</p>
+        <dl class="message-properties">
+            <dt>payload.FREQUENCY
+                <span class="property-type">float</span>
+            </dt>
+            <dd>Radio Frequency in Hz</dd>    
+            <dt>payload.REAL_POWER
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Power in Watts</dd>            
+            <dt>payload.REACTIVE_POWER
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Power in volt-ampere reactive (VAR). Reactive power exists when the current and voltage are not in phase.</dd>            
+            <dt>payload.VOLTAGE
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Power in Volts</dd>                    
+            <dt>payload.SWITCH_STATE
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>Device State, 0 = off, 1 = on</dd>
+        </dl>
+        <p>Other devices may return other parameters which you can use. All known parameter names and values should be returned in the received messages.</p>
+        <p>Connect up a debug node to see what your specific devices output.</p>
+        <p>NOTE: As this node also receives, all input messages do not get outputed.</p>
+
+
+</script>

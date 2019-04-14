@@ -11,13 +11,22 @@
 var ffi = require('ffi');
 var ref = require('ref');
 var ArrayType = require('ref-array');
+var path = require('path');
 
 var int = ref.types.uint8;
 var IntArray = ArrayType(int);
-var path = require('path');
 
-
-// link the C shared object file provided by energenie
+// link the C shared object file
+var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
+  'init_ener314rt':      [ 'int8',  ['int8'] ],
+  'OokSend':             [ 'uint8', ['uint32', 'uint8', 'uint8', 'uint8'] ],
+  'openThings_switch':   [ 'uint8', ['uint8', 'uint32', 'uint8', 'uint8'] ],
+  'openThings_deviceList': [ 'int8',  ['string', 'bool'] ],
+  'openThings_receive':  [ 'int8',  ['string'] ],
+//  'openThings_learn':    [ 'uint8', ['uint8', 'string' ] ],
+  'close_ener314rt':     [ 'void',  [] ]
+  });
+/*
 var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
   'radio_init': [ 'void', [] ],
   'radio_reset': [ 'void', ['void'] ],
@@ -30,10 +39,16 @@ var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
   'radio_is_receive_waiting': [ 'uint8', ['void'] ],
   'radio_get_payload_len': [ 'uint8', [ IntArray, int ]],
   'radio_get_payload_cbp': [ 'uint8', [ IntArray, int ]],
-  'radio_standby':  [ 'void', ['void'] ],
-  'radio_finished': [ 'void',  ['void'] ],
-  'OokSend':        [ 'uint8', ['uint32', 'uint8', 'uint8', 'uint8'] ],
-  'encodeDecimal':  [ 'void', ['uint32', 'uint8', IntArray ]]
-});
+  'radio_standby':       [ 'void',  ['void'] ],
+  'radio_finished':      [ 'void',  ['void'] ],
+  'OokSend':             [ 'uint8', ['uint32', 'uint8', 'uint8', 'uint8'] ],
+  'encodeDecimal':       [ 'void',  ['uint32', 'uint8', IntArray ] ],
+  'openThings_switch':   [ 'uint8', ['uint8', 'uint32', 'uint8', 'uint8'] ],
+  'openThings_discover': [ 'int8',  ['uint8', 'string'] ],
+  'close_ener314rt':     [ 'void',  ['void'] ]
+  });
+*/
+// unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits)
+// unsigned char openThings_discover(unsigned char iTimeOut, unsigned char *devices )
 
 module.exports = libradio;

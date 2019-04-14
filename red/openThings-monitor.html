@@ -1,0 +1,101 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openThings-monitor',{
+        category: 'Energenie 314RT',
+        color: '#de348c',
+        defaults: {
+            name: {value:"Monitor"},
+            device: {type:"openThings-device", required: true},
+            board: {type:"energenie-board", required: true}
+        },
+        inputs:0,
+        outputs:1,
+        align: "left",
+        icon: "Adaptor.png",
+        paletteLabel: 'Monitor',
+        label: function() {
+            return (this.name || this.label || this.paletteLabel);
+        },
+        // Update the label to the select device on save (displayed if node name is undefined)
+        oneditsave: function(){
+            this.label = $('#node-input-device option:selected').text();
+        }        
+    });
+</script>
+
+<script type="text/x-red" data-template-name="openThings-monitor">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-board"><i class="fa fa-microchip"></i> Board</label>
+        <input type="text" id="node-input-board"/>
+    </div>
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-plug"></i> Device</label>
+        <input type="text" id="node-input-device"/>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="openThings-monitor">
+    <h3>Details</h3>
+        <p>Node that monitors OpenThings based devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>This includes:</p>
+        <ul>
+            <li>MiHome Pink Monitor Adapters</li>
+            <li>MiHome Purple Adapter Plus</li>
+            <li>MiHome Heating TRVs</li>
+            <li>MiHome Smart Motion sensor</li>
+            <li>MiHome Door/Window Open sensor</li>
+            <li>MiHome Thermostat</li>
+            <li>MiHome Whole House Monitor</li>
+            <li>MiHome Click Smart Button</li>
+        </ul>
+        <p>It is recommended to use the Control & Monitor nodes for the C&M devices, but this node works fine with them.</p>
+
+    <h3>Outputs</h3>
+        <p>Device Config</p>
+        <dl class="message-properties">
+            <dt>payload.deviceId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>The unique Id of the device</dd>
+            <dt>payload.mfrId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Usually 4 for energenie devices</dd>
+            <dt>payload.productId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Product code (2 for Adapter Plus)</dd>
+            <dt>payload.timestamp
+                <span class="property-type">timestamp</span>
+            </dt>
+            <dd>Date & Time the message was received</dd>
+        </dl>
+        <p>Monitored Values (Adapter + shown)</p>
+        <dl class="message-properties">
+            <dt>payload.FREQUENCY
+                <span class="property-type">float</span>
+            </dt>
+            <dd>Radio Frequency in Hz</dd>    
+            <dt>payload.REAL_POWER
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Power in Watts</dd>            
+            <dt>payload.REACTIVE_POWER
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Power in volt-ampere reactive (VAR). Reactive power exists when the current and voltage are not in phase.</dd>            
+            <dt>payload.VOLTAGE
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Power in Volts</dd>                    
+            <dt>payload.SWITCH_STATE
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>Device State, 0 = off, 1 = on</dd>
+        </dl>
+        <p>Other devices may return other parameters which you can use. All known parameter names and values should be returned in the received messages.</p>
+        <p>Connect up a debug node to see what your specific devices output.</p>
+</script>
