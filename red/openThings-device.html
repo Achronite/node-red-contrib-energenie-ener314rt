@@ -4,9 +4,9 @@
         defaults: {
             name: {value:"MiHome Device"},
             productId: {required:true},
-            product:   {value:"",required:false},
+            product:   {value:"Select device from dropdown",required:false},
             deviceId:  {required:true},
-            control:   {value:"Control", required:false}
+            control:   {value:"Unknown", required:false}
         },
         label: function() {
             return (this.name || (this.productId+":"+this.deviceId) || ("C+ "+ this.deviceId) || this.paletteLabel); },
@@ -141,11 +141,26 @@
         <input type="text" id="node-config-input-product" disabled>
     </div>  
     <div class="form-row">
-        <label for="node-config-input-productId"><i class="fa fa-plug"></i> Product ID</label>
+        <label for="node-config-input-productId"><i class="fa fa-id-card"></i> Product ID</label>
         <input type="text" id="node-config-input-productId" disabled>
     </div>  
     <div class="form-row">
         <label for="node-config-input-control"><i class="fa fa-power-off"></i> Type</label>
         <input type="text" id="node-config-input-control" disabled>
     </div>  
+</script>
+
+<script type="text/x-red" data-help-name="openThings-device">
+    <h3>Details</h3>
+        <p>Configuration node for OpenThings (Monitor and Control & Monitor) devices.</p>
+        <p>Select your device after search has completed from the 'Devices' drop down opposite.</p>
+        <p>Follow these steps for adding a new device:</p>
+        <ol>
+            <li>Press the search icon</li>
+            <li>Press and hold the learn button on your device</li>
+            <li>The light will start to flash (dependant upon device)</li>
+            <li>On receipt of the 'JOIN' request the search will auto-acknolwedge the new device and add it</li>
+            <li>The light should flash quickly and then go out, if device is added succesfully</li>
+            <li>Select the new device from the drop-down</li>
+        </ol>
 </script>
