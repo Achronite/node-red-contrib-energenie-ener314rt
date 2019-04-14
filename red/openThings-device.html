@@ -14,6 +14,10 @@
         oneditprepare: function() {
             
             function scanForDevices(selected_device){
+                /*
+                ** Function that auto-scans and presents all discovered OpenThings devices in a dropdown
+                ** Also auto-discovers any new device in 'learn' mode
+                */
                 $('#node-config-discover').addClass('disabled')
                 $('#node-config-input-device').attr('disabled', 'disabled')
                 $('#node-config-input-device').append("<option value='' selected>Scanning for devices...</option>")
@@ -35,8 +39,12 @@
 
                             // add devices to drop down
                             resp.devices.forEach(function (device) {
-                                $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.product + ":" + device.productId + ":" + device.deviceId + ":" + device.control + ":" + device.joined + '</option>');
-                            });
+                                if (device.joined) {
+                                    $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.product + ":" + device.productId + ":" + device.deviceId + ":" + device.control + '</option>');
+                                } else
+                                    RED.notify(`New ${device.product} (${device.deviceId}) discovered`, "log")
+                                    $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.product + ":" + device.productId + ":" + device.deviceId + ":" + device.control + ': *NEW* </option>');
+                                });
 
                             // show selected device
                             if (selected_device) {
@@ -53,10 +61,14 @@
                     })
             }
 
-            function learnDevice(selected_device){
-                 $('#node-config-discover').addClass('disabled')
-            //     $('#node-config-input-device').attr('disabled', 'disabled')
-                 $('#node-config-input-device').append("<option value='' selected>Scanning for devices...</option>")
+            function learnDevices(selected_device){
+                /*
+                ** Function that performs a forced auto-scan and presents all discovered OpenThings devices in dropdown
+                ** almost identical to scanForDevices() above, except a new discovery scan is force for discovering new devices
+                */
+                $('#node-config-discover').addClass('disabled')
+                $('#node-config-input-device').attr('disabled', 'disabled')
+                $('#node-config-input-device').append("<option value='' selected>Scanning for devices...</option>")
                 $.get('board/learn')
                     .done(function (data) {
                         var resp = JSON.parse(data);
@@ -75,8 +87,12 @@
 
                             // add devices to drop down
                             resp.devices.forEach(function (device) {
-                                $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.product + ":" + device.productId + ":" + device.deviceId + ":" + device.control + ":" + device.joined + '</option>');
-                            });
+                                if (device.joined) {
+                                    $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.product + ":" + device.productId + ":" + device.deviceId + ":" + device.control + '</option>');
+                                } else
+                                    RED.notify(`New ${device.product} (${device.deviceId}) discovered`, "log")
+                                    $('#node-config-input-device').append('<option value="' + device.deviceId + '">' + device.product + ":" + device.productId + ":" + device.deviceId + ":" + device.control + ': *NEW* </option>');
+                                });
 
                             // show selected device
                             if (selected_device) {
@@ -115,6 +131,8 @@
                         $('#node-config-input-control').val("Monitor");
                     }
                     //$('#node-config-input-product').val = deviceName;
+                    // force redraw to clear red warning boxes
+                    RED.view.redraw();
                 }
             })
         }
@@ -133,12 +151,12 @@
         <a id="node-config-discover" class="editor-button"><i class="fa fa-search"></i></a>
     </div>
     <div class="form-row">
+            <label for="node-config-input-product"><i class="fa fa-plug"></i> Product</label>
+            <input type="text" id="node-config-input-product" disabled>
+        </div>  
+    <div class="form-row">
         <label for="node-config-input-deviceId"><i class="fa fa-id-card"></i> Device ID</label>
         <input type="text" id="node-config-input-deviceId" disabled>
-    </div>  
-    <div class="form-row">
-        <label for="node-config-input-product"><i class="fa fa-plug"></i> Product</label>
-        <input type="text" id="node-config-input-product" disabled>
     </div>  
     <div class="form-row">
         <label for="node-config-input-productId"><i class="fa fa-id-card"></i> Product ID</label>
@@ -147,20 +165,22 @@
     <div class="form-row">
         <label for="node-config-input-control"><i class="fa fa-power-off"></i> Type</label>
         <input type="text" id="node-config-input-control" disabled>
-    </div>  
+    </div>
+    <div class="form-tips">
+            <strong>Tip:</strong> You can discover new 'monitor' and 'control & monitor' energenie devices by following these steps:
+            <ol>
+                <li>If your device is not found, press the search icon above.</li>
+                <li>Press and hold the learn button for 5 seconds on your device (the light should start to flash).</li>
+                <li>The device will send a 'Join' request, the search should recieve this and send an acknowledge to the new device to add it.</li>
+                <li>The light on the device should flash quickly and then go out, indicating it has been added succesfully.</li>
+                <li>Select the new device from the drop-down.  Newly discovered devices are tagged with *NEW*.</li>
+            </ol>
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="openThings-device">
     <h3>Details</h3>
         <p>Configuration node for OpenThings (Monitor and Control & Monitor) devices.</p>
         <p>Select your device after search has completed from the 'Devices' drop down opposite.</p>
-        <p>Follow these steps for adding a new device:</p>
-        <ol>
-            <li>Press the search icon</li>
-            <li>Press and hold the learn button on your device</li>
-            <li>The light will start to flash (dependant upon device)</li>
-            <li>On receipt of the 'JOIN' request the search will auto-acknolwedge the new device and add it</li>
-            <li>The light should flash quickly and then go out, if device is added succesfully</li>
-            <li>Select the new device from the drop-down</li>
-        </ol>
+
 </script>
