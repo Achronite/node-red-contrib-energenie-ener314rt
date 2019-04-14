@@ -610,8 +610,14 @@ char openThings_receive(char *OTmsg)
                 case OTR_INT:
                     // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
                     sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
-                    if (OTrecs[i].paramId == 0x6A)
+                    if (OTrecs[i].paramId == 0x6A) {
+                        // We seem to have stumbled upon an instruction to join outside of discovery loop, may as well autojoin the device
+                        TRACE_OUTS("openThings_switch(): New device found, sending ACK: deviceId:");
+                        TRACE_OUTN(iDeviceId);
+                        TRACE_NL();
                         joining = true;
+                        openThings_joinACK(productId, iDeviceId, 20);
+                    }
                     break;
                 case OTR_FLOAT:
                     // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
@@ -661,8 +667,8 @@ unsigned char openThings_deviceList(char *devices, bool scan)
 
     if (NumDevices == 0 || scan)
     {
-        // We dont have any learnt devices :( Need to run a scan for a bit
-        openthings_scan(10);
+        // If we dont have any learnt devices yet, or a scan is being forced
+        openthings_scan(11);
     }
 
     sprintf(devices, "{\"numDevices\":%d, \"devices\":[\n", NumDevices);
