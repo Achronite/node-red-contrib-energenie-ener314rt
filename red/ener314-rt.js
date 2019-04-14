@@ -74,7 +74,6 @@ module.exports = function (RED) {
     }
     RED.nodes.registerType("energenie-board", ener314rtAdaptor);
 
-    // TODO: discovery stuff; will also need learn mode too
     RED.httpAdmin.get("/board/devices", function (req, res) {
 
         // allocate the return buffer here for the JSON response, C routine does not do malloc()
@@ -86,7 +85,7 @@ module.exports = function (RED) {
         res.end(JSON.stringify(devices));
     });
 
-    // learn mode for monitor devices
+    // learn/discovery mode for FSK monitor devices
     RED.httpAdmin.get("/board/learn", function (req, res) {
 
         // allocate the return buffer here for the JSON response, C routine does not do malloc()
@@ -94,7 +93,7 @@ module.exports = function (RED) {
 
         var iTimeOut = 10; // 10 seconds
 
-        // Call discovery function
+        // Call discovery function - this time force a scan as button was pressed
         var ret = libradio.openThings_deviceList(buf, true);;
         var devices = JSON.parse(ref.readCString(buf, 0));
         res.end(JSON.stringify(devices));
