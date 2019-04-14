@@ -596,7 +596,7 @@ char openThings_receive(char *OTmsg)
         {
             //printf("openThings_receive(): Valid OT: \n");
             // build response JSON
-            sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
+            //sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
 
             // add records
             for (i = 0; i < records; i++)
@@ -703,7 +703,7 @@ void openthings_scan(int iTimeOut)
     struct OTrecord OTrecs[OT_MAX_RECS];
     unsigned char mfrId, productId;
     unsigned int iDeviceId;
-    int records, i;
+    int records, i, j;
     //char OTrecord[100];
     struct RADIO_MSG rxMsg;
     bool joining = false;
@@ -748,7 +748,7 @@ void openthings_scan(int iTimeOut)
                 //printf("openThings_scan(): Valid OT: deviceId:%d mfrId:%d productId:%d recs:%d\n", iDeviceId, mfrId, productId, records);
 
                 // scan records for JOIN requests, and reply to add
-                for (i = 0; i < records; i++)
+                for (j = 0; j < records; j++)
                 {
                     if (OTrecs[i].paramId == 0x6A)
                     {
@@ -756,7 +756,7 @@ void openthings_scan(int iTimeOut)
                         TRACE_OUTN(iDeviceId);
                         TRACE_NL();
                         joining = true;
-                        i = openThings_joinACK(productId, iDeviceId, 20);
+                        openThings_joinACK(productId, iDeviceId, 20);
                     }
                 }
                 // Add devices to standard deviceList
@@ -771,8 +771,6 @@ void openthings_scan(int iTimeOut)
 ** ===================
 ** Send a JOIN ACK message to a FSK OpenThings based Energenie smart device
 **
-** THIS FUNCTION DOES NOT WORK!
-**
 ** The OpenThings messages are comprised of 3 parts:
 **  Header  - msgLength, manufacturerId, productId, encryptionPIP, and deviceId
 **  Records - The body of the message, in this case a single command to switch the state
@@ -782,6 +780,8 @@ void openthings_scan(int iTimeOut)
 **    encoding of the device and join request
 **    formatting and encoding the OpenThings FSK radio request
 **    sending the radio request via the ENER314-RT RaspberryPi adaptor
+**
+** NOTE: There is an extremely small chance we could lose an incoming message here, but as we are adding new devices it's not worth bothering
 */
 unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceId, unsigned char xmits)
 {
@@ -789,16 +789,7 @@ unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceI
     unsigned short crc;
     unsigned char radio_msg[OTA_MSGLEN] = {OTA_MSGLEN - 1, ENERGENIE_MFRID, PRODUCTID_MIHO005, OT_DEFAULT_PIP, OT_DEFAULT_DEVICEID, OTC_JOIN_ACK, 0x00, 0x00};
 
-    // "recs": [
-    //     {
-    //         "wr":      False,
-    //         "paramid": OpenThings.PARAM_JOIN,  0x6A
-    //         "typeid":  OpenThings.Value.UINT,  0x00
-    //         "length":  0
-    //     }
-    // ]
-
-    printf("openThings_joinACK(): productId=%d, deviceId=%d\n", iProductId, iDeviceId);
+    //printf("openThings_joinACK(): productId=%d, deviceId=%d\n", iProductId, iDeviceId);
 
     /*
     ** Stage 1: Build the message to send
@@ -806,16 +797,15 @@ unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceI
 
     /* Stage 1a: OpenThings HEADER
     */
-    // productId (usually 2 for MIHO005)
     radio_msg[OTH_INDEX_PRODUCTID] = iProductId;
-
-    /*
-    ** Stage 1b: OpenThings RECORDS (Commands)
-    */
     // deviceId
     radio_msg[OTH_INDEX_DEVICEID] = (iDeviceId >> 16) & 0xFF;    //MSB
     radio_msg[OTH_INDEX_DEVICEID + 1] = (iDeviceId >> 8) & 0xFF; //MID
     radio_msg[OTH_INDEX_DEVICEID + 2] = iDeviceId & 0xFF;        //LSB
+
+    /*
+    ** Stage 1b: OpenThings RECORDS (Commands) - Not required, as ACK record is always the same 
+    */
 
     /*
     ** Stage 1c: OpenThings FOOTER (CRC)
@@ -827,11 +817,7 @@ unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceI
     // Stage 1d: encrypt body part of message
     cryptMsg(CRYPT_PID, CRYPT_PIP, &radio_msg[5], (OTA_MSGLEN - 5));
 
-    /*
-    ** Stage 2: Empty Rx buffer if required
-    */
-
-    // mutex access radio adaptor to set mode
+    // mutex access radio adaptor
     if ((ret = lock_ener314rt()) != 0)
     {
         return -1;

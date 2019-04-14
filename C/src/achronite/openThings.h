@@ -48,11 +48,11 @@ struct OT_PARAM {
 #define	OT_SINT24 0xB0    // 24
 #define	OT_FLOAT  0xF0    // Not implemented yet
 
-/* OpenThings Commands */
+/* OpenThings Commands (as we don't support auto build of these yet) */
 // PARAM, TYPEID, VALUE BYTES
-#define OTC_SWITCH_ON  0xF3, 0x01, 0x01, 0x00
-#define OTC_SWITCH_OFF 0xF3, 0x01, 0x00, 0x00
-#define OTC_JOIN_ACK   0x6A, 0x01             // This does not work - pyenergenie says not "wr", so dont add 0x80 (0xEA) to JOIN (0x6A) - may need shortening as no value
+#define OTC_SWITCH_ON  0xF3, 0x01, 0x01, 0x00       // Switch ON
+#define OTC_SWITCH_OFF 0xF3, 0x01, 0x00, 0x00       // Switch OFF
+#define OTC_JOIN_ACK   0x6A, 0x00, 0x00             // Join ACK
 
 
 // Default keys for OpenThings encryption and decryption
@@ -64,14 +64,12 @@ struct OT_PARAM {
 #define OT_MAX_RECS 0xF
 
 // Array positions
-#define OTS_MSGLEN 14       // Length with only 1 command sent
+#define OTS_MSGLEN 14       // Switch command - Length with only 1 command sent
+#define OTA_MSGLEN 13       // ACK command - Length with 1 command without value!
 #define OTH_INDEX_PRODUCTID 2
 #define OTH_INDEX_DEVICEID 5
 #define OT_INDEX_R1 8
 #define OT_INDEX_R1_VALUE 10 
-
-#define OTA_MSGLEN 12       // Length with only 1 command without value
-
 
 // OpenThings record
 struct OTrecord {
