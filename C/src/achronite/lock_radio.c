@@ -39,7 +39,7 @@ static int pRxMsgTail = 0; // pointer to the next msg to read from Rx Msg FIFO, 
 */
 int init_ener314rt(int lock)
 {
-    int ret = -1;
+    int ret = 0;
 
     if (!initialised)
     {
