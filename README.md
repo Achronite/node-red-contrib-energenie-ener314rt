@@ -94,6 +94,7 @@ All Energenie Mi|Home 'Monitor' & 'Control & Monitor' devices:
 * MIHO032: Smart Motion sensor
 * MIHO033: Door/Window Open sensor
 * MIHO069: Thermostat (monitoring only)
+* MIHO089: Click Smart Button
 
 ### NOT SUPPORTED:
 Specific nodes will be required to control the other 'control & monitor' devices such as the MiHome Heating TRV.  I do not own any of these devices so it is difficult to create code for them.  It *may* be possible to switch the TRV with the Control & Monitor Switch node, but this is untested.
