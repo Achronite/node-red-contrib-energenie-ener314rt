@@ -71,9 +71,9 @@ This node works with all radio devices. It was designed to work with all switcha
 
 I have a small selection of energenie devices, so have only tested it with these.  Here is a list of what I believe each node **should** support:
 
-| Device | Description | Control (Blue)|Monitor (Pink)|Control & Monitor (Purple)|Tested|
+| Device | Description | Control Node (Blue)|Monitor Node (Pink)|Control+Monitor (Purple)|Tested OK|
 |---|---|:---:|:---:|:---:|:---:|
-|ENER002|Energenie Adaptor (Green)|x|||x
+|ENER002|Legacy Adaptor (Green)|x|||x
 |ENER010|MiHome 4 gang Multiplug|x
 |MIHO002|MiHome Adaptor (Blue)|x
 |MIHO004|MiHome Energy Monitor (Pink)||x
