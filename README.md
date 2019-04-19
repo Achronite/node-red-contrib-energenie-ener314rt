@@ -71,29 +71,29 @@ This node works with all radio devices. It was designed to work with all switcha
 
 I have a small selection of energenie devices, so have only tested it with these.  Here is a list of what I believe each node **should** support:
 
-| Device | Control (Blue)|Monitor (Pink)|Control & Monitor (Purple)|Tested|
-|---|:---:|:---:|:---:|:---:|
-| ENER002: Energenie 'legacy' Green Button Socket |x|||x
-| ENER010: MiHome Multiplug - 4 Gang Extension lead|x
-| MIHO002: MiHome Adaptor - Smart Plug with Blue Text|x
-| MIHO004: MiHome Energy Monitor - Pink Monitor Adapter||x
-| MIHO005: MiHome Adapter Plus| | x | x|x
-| MIHO006: MiHome House Monitor| | x
-| MIHO007: MiHome Socket - Double Wall Socket White| x|||x
-| MIHO008: MiHome Light - Single Light Switch White| x
-| MIHO013: MiHome Heating Thermostatic Radiator Valve TRV | | x | x |
-| MIHO014: In-line Controller | x
-| MIHO015: MiHome Relay - In-line Relay | x
-| MIHO021: MiHome Socket - Double Wall Socket Nickel | x
-| MIHO022: MiHome Socket - Double Wall Socket Chrome | x
-| MIHO023: MiHome Socket - Double Wall Socket Brushed Steel | x
-| MIHO024: MiHome Light - Single Light Switch Nickel | x
-| MIHO025: MiHome Light - Single Light Switch Chrome | x
-| MIHO026: MiHome Light - Single Light Switch Steel | x
-| MIHO032: MiHome Motion sensor| | x
-| MIHO033: MiHome Open Sensor - Door/Window sensor| | x
-| MIHO069: MiHome Heating Thermostat | | x | x
-| MIHO089: MiHome Click - Smart Button| | x
+| Device | Description | Control (Blue)|Monitor (Pink)|Control & Monitor (Purple)|Tested|
+|---|---|:---:|:---:|:---:|:---:|
+|ENER002|Energenie Adaptor (Green)|x|||x
+|ENER010|MiHome 4 gang Multiplug|x
+|MIHO002|MiHome Adaptor (Blue)|x
+|MIHO004|MiHome Energy Monitor (Pink)||x
+|MIHO005|MiHome Adapter Plus (Purple)| | x | x|x
+|MIHO006|MiHome House Monitor| | x
+|MIHO007|MiHome Socket - White| x|||x
+|MIHO008|MiHome Light Switch (White)| x
+|MIHO013|MiHome Heating TRV| | x | ? |
+|MIHO014|In-line Controller | x
+|MIHO015|MiHome Relay| x
+|MIHO021|MiHome Socket (Nickel)| x
+|MIHO022|MiHome Socket (Chrome)| x
+|MIHO023|MiHome Socket (Steel)| x
+|MIHO024|MiHome Light Switch (Nickel)| x
+|MIHO025|MiHome Light Switch (Chrome)| x
+|MIHO026|MiHome Light Switch (Steel)| x
+|MIHO032|MiHome Motion sensor| | x
+|MIHO033|MiHome Open Sensor| | x
+|MIHO069|MiHome Heating Thermostat | | x | ?
+|MIHO089|MiHome Click - Smart Button| | x
 
 
 ### Control Node (Blue):
