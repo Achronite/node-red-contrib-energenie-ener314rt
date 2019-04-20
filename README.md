@@ -67,63 +67,35 @@ The number of individual devices this node can control is over 4 million, so it 
 
 ## Supported Devices
 
-This node works with all radio devices. It was designed to work with all switchable devices, including devices in the OOK & FSK (OpenThings) ranges.
+This nodes works with all radio devices. It was designed to work with all on/off switchable devices, including devices in the OOK & FSK (OpenThings) ranges.
 
-I have a small selection of energenie devices, so have only tested it with these.  Here is a list of what I believe each node **should** support:
+I've tested the nodes with all devices that I currently own.  Here is a table showing what each node *should* support, and a tag showing if it has been tested (please let me know of any succesful tests, and I'll update the table):
 
-| Device | Description | Control Node (Blue)|Monitor Node (Pink)|Control+Monitor (Purple)|Tested OK|
+| Device | Description | Control Node (Blue)|Monitor Node (Pink)|Control+Monitor Node (Purple)|Tested OK|
 |---|---|:---:|:---:|:---:|:---:|
-|ENER002|Legacy Adaptor (Green)|x|||x
+||**Node Protocol / Type**|*OOK*|*FSK*|*FSK*
+|ENER002|Green Button Adapter|x|||x
 |ENER010|MiHome 4 gang Multiplug|x
-|MIHO002|MiHome Adaptor (Blue)|x
+|MIHO002|MiHome Adapter (Blue)|x
 |MIHO004|MiHome Energy Monitor (Pink)||x
 |MIHO005|MiHome Adapter Plus (Purple)| | x | x|x
 |MIHO006|MiHome House Monitor| | x
-|MIHO007|MiHome Socket - White| x|||x
+|MIHO007|MiHome Socket (White)| x|||x
 |MIHO008|MiHome Light Switch (White)| x
-|MIHO013|MiHome Heating TRV| | x | ? |
-|MIHO014|In-line Controller | x
+|MIHO013|MiHome Radiator Valve| | x | ? |
+|MIHO014|Single Pole Relay (inline)| x
 |MIHO015|MiHome Relay| x
-|MIHO021|MiHome Socket (Nickel)| x
-|MIHO022|MiHome Socket (Chrome)| x
-|MIHO023|MiHome Socket (Steel)| x
+|MIHO021|MiHome Socket (Nickel)|x|||White
+|MIHO022|MiHome Socket (Chrome)|x|||White
+|MIHO023|MiHome Socket (Steel)|x|||White
 |MIHO024|MiHome Light Switch (Nickel)| x
 |MIHO025|MiHome Light Switch (Chrome)| x
 |MIHO026|MiHome Light Switch (Steel)| x
 |MIHO032|MiHome Motion sensor| | x
 |MIHO033|MiHome Open Sensor| | x
 |MIHO069|MiHome Heating Thermostat | | x | ?
-|MIHO089|MiHome Click - Smart Button| | x
+|MIHO089|MiHome Click - Smart Button||x
 
-
-### Control Node (Blue):
-* ENER002: Energenie 'legacy' Green Button Socket **(tested)**
-* ENER010: MiHome Multiplug - 4 Gang Extension lead
-* MIHO002: MiHome Adaptor - Smart Plug with Blue Text
-* MIHO007: MiHome Socket - Double Wall Socket White **(tested)**
-* MIHO008: MiHome Light - Single Light Switch White
-* MIHO014: In-line Controller
-* MIHO015: MiHome Relay - In-line Relay
-* MIHO021: MiHome Socket - Double Wall Socket Nickel
-* MIHO022: MiHome Socket - Double Wall Socket Chrome
-* MIHO023: MiHome Socket - Double Wall Socket Brushed Steel
-* MIHO024: MiHome Light - Single Light Switch Nickel
-* MIHO025: MiHome Light - Single Light Switch Chrome
-* MIHO026: MiHome Light - Single Light Switch Steel
-
-### Control & Monitor Switch Node (Purple):
-* MIHO005: Purple MiHome Adapter Plus (switching and monitoring) **(tested)**
-
-### Monitor Node (Pink):
-* All Energenie Mi|Home **'Monitor'** & **'Control & Monitor'** devices:
-* MIHO004: MiHome Energy Monitor - Pink Monitor Adapter
-* MIHO005: MiHome Adapter Plus (monitoring only) **(tested)**
-* MIHO006: MiHome House Monitor
-* MIHO013: MiHome Heating Thermostatic Radiator Valve TRV (monitoring only)
-* MIHO032: MiHome Motion sensor
-* MIHO033: MiHome Open Sensor - Door/Window sensor
-* MIHO069: MiHome Heating Thermostat (monitoring only)
-* MIHO089: MiHome Click - Smart Button
 
 ### NOT SUPPORTED:
 Specific nodes are required to send the correct control signals to other **'control & monitor'** devices such as the MiHome Heating TRV.  I do not own any of these devices so it is difficult to create code for them.  It *may* be possible to switch the TRV with the Control & Monitor Switch node, but this is untested.
