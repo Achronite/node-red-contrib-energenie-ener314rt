@@ -1,20 +1,19 @@
 {
   "name": "node-red-contrib-energenie-ener314rt",
-  "version": "1.0.0",
-  "description": "Node red module for energenie ENER314-RT for raspberry pi",
+  "version": "0.1.0",
+  "description": "Node red module for energenie ENER314-RT board for raspberry pi",
   "dependencies": {
     "ffi": "latest",
     "ref": "latest",
     "ref-array": "latest",
-    "path": "latest",
-    "async": "latest"
+    "path": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Philip Grainger",
+  "author": "Achronite",
   "contributors": [
-    {"name": "Philip Grainger"},
+    {"name": "Achronite"},
     {"name": "David Whale"}
   ],
   "license": "MIT",

@@ -1,24 +1,24 @@
 <script type="text/javascript">
-    RED.nodes.registerType('openThings-switch',{
+    RED.nodes.registerType('openThings-switch', {
         category: 'Energenie 314RT',
         color: '#82529e',
         defaults: {
-            name: {value:"Control & Monitor"},
-            device: {type:"openThings-device", required: true},
-            board: {type:"energenie-board", required: true}
+            name: { value: "Control & Monitor" },
+            device: { type: "openThings-device", required: true },
+            board: { type: "energenie-board", required: true }
         },
-        inputs:1,
-        outputs:1,
+        inputs: 1,
+        outputs: 1,
         align: "right",
         icon: "Adaptor.png",
         paletteLabel: 'Control& Monitor',
-        label: function() {
+        label: function () {
             return (this.name || this.label || this.paletteLabel);
         },
         // Update the label to the select device on save (displayed if node name is undefined)
-        oneditsave: function(){
+        oneditsave: function () {
             this.label = $('#node-input-device option:selected').text();
-        }        
+        }
     });
 </script>
 
@@ -42,7 +42,12 @@
         <p>Node that monitors and switches the OpenThings based devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
         <p>This includes:</p>
         <ul>
-            <li>Purple Button MiHome Monitor + Switch Adaptors</li>
+            <li>MiHome Purple Adapter Plus</li>
+        </ul>
+        <p>The status of the node shows '.. sent' when a signal is sent to device, it then reads the status from the device, confirming it has received the request, e.g.
+        <ul>
+            <li>'OFF sent' > 'OFF'</li>
+            <li>'ON sent' > 'ON'</li>
         </ul>            
         <p>Example <code>msg.payload</code>:</p>
 <pre>{
