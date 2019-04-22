@@ -70,18 +70,18 @@ int init_ener314rt(int lock)
                 if ((ret = pthread_mutex_lock(&radio_mutex)) == 0)
                 {
                     // thread safe, set initialised
-                    initialised = true;
                     TRACE_OUTS("init_ener314(): mutex created & locked\n");
-                    radio_init();
-
-                    // place radio in known modulation and mode - OOK:Standby
-                    radio_modulation(RADIO_MODULATION_OOK);
-                    radio_standby();
+                    if ((ret = radio_init()) == 0) {
+                        // place radio in known modulation and mode - OOK:Standby
+                        initialised = true;
+                        radio_modulation(RADIO_MODULATION_OOK);
+                        radio_standby();
+                    } 
 
                     if (!lock)
                     {
                         // unlock mutex if not required to be retained
-                        ret = pthread_mutex_unlock(&radio_mutex);
+                        pthread_mutex_unlock(&radio_mutex);
                     }
                 }
             }
@@ -99,23 +99,23 @@ int lock_ener314rt()
 {
     int ret = -1;
 
-    // Always check that the adaptor & mutex have been initialised, and if not do it
-    if (!initialised)
-    {
-        // init and lock
-        if ((ret = init_ener314rt(true)) != 0)
-        {
-            // init already done, not locked
-            ret = pthread_mutex_lock(&radio_mutex);
-            if (ret == EDEADLK)
-            {
-                // Mutex already locked!
-                ret = 0;
-            }
-        };
-    }
-    else
-    {
+    // Always check that the adaptor & mutex have been initialised, dont continue if not
+    // if (!initialised)
+    // {
+    //     // // init and lock
+    //     // if ((ret = init_ener314rt(true)) != 0)
+    //     // {
+    //     //     // init already done, not locked
+    //     //     ret = pthread_mutex_lock(&radio_mutex);
+    //     //     if (ret == EDEADLK)
+    //     //     {
+    //     //         // Mutex already locked!
+    //     //         ret = 0;
+    //     //     }
+    //     // };
+    // }
+    // else
+    if (initialised) {
         // lock radio now
         TRACE_OUTS("[lock-");
         TRACE_OUTN((int)pthread_self());
@@ -138,6 +138,8 @@ int lock_ener314rt()
             }
             //printf("lock_ener314rt(%d): mutex got\n",deviceMode);
         }
+    } else {
+        TRACE_OUTS("lock_ener314(): Radio not initialised, call init_ener314rt() first\n");
     }
 
     return ret;

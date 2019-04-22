@@ -26,18 +26,20 @@ module.exports = function (RED) {
         this.nodeActive = true;
 
         if (!inited) {
-            inited = true;
             // initialise stuff - do once
 
             // Initialise radio
             let ret = libradio.init_ener314rt(false);
+            scope.log(`radio_init returned ${ret}`);
 
-            if (ret != 0)
+            if (ret != 0){
                 // can also happen if something else has beat us to it!
                 scope.error(`Unable to initialise Energenie ENER314-RT board error: ${ret}`);
-        };
-
-        RED.nodes.createNode(this, config);
+            } else {
+                inited = true;
+                RED.nodes.createNode(this, config);
+            }
+        };     
 
         // monitor mode - non-async version - this works, but does seem to use the main thread loop
         getMonitorMsg = () => {
@@ -57,11 +59,12 @@ module.exports = function (RED) {
 
         // start the monitoring loop when we have listeners
         this.events.once('newListener', (event, listener) => {
-            if (event === 'monitor') {
+            if (event === 'monitor' && inited) {
                 scope.log("Monitor listener detected, starting monitor loop");
                 // Do monitoring as we have listeners!
                 myInterval = setInterval(getMonitorMsg, config.interval);
-            }
+            } else
+                scope.error("Monitor unable to start, board not initialised");
         });
 
         // Close node, stop radio

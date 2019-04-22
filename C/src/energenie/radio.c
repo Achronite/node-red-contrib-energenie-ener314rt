@@ -244,7 +244,7 @@ void radio_reset(void)
 
 /*---------------------------------------------------------------------------*/
 
-void radio_init(void)
+int radio_init(void)
 {
     TRACE_OUTS("radio_init\n");
 
@@ -271,13 +271,16 @@ void radio_init(void)
     {
         TRACE_OUTS("warning:unexpected radio ver<min\n");
         //TRACE_FAIL("unexpected radio ver<min\n");
+        return -1;
     }
     else if (rv > EXPECTED_RADIOVER)
     {
         TRACE_OUTS("warning:unexpected radio ver>exp\n");
+        return -2;
     }
 
     radio_standby();
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
