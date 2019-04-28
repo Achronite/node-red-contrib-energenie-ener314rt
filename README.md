@@ -129,9 +129,8 @@ A full parameter list can be found in C/src/achronite/openThings.c if required.
 ## Authors
 
 * **Achronite** - *Node-Red wrappers, javascript and additional C code for switching, monitoring and locking* - [Achronite](https://github.com/Achronite/node-red-contrib-energenie-ener314)
-* **Energenie** - *Radio C library* - [Energenie](https://github.com/Energenie)
-* **David Whale** - *Python implementation* - [whaleygeek](https://github.com/whaleygeek/pyenergenie)
-
+* **David Whale** - *Radio C library and python implementation* - [whaleygeek](https://github.com/whaleygeek/pyenergenie)
+* **Energenie** - *Original C code base* - [Energenie](https://github.com/Energenie)
 
 ## License
 
