@@ -7,14 +7,14 @@ https://energenie4u.co.uk/
 ## Purpose
 
 You can use this node-red module to control and monitor the Energenie MiHome radio based smart devices such as adapters, sockets, lights and relays 
-on a Raspberry Pi with an **ENER314-RT** board installed using node-red (see below for full list).  This is *instead* of operating the devices using a MiHome Gateway.
+on a Raspberry Pi with an **ENER314-RT** board installed using node-red (see below for full list).  This is *instead* of operating the devices using a MiHome Gateway, so it works without an internet connection.
 
 **'Control'**, **'Monitor'** and **'Control & Monitor'** radio based devices are supported from the legacy and MiHome range.
 
 There are 4 nodes in total:
 * 'Blue' for switching '**Control**' (OOK) based devices
 * 'Pink' for monitoring MiHome **'Monitor'** devices
-* 'Purple' for monitoring and controlling **'Control & Monitor'** devices
+* 'Purple' for monitoring and controlling **'Control & Monitor'** devices, including confirmed switching
 * 'Green' for sending any OOK or FSK raw byte array (Advanced node)
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
@@ -129,9 +129,8 @@ A full parameter list can be found in C/src/achronite/openThings.c if required.
 ## Authors
 
 * **Achronite** - *Node-Red wrappers, javascript and additional C code for switching, monitoring and locking* - [Achronite](https://github.com/Achronite/node-red-contrib-energenie-ener314)
-* **Energenie** - *Radio C library* - [Energenie](https://github.com/Energenie)
-* **David Whale** - *Python implementation* - [whaleygeek](https://github.com/whaleygeek/pyenergenie)
-
+* **David Whale** - *Radio C library and python implementation* - [whaleygeek](https://github.com/whaleygeek/pyenergenie)
+* **Energenie** - *Original C code base* - [Energenie](https://github.com/Energenie)
 
 ## License
 
