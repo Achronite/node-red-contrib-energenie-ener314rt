@@ -3,7 +3,8 @@
     {
       "target_name": "radio",
       "type": "shared_library",
-      "sources": ["src/achronite/lock_radio.c","src/achronite/ook_send.c","src/achronite/openThings.c","src/energenie/radio.c","src/energenie/hrfm69.c","src/energenie/spis.c","src/energenie/gpio_rpi.c","src/energenie/delay_posix.c"],
+      "sources": ["C/achronite/lock_radio.c","C/achronite/ook_send.c","C/achronite/openThings.c",
+                  "C/energenie/radio.c","C/energenie/hrfm69.c","C/energenie/spis.c","C/energenie/gpio_rpi.c","C/energenie/delay_posix.c"],
       "cflags": ["-Wall", "-fPIC" ],
       'defines': [],	
       "conditions": [

@@ -18,8 +18,6 @@
  * These macros make it possible to re-map I/O to more efficient functions.
  */
 
-//#define TRACE_POSIX
-
 #if defined(TRACE_POSIX)
 #include <stdio.h>
 #include <stdlib.h>
