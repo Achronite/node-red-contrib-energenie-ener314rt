@@ -18,6 +18,8 @@
 **  OpenThings protocol encode (used by MiHome transmitting devices)
 **  OpenThings message body encryption
 */
+"use strict";
+
 var libradio = require( './libradio');
 
 module.exports = function(RED) {

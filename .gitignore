@@ -82,5 +82,5 @@ typings/
 *.Makefile
 *.gypi
 *.mk
-C/build/Release/obj.target/radio.so
-C/build/Makefile
+build/Release/obj.target/radio.so
+build/Makefile

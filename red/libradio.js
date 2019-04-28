@@ -7,6 +7,7 @@
 ** File: libradio.js
 ** Purpose: Wrap the C library calls to interface with the radio device so they are available from javascript
 */
+"use strict";
 
 var ffi = require('ffi');
 var ref = require('ref');
@@ -17,7 +18,7 @@ var int = ref.types.uint8;
 var IntArray = ArrayType(int);
 
 // link the C shared object file
-var libradio = ffi.Library(path.join(__dirname, '../C/build/Release/radio'), {
+var libradio = ffi.Library(path.join(__dirname, '../build/Release/radio'), {
   'init_ener314rt':      [ 'int8',  ['int8'] ],
   'OokSend':             [ 'uint8', ['uint32', 'uint8', 'uint8', 'uint8'] ],
   'openThings_switch':   [ 'uint8', ['uint8', 'uint32', 'uint8', 'uint8'] ],

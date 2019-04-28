@@ -12,7 +12,7 @@ on a Raspberry Pi with an **ENER314-RT** board installed using node-red (see bel
 **'Control'**, **'Monitor'** and **'Control & Monitor'** radio based devices are supported from the legacy and MiHome range.
 
 There are 4 nodes in total:
-* 'Blue' for switching 'Control Only' (OOK) based devices
+* 'Blue' for switching '**Control**' (OOK) based devices
 * 'Pink' for monitoring MiHome **'Monitor'** devices
 * 'Purple' for monitoring and controlling **'Control & Monitor'** devices
 * 'Green' for sending any OOK or FSK raw byte array (Advanced node)
@@ -104,7 +104,7 @@ Specific nodes are required to send the correct control signals to other **'cont
 ## Processing Monitor Messages
 
 The **'Control'** & **'Control & Monitor'** nodes emit messages that conform to the OpenThings standard.
-I use the *SWITCH_STATE* parameter to set the *node.status* of the node, but all parameters received from the device are returned in the ```msg.payload``` that you can use.
+All OpenThings parameters received from the device are decoded and returned in the ```msg.payload```.  I use the returned *SWITCH_STATE* parameter to set the *node.status* of the node to say if it is 'ON' or 'OFF'.
 
 For example the 'Adapter Plus' returns the following parameters in the ```msg.payload```:
 ```
@@ -148,4 +148,4 @@ Please raise any bugs, questions or queries using the github issues link below:
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - April 2019 - v0.1 Beta
+@Achronite - April 2019 - v0.1.1 Beta
