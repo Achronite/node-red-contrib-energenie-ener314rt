@@ -4,6 +4,14 @@ A node-red module to control the Energenie line of products via the ENER314-RT a
 https://energenie4u.co.uk/
 
 
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/Achronite/node-red-contrib-energenie-ener314/graphs/commit-activity)
+[![Downloads](https://img.shields.io/npm/dm/node-red-contrib-energenie-ener314rt.svg)]()
+[![HitCount](http://hits.dwyl.io/achronite/node-red-contrib-energenie-ener314rt.svg)](http://hits.dwyl.io/achronite/node-red-contrib-energenie-ener314rt)
+[![Dependencies Status](https://img.shields.io/david/Achronite/node-red-contrib-energenie-ener314rt.svg)](https://david-dm.org/Achronite/node-red-contrib-energenie-ener314rt)
+[![Issues](https://img.shields.io/github/issues/Achronite/node-red-contrib-energenie-ener314rt.svg?style=flat-square)](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues)
+[![NPM](https://nodei.co/npm/node-red-contrib-energenie-ener314rt.png)](https://nodei.co/npm/node-red-contrib-energenie-ener314rt/)
+
+
 ## Purpose
 
 You can use this node-red module to control and monitor the Energenie MiHome radio based smart devices such as adapters, sockets, lights and relays 
