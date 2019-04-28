@@ -23,6 +23,8 @@ module.exports = function (RED) {
         var board = RED.nodes.getNode(config.board);
         var deviceId = Number(device.deviceId) || 0;
         var productId = Number(device.productId) || 2;
+        var retry = device.retry || true;
+        var sentState = -1;
 
         // CHECK CONFIG
         if (!deviceId || device == null || !board || board == null) {
@@ -66,6 +68,11 @@ module.exports = function (RED) {
                         node.error("openThings_switch err: " + err);
                         node.status({ fill: "red", shape: "dot", text: "ERROR" });
                     }
+                    if (res == 0 && retry) {
+                        // radio send successful, check guaranteed delivery through monitoring
+                        //console.log(`Checking switch to ${switchState}`);
+                        sentState = switchState;
+                    }
                 });
 
                 // dont send any payload for the input messages, as we are also a monitor node
@@ -75,7 +82,23 @@ module.exports = function (RED) {
                 if (OTmsg.deviceId == deviceId) {
                     // received event for me
 
-                    // set node status for confirmed switch status
+                    // check if we have any confirmations outstanding in retry mode
+                    if (retry) {
+                        if (sentState == OTmsg.SWITCH_STATE) {
+                            // switch confirmed
+                            //console.log(`confirmed switch to ${sentState}`);
+                            sentState = -1;
+
+                        } else if (sentState >= 0) {
+                            // oh dear, switch didn't actually switch!
+                            node.warn(`openThings_switch: device ${deviceId} did not switch to ${sentState}, retrying`);
+
+                            //Resend switch message (non-async) overriding xmits
+                            let res = libradio.openThings_switch(productId, deviceId, sentState, 20);
+                        }
+                    }
+
+                    // set node status for Rx switch status
                     if (OTmsg.SWITCH_STATE) {
                         node.status({ fill: "green", shape: "dot", text: "ON" });
                     } else {

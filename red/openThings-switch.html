@@ -5,7 +5,8 @@
         defaults: {
             name: { value: "Control & Monitor" },
             device: { type: "openThings-device", required: true },
-            board: { type: "energenie-board", required: true }
+            board: { type: "energenie-board", required: true },
+            retry: { value: true, required: true}
         },
         inputs: 1,
         outputs: 1,
@@ -35,6 +36,10 @@
         <label for="node-input-device"><i class="fa fa-plug"></i> Device</label>
         <input type="text" id="node-input-device"/>
     </div>
+    <div class="form-row">
+        <label for="node-input-retry">Retry Tx?</label>
+        <input type="checkbox" id="node-input-retry"/>
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="openThings-switch">
@@ -48,7 +53,8 @@
         <ul>
             <li>'OFF sent' > 'OFF'</li>
             <li>'ON sent' > 'ON'</li>
-        </ul>            
+        </ul>
+        <p>The node will retry any switch requests until they are confirmed if <code>Retry Tx?</code> is ticked.</p>
         <p>Example <code>msg.payload</code>:</p>
 <pre>{
     "deviceId": 1234,
