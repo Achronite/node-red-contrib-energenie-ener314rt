@@ -7,6 +7,8 @@
 ** File: OpenThings-device.js
 **
 */
+"use strict";
+
 var ref = require('ref');
 var libradio = require( './libradio');
 

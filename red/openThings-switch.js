@@ -9,6 +9,8 @@
 **          Primarily intended for MiHome Adapter Plus - Control & Monitor
 **
 */
+"use strict";
+
 var libradio = require('./libradio');
 
 module.exports = function (RED) {

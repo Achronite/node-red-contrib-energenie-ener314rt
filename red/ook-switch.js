@@ -8,6 +8,8 @@
 ** Purpose: Node-Red wrapper for call to switch node for ENER314-RT OOK device
 **
 */
+"use strict";
+
 var libradio = require('./libradio');
 
 module.exports = function (RED) {

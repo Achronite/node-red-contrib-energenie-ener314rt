@@ -11,6 +11,8 @@
 // var ref = require('ref');
 // var libradio = require('./libradio');
 
+"use strict";
+
 module.exports = function (RED) {
 
     function OpenThingsMonitorNode(config) {

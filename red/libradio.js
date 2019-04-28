@@ -7,6 +7,7 @@
 ** File: libradio.js
 ** Purpose: Wrap the C library calls to interface with the radio device so they are available from javascript
 */
+"use strict";
 
 var ffi = require('ffi');
 var ref = require('ref');

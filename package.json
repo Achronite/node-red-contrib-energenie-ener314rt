@@ -32,8 +32,7 @@
     "radio",
     "ener314",
     "ener314rt",
-    "ener314-rt",
-    "node-red"
+    "ener314-rt"
   ],
   "bugs": {
     "url": "https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues"

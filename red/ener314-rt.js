@@ -10,6 +10,7 @@
 **
 ** Copyright - Achronite, March 2019
 */
+"use strict";
 
 var ref = require('ref');
 var libradio = require('./libradio');
@@ -42,7 +43,7 @@ module.exports = function (RED) {
         };     
 
         // monitor mode - non-async version - this works, but does seem to use the main thread loop
-        getMonitorMsg = () => {
+        function getMonitorMsg () {
             const buf = Buffer.alloc(500);
             //res =
             var recs = libradio.openThings_receive(buf);
@@ -55,7 +56,7 @@ module.exports = function (RED) {
             } else {
                 // no message
             }
-        }
+        };
 
         // start the monitoring loop when we have listeners
         this.events.once('newListener', (event, listener) => {
