@@ -146,11 +146,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Bugs and Future Work
 
-The ENER314-RT board is a full receive/transmit radio that is programmable from the SPI interface of the
-Raspberry Pi. The board and the underlying 'C' code that this modules uses is capable of supporting all 
-of the MiHome monitor devices.
-
-Please raise any bugs, questions or queries using the github issues link below:
+Future work is detailed on the [github issues page](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues). Please raise any bugs, questions, queries or enhancements you have using this page.
 
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
