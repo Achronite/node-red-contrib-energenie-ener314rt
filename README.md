@@ -111,7 +111,7 @@ Specific nodes are required to send the correct control signals to other **'cont
 
 ## Processing Monitor Messages
 
-The **'Control'** & **'Control & Monitor'** nodes emit messages that conform to the OpenThings standard.
+The **'Monitor'** & **'Control & Monitor'** nodes receive monitoring information from the devices and emit the received paramter values on their output.  These messages conform to the OpenThings parameter standard.
 All OpenThings parameters received from the device are decoded and returned in the ```msg.payload```.  I use the returned *SWITCH_STATE* parameter to set the *node.status* of the node to say if it is 'ON' or 'OFF'.
 
 For example the 'Adapter Plus' returns the following parameters in the ```msg.payload```:
@@ -123,7 +123,7 @@ VOLTAGE: <Power in Volts>
 FREQUENCY: <Radio Frequency in Hz>
 SWITCH_STATE: <Device State, 0 = off, 1 = on
 ```
-Other devices may return other parameters which you can use. I have provided generic name and parameter mapping for the known values for received messages.
+Other devices will return other parameters which you can use. I have provided parameter name and type mapping for the known values for received messages.
 Connect up a debug node to see what your specific devices output.
 
 A full parameter list can be found in C/src/achronite/openThings.c if required.
@@ -155,4 +155,4 @@ Please raise any bugs, questions or queries using the github issues link below:
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - April 2019 - v0.1.1 Beta
+@Achronite - April 2019 - v0.2.0 Beta
