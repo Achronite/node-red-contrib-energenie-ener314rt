@@ -61,7 +61,7 @@ module.exports = function (RED) {
         // start the monitoring loop when we have listeners
         this.events.once('newListener', (event, listener) => {
             if (event === 'monitor' && inited) {
-                scope.log("Monitor listener detected, starting monitor loop");
+                scope.log("Monitor listener detected, starting monitor loop, poll interval=" + config.interval + "ms");
                 // Do monitoring as we have listeners!
                 myInterval = setInterval(getMonitorMsg, config.interval);
             } else

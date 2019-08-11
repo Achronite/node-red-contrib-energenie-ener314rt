@@ -4,11 +4,11 @@ A node-red module to control the Energenie line of products via the ENER314-RT a
 https://energenie4u.co.uk/
 
 
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/Achronite/node-red-contrib-energenie-ener314/graphs/commit-activity)
-[![Downloads](https://img.shields.io/npm/dm/node-red-contrib-energenie-ener314rt.svg)]()
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-brightgreen.svg)](https://github.com/Achronite/node-red-contrib-energenie-ener314/graphs/commit-activity)
+[![Downloads](https://img.shields.io/npm/dm/node-red-contrib-energenie-ener314rt.svg)](https://www.npmjs.com/package/node-red-contrib-energenie-ener314rt)
 [![HitCount](http://hits.dwyl.io/achronite/node-red-contrib-energenie-ener314rt.svg)](http://hits.dwyl.io/achronite/node-red-contrib-energenie-ener314rt)
 [![Dependencies Status](https://img.shields.io/david/Achronite/node-red-contrib-energenie-ener314rt.svg)](https://david-dm.org/Achronite/node-red-contrib-energenie-ener314rt)
-[![Issues](https://img.shields.io/github/issues/Achronite/node-red-contrib-energenie-ener314rt.svg?style=flat-square)](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues)
+[![Release](https://img.shields.io/github/release-pre/achronite/node-red-contrib-energenie-ener314rt.svg)](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/releases)
 [![NPM](https://nodei.co/npm/node-red-contrib-energenie-ener314rt.png)](https://nodei.co/npm/node-red-contrib-energenie-ener314rt/)
 
 
@@ -20,10 +20,10 @@ on a Raspberry Pi with an **ENER314-RT** board installed using node-red (see bel
 **'Control'**, **'Monitor'** and **'Control & Monitor'** radio based devices are supported from the legacy and MiHome range.
 
 There are 4 nodes in total:
-* 'Blue' for switching '**Control**' (OOK) based devices
-* 'Pink' for monitoring MiHome **'Monitor'** devices
-* 'Purple' for monitoring and controlling **'Control & Monitor'** devices, including confirmed switching
-* 'Green' for sending any OOK or FSK raw byte array (Advanced node)
+* **Blue** for switching '**Control**' (OOK) based devices
+* **Pink** for monitoring MiHome **'Monitor'** devices
+* **Purple** for monitoring and controlling **'Control & Monitor'** devices, including confirmed switching
+* **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
@@ -151,4 +151,4 @@ Future work is detailed on the [github issues page](https://github.com/Achronite
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - April 2019 - v0.2.0 Beta
+@Achronite - April 2019 - v0.2.1 Beta

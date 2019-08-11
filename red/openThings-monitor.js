@@ -40,9 +40,8 @@ module.exports = function (RED) {
                     if (OTmsg.SWITCH_STATE) {
                         node.status({ fill: "green", shape: "dot", text: "ON" });
                     } else {
-                        node.status({ fill: "red", shape: "ring", text: "OFF" });
+                        node.status({ fill: "red", shape: "dot", text: "OFF" });
                     }
-
                     // send on decoded OpenThings message as is
                     node.send({'payload':OTmsg});
                 }

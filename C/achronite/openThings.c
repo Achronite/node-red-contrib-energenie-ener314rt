@@ -24,6 +24,7 @@ static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
     {"REAL_POWER",      0x70},
     {"REACTIVE_POWER",  0x71},
     {"VOLTAGE",         0x76},
+    {"TEMPERATURE",     0x74},
     {"ALARM",           0x21},
     {"DEBUG_OUTPUT",    0x2D},
     {"IDENTIFY",        0x3F},
@@ -61,7 +62,6 @@ static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
     {"OCCUPANCY",       0x6F},
     {"ROTATION_SPEED",  0x72},
     {"SWITCH_STATE",    0x73},
-    {"TEMPERATURE",     0x74},
     {"WATER_FLOW_RATE", 0x77},
     {"WATER_PRESSURE",  0x78},
     {"TEST",            0xAA}
@@ -601,6 +601,12 @@ char openThings_receive(char *OTmsg)
             // add records
             for (i = 0; i < records; i++)
             {
+#if defined(TRACE)
+                TRACE_OUTS("openThings_receive(): rec:");
+                TRACE_OUTN(i);
+                sprintf(OTrecord, " {\"name\":\"%s\",\"id\":%d,\"type\":%d,\"str\":\"%s\",\"int\":\"%d\",\"float\":\"%f\"}\n",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].typeIndex, OTrecs[i].retChar, OTrecs[i].retInt,OTrecs[i].retFloat);
+                TRACE_OUTS(OTrecord);
+#endif
                 switch (OTrecs[i].typeIndex)
                 {
                 case OTR_CHAR: //CHAR
@@ -612,11 +618,14 @@ char openThings_receive(char *OTmsg)
                     sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
                     if (OTrecs[i].paramId == 0x6A) {
                         // We seem to have stumbled upon an instruction to join outside of discovery loop, may as well autojoin the device
-                        TRACE_OUTS("openThings_switch(): New device found, sending ACK: deviceId:");
+                        TRACE_OUTS("openThings_receive(): New device found, sending ACK: deviceId:");
                         TRACE_OUTN(iDeviceId);
                         TRACE_NL();
                         joining = true;
                         openThings_joinACK(productId, iDeviceId, 20);
+                    } else if (OTrecs[i].paramId == 0x74) {
+                        // Seems that the TEMPERATURE (0x74) typeId=1 (int), and it should be 2 (float) on the eTRV, so override and return float value instead
+                        sprintf(OTrecord, ",\"%s\":%f", OTrecs[i].paramName, OTrecs[i].retFloat);
                     }
                     break;
                 case OTR_FLOAT:
