@@ -604,7 +604,7 @@ char openThings_receive(char *OTmsg)
 #if defined(TRACE)
                 TRACE_OUTS("openThings_receive(): rec:");
                 TRACE_OUTN(i);
-                sprintf(OTrecord, " {\"name\":\"%s\",\"id\":%d,\"type\":%d,\"str\":\"%s\",\"int\":\"%d\",\"float\":\"%f\"}\n",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].typeIndex, OTrecs[i].retChar, OTrecs[i].retInt,OTrecs[i].retFloat);
+                sprintf(OTrecord, " {\"name\":\"%s\",\"id\":%d,\"type\":%d,\"str\":\"%s\",\"int\":%d,\"float\":%f}\n",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].typeIndex, OTrecs[i].retChar, OTrecs[i].retInt,OTrecs[i].retFloat);
                 TRACE_OUTS(OTrecord);
 #endif
                 switch (OTrecs[i].typeIndex)
@@ -624,8 +624,8 @@ char openThings_receive(char *OTmsg)
                         joining = true;
                         openThings_joinACK(productId, iDeviceId, 20);
                     } else if (OTrecs[i].paramId == 0x74) {
-                        // Seems that the TEMPERATURE (0x74) typeId=1 (int), and it should be 2 (float) on the eTRV, so override and return float value instead
-                        sprintf(OTrecord, ",\"%s\":%f", OTrecs[i].paramName, OTrecs[i].retFloat);
+                        // Seems that TEMPERATURE (0x74) received as type OTR_INT=1, and it should be OTR_FLOAT=2 from the eTRV, so override and return a float instead
+                        sprintf(OTrecord, ",\"%s\":%.1f", OTrecs[i].paramName, OTrecs[i].retFloat);
                     }
                     break;
                 case OTR_FLOAT:
@@ -652,8 +652,9 @@ char openThings_receive(char *OTmsg)
         }
     }
 
-    TRACE_OUTS("openThings_receive: Returning:\n");
+    TRACE_OUTS("openThings_receive: Returning: ");
     TRACE_OUTS(OTmsg);
+    TRACE_NL();
 
     return records;
 }
