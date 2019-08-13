@@ -104,7 +104,7 @@ module.exports = function (RED) {
                     } else if (OTmsg.SWITCH_STATE != null) {   // also checks for undefined, assume 0=off
                         node.status({ fill: "red", shape: "ring", text: "off" });
                     } else if (OTmsg.TEMPERATURE){
-                        node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE.toFixed(1) });
+                        node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
                     }
 
                     // send on decoded OpenThings message as is
