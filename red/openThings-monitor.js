@@ -23,9 +23,6 @@ module.exports = function (RED) {
         var board = RED.nodes.getNode(config.board);
         var deviceId = Number(device.deviceId);
 
-        // allocate the return buffer here for the JSON response, C routine does not do malloc()
-        //var buf = Buffer.alloc(500);
-
         // CHECK CONFIG
         if (!deviceId || device == null || !board || board == null) {
             this.status({ fill: "red", shape: "ring", text: "Not configured" });
@@ -35,14 +32,14 @@ module.exports = function (RED) {
 
             board.events.on('monitor', function (OTmsg) {
                 if (OTmsg.deviceId == deviceId) {
-                    // received event for me
-                    
+                    // received event for me, update status and send monitor message to consuming downstream nodes
                     if (OTmsg.SWITCH_STATE) {
-                        node.status({ fill: "green", shape: "dot", text: "ON" });
-                    } else {
-                        node.status({ fill: "red", shape: "ring", text: "OFF" });
+                        node.status({ fill: "green", shape: "dot", text: "on" });
+                    } else if (OTmsg.SWITCH_STATE != null) {   // also checks for undefined, assume 0=off
+                        node.status({ fill: "red", shape: "ring", text: "off" });
+                    } else if (OTmsg.TEMPERATURE){
+                        node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
                     }
-
                     // send on decoded OpenThings message as is
                     node.send({'payload':OTmsg});
                 }

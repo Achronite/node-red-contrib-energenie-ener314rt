@@ -98,11 +98,13 @@ module.exports = function (RED) {
                         }
                     }
 
-                    // set node status for Rx switch status
+                    // set node status for Rx switch status or temperature
                     if (OTmsg.SWITCH_STATE) {
-                        node.status({ fill: "green", shape: "dot", text: "ON" });
-                    } else {
-                        node.status({ fill: "red", shape: "dot", text: "OFF" });
+                        node.status({ fill: "green", shape: "dot", text: "on" });
+                    } else if (OTmsg.SWITCH_STATE != null) {   // also checks for undefined, assume 0=off
+                        node.status({ fill: "red", shape: "ring", text: "off" });
+                    } else if (OTmsg.TEMPERATURE){
+                        node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
                     }
 
                     // send on decoded OpenThings message as is
