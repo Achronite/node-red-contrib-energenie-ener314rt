@@ -90,7 +90,7 @@ I've tested the nodes with all devices that I currently own.  Here is a table sh
 |MIHO006|MiHome House Monitor| | x
 |MIHO007|MiHome Socket (White)| x|||x
 |MIHO008|MiHome Light Switch (White)| x
-|MIHO013|MiHome Radiator Valve| | x | ? |
+|MIHO013|MiHome Radiator Valve| | x | soon |
 |MIHO014|Single Pole Relay (inline)| x
 |MIHO015|MiHome Relay| x
 |MIHO021|MiHome Socket (Nickel)|x|||White
@@ -106,7 +106,7 @@ I've tested the nodes with all devices that I currently own.  Here is a table sh
 
 
 ### NOT SUPPORTED:
-Specific nodes are required to send the correct control signals to other **'control & monitor'** devices such as the MiHome Heating TRV.  I do not own any of these devices so it is difficult to create code for them.  It *may* be possible to switch the TRV with the Control & Monitor Switch node, but this is untested.
+Specific nodes are required to send the correct control signals to other **'control & monitor'** devices such as the MiHome Heating TRV.  I now have an eTRV and I will be creating a new node for them. The current build supports temperature reporting via the monitor node; but I want to refactor the code to use N-API first.
 
 
 ## Processing Monitor Messages
@@ -151,4 +151,4 @@ Future work is detailed on the [github issues page](https://github.com/Achronite
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - April 2019 - v0.2.1 Beta
+@Achronite - August 2019 - v0.2.2 Beta
