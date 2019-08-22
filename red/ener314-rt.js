@@ -13,8 +13,7 @@
 "use strict";
 
 //var libradio = require('./libradio');
-//var ener314rt = require('/home/pi/development/node-red-contrib-energenie-ener314rt/build/Release/ener314rt');
-var ener314rt = require('ener314rt');
+var ener314rt = require('/home/pi/development/node-red-contrib-energenie-ener314rt/build/Release/ener314rt');
 
 //var async = require('async');
 var inited = false;
