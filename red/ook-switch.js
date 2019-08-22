@@ -10,7 +10,7 @@
 */
 "use strict";
 
-var libradio = require('./libradio');
+var ener314rt = require('/home/pi/development/node-red-contrib-energenie-ener314rt/build/Release/ener314rt');
 
 module.exports = function (RED) {
 
@@ -23,13 +23,13 @@ module.exports = function (RED) {
         if (!board || board == null) {
             this.status({ fill: "red", shape: "ring", text: "Not configured" });
             return false;
-            
+
         } else {
 
             this.on('input', function (msg) {
 
                 this.status({ fill: "yellow", shape: "ring", text: "Sending" });
-                var zone = config.zone || 0;
+                var zone = Number(config.zone) || 0;
                 var switchNum = Number(config.switchNum) || 1;
                 var xmits = 20;
 
@@ -68,27 +68,19 @@ module.exports = function (RED) {
                     xmits = Number(msg.payload.repeat);
 
                 // Invoke C function to do the send
-                libradio.OokSend.async(zone, switchNum, Number(switchState), xmits, function (err, res) {
-                    // callback
-                    if (err) {
-                        node.error("ookSend err: " + err);
-                        node.status({ fill: "red", shape: "dot", text: "ERROR" });
-                        //this.warn("openThings_switch returned res:" + res);
-                        //.catch(error)
-                    } else {
-                        // Set the node status in the GUI
-                        switch (switchState) {
-                            case true:
-                                node.status({ fill: "green", shape: "dot", text: "ON " + zone + ":" + switchNum });
-                                break;
-                            case false:
-                                node.status({ fill: "red", shape: "ring", text: "OFF " + zone + ":" + switchNum });
-                                break;
-                        }
+                var ret = ener314rt.ookSend(zone, switchNum, switchState, xmits);
+                if (ret == 0) {
+                    switch (switchState) {
+                        case true:
+                            node.status({ fill: "green", shape: "dot", text: "ON " + zone + ":" + switchNum });
+                            break;
+                        case false:
+                            node.status({ fill: "red", shape: "ring", text: "OFF " + zone + ":" + switchNum });
+                            break;
                     }
                     // return payload unchanged
                     node.send(msg);
-                });
+                }
             });
 
             this.on('close', function () {
@@ -102,7 +94,7 @@ module.exports = function (RED) {
     RED.httpAdmin.get("/ook/teach", function (req, res) {
         var zone = req.query.zone || 0;
         var switchNum = req.query.switchNum;
-        if (libradio.OokSend(zone, switchNum, 1, 20) == 0)
+        if (ener314rt.ookSend(zone, switchNum, true, 20) == 0)
             res.sendStatus(200);
         else
             res.sendStatus(500);
