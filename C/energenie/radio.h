@@ -25,21 +25,21 @@ typedef uint8_t RADIO_MODULATION;
 typedef uint8_t RADIO_MODE;
 
 //extern void radio_init(void);
-extern void radio_reset(void);
-extern int radio_init(void);
-extern uint8_t radio_get_ver(void);
-extern void radio_modulation(RADIO_MODULATION mod);
-extern void radio_transmitter(RADIO_MODULATION mod);
-extern void radio_receiver(RADIO_MODULATION mod);
-extern void radio_standby(void);
-extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t times);
-extern void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times);
-extern RADIO_RESULT radio_is_receive_waiting(void);
-extern RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen);
-extern RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen);
-extern void radio_finished(void);
-extern void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode);
-extern void radio_mod_transmit(RADIO_MODULATION mod, uint8_t* payload, uint8_t len, uint8_t times);
+void radio_reset(void);
+int radio_init(void);
+uint8_t radio_get_ver(void);
+void radio_modulation(RADIO_MODULATION mod);
+void radio_transmitter(RADIO_MODULATION mod);
+void radio_receiver(RADIO_MODULATION mod);
+void radio_standby(void);
+void radio_transmit(uint8_t* payload, uint8_t len, uint8_t times);
+void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times);
+RADIO_RESULT radio_is_receive_waiting(void);
+RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen);
+RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen);
+void radio_finished(void);
+void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode);
+void radio_mod_transmit(RADIO_MODULATION mod, uint8_t* payload, uint8_t len, uint8_t times);
 
 #endif
 

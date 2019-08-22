@@ -21,8 +21,8 @@ struct RADIO_MSG {
 #define RX_MSGS 5
 
 // function prototypes
-extern int init_ener314rt(int lock);
-extern void close_ener314rt(void);
+int init_ener314rt(int lock);
+void close_ener314rt(void);
 int lock_ener314rt(void);
 int unlock_ener314rt(void);
 int empty_radio_Rx_buffer(enum deviceTypes rxMode);
