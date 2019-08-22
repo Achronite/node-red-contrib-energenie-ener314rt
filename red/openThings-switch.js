@@ -51,10 +51,10 @@ module.exports = function (RED) {
 
                 // Set the node status in the GUI
                 switch (switchState) {
-                    case 1:
+                    case true:
                         node.status({ fill: "green", shape: "ring", text: "ON sent" });
                         break;
-                    case 0:
+                    case false:
                         node.status({ fill: "red", shape: "ring", text: "OFF sent" });
                         break;
                 }
