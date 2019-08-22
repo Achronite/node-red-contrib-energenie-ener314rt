@@ -25,8 +25,8 @@
 #define INDEX_SC 14
 
 /***** FUNCTION PROTOTYPES *****/
-extern void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
-extern unsigned char OokSend(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits);
+void encode_decimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
+extern unsigned char ook_send(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits);
 
 
 #endif

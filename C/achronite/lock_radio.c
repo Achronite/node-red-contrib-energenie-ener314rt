@@ -95,7 +95,7 @@ int init_ener314rt(int lock)
 **
 ** Copes with conditions where we already have the lock
 */
-int lock_ener314rt()
+int lock_ener314rt(void)
 {
     int ret = -1;
 
@@ -171,7 +171,7 @@ void close_ener314rt(void)
 {
     //Elegant shutdown of ener314rt
     TRACE_OUTS("close_ener314(): called\n");
-    if (lock_ener314rt(DT_MONITOR) == 0)
+    if (lock_ener314rt() == 0)
     {
         // we have the lock, do all the tidying
         radio_finished();

@@ -547,7 +547,7 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
 **    formatting and decoding the OpenThings FSK radio responses
 **    returning array of returned parameters for a deviceId
 */
-char openThings_receive(char *OTmsg)
+int openThings_receive(char *OTmsg)
 {
     //int ret = 0;
     //uint8_t buf[MAX_FIFO_BUFFER];
@@ -669,7 +669,6 @@ char openThings_receive(char *OTmsg)
 */
 unsigned char openThings_deviceList(char *devices, bool scan)
 {
-    int ret = 0;
     int i;
     char deviceStr[100];
 
@@ -703,7 +702,7 @@ unsigned char openThings_deviceList(char *devices, bool scan)
     TRACE_OUTS(devices);
     TRACE_NL();
 
-    return ret;
+    return NumDevices;
 }
 
 /*

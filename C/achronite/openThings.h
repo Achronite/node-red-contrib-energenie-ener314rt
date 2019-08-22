@@ -112,7 +112,7 @@ struct OT_PRODUCT {
 //extern void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
 extern unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits);
 extern unsigned char openThings_deviceList(char *devices, bool scan);
-extern char openThings_receive(char *OTmsg );
+extern int openThings_receive(char *OTmsg );
 unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceId, unsigned char xmits);
 void openthings_scan(int iTimeOut);
 //unsigned char openThings_learn(unsigned char iTimeOut, char *devices)

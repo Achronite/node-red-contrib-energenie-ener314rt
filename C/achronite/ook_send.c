@@ -13,11 +13,11 @@
 ** Author: Phil Grainger - @Achronite, January 2019
 */
 
-/* encodeDecimal()
+/* encode_decimal()
 ** encodes any 'iDecimal' value into a transmittable byte array 'encArray' of length 'bits' compatible with the energenie OOK radio protocol
 ** this is primarily used to encode the house code
 */
-void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char *encArray)
+void encode_decimal(unsigned int iDecimal, unsigned char bits, unsigned char *encArray)
 {
     int c, msb, lsb, iByte = 0;
     unsigned char encByte;
@@ -61,20 +61,20 @@ void encodeDecimal(unsigned int iDecimal, unsigned char bits, unsigned char *enc
 **    formatting and encoding an OOK radio request
 **    sending the radio request via the ENER314-RT RaspberryPi adaptor
 */
-unsigned char OokSend(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits)
+unsigned char ook_send(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits)
 {
     int ret = 0;
     unsigned char radio_msg[OOK_MSGLEN] = {PREAMBLE, DEFAULT_HC, 0x00, 0x00};
 
 
 #if defined(TRACE)
-    printf("ookSend: Zone=%d, Switch=%d, state=%d\n", iZone, iSwitchNum, bSwitchState);
+    printf("ook_send: Zone=%d, Switch=%d, state=%d\n", iZone, iSwitchNum, bSwitchState);
 #endif
 
     // encode the zone / house code if not using the default
     if (iZone != USE_DEFAULT_ZONE)
     {
-        encodeDecimal(iZone, ZONE_BITS, &radio_msg[INDEX_HC]);
+        encode_decimal(iZone, ZONE_BITS, &radio_msg[INDEX_HC]);
     }
 
     /* Encode the 2 byte switch code for OFF, minimising calculations */
