@@ -29,9 +29,42 @@ struct OT_PARAM {
 #define NUM_OT_PARAMS 46
 
 
-/* OpenThings Command Paramters - 0x80 added*/
+/* OpenThings Command Parameters - 0x80 added */
 #define OTCP_SWITCH_STATE    0xF3
 #define OTCP_JOIN            0xEA
+#define OTCP_TEMP_SET		 0xF4   /* Send new target temperature to driver board */
+#define OTCP_EXERCISE_VALVE  0xA3   /* Send exercise valve command to driver board. 
+                                       Read diagnostic flags returned by driver board. 
+                                       Send diagnostic flag acknowledgement to driver board. 
+                                       Report diagnostic flags to the gateway. 
+                                       Flash red LED once every 5 seconds if ‘battery dead’ flag is set.
+                                       Length 0
+                                    */
+#define OTCP_REQUEST_VOLTAGE 0xE2   /* Request battery voltage. 
+                                       Flash red LED 2 times every 5 seconds if voltage is less than 2.4V
+                                       Length 0
+                                    */
+#define OTCP_REQUEST_DIAGNOTICS 0xA6  /* Request diagnostic flags.
+                                         Flash red LED once every 5 seconds if ‘battery dead’ flag is set.
+                                         Length 0
+                                      */
+#define OTCP_SET_VALVE_STATE 0xA5     /* Set valve state:
+                                        0 = Set Valve Fully Open
+                                        1 = Set Valve Fully Closed
+                                        2 = Set Normal Operation
+                                       Valve remains either fully open or fully closed until valve state is set to ‘normal operation’.
+                                       Red LED flashes continuously while motor is running terminated by three long green LED flashes when valve 
+                                       fully open or three long red LED flashes when valve is closed.
+                                       Length 1
+                                       */
+#define OTCP_SET_LOW_POWER_MODE 0xA4  /* 0=Low power mode off, 1=Low power mode on
+                                         Length 1
+                                      */                                       
+
+#define OTCP_SET_REPORTING_INTERVAL 0xD2 /* Update reporting interval to requested value
+                                            Length 2
+                                         */   
+
 
 // OpenThings record data types
 #define	OT_UINT   0x00
@@ -64,11 +97,14 @@ struct OT_PARAM {
 #define OT_MAX_RECS 0xF
 
 // Array positions
-#define OTS_MSGLEN 14       // Switch command - Length with only 1 command sent
-#define OTA_MSGLEN 13       // ACK command - Length with 1 command without value!
+#define MIN_R1_MSGLEN 13
+#define MAX_R1_MSGLEN 15
+#define OTS_MSGLEN 14       // Switch command - Length with 1 command 1 byte sent  (3)
+#define OTA_MSGLEN 13       // ACK command    - Length with 1 command 0 bytes sent (2)
 #define OTH_INDEX_PRODUCTID 2
 #define OTH_INDEX_DEVICEID 5
-#define OT_INDEX_R1 8
+#define OT_INDEX_R1_CMD    8
+#define OT_INDEX_R1_TYPE   9
 #define OT_INDEX_R1_VALUE 10 
 
 // OpenThings record
@@ -94,6 +130,8 @@ struct OT_DEVICE {
     bool          control;
     bool          joined;
     char          product[14];
+    unsigned char command;
+    unsigned int  data;
 };
 
 #define MAX_DEVICES 30
@@ -112,9 +150,12 @@ struct OT_PRODUCT {
 unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits);
 unsigned char openThings_deviceList(char *devices, bool scan);
 int openThings_receive(char *OTmsg );
-
 unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceId, unsigned char xmits);
 void openthings_scan(int iTimeOut);
+
+char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigned int data);
+int openThings_cache_send(unsigned int iDeviceId);
+int openThings_cmd(unsigned char iProductId, unsigned int iDeviceId, unsigned char iCommand, unsigned int iData, unsigned char xmits);
 
 #endif
 

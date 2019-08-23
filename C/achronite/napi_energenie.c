@@ -19,6 +19,13 @@
 ** this code to be Application Binary (ABI) compatiable across multiples platforms.
 **
 ** Author: Phil Grainger - @Achronite, August 2019
+**
+** Conventions Used:
+**  nf_   n-api wrapper of synchronous function
+**  nv_   n-api value
+**  na_   n-api wrapper of asynchronous functions
+**  xcb_  execute callback function for async work
+**  ccb_  complete callback function for async work
 */
 
 // ----------FILE--------- lock_radio.c
@@ -316,6 +323,90 @@ napi_value nf_openThings_receive(napi_env env, napi_callback_info info)
     return nv_ret;
 }
 
+/* N-API function (nf_) wrapper for:
+**  unsigned char openThings_cache_cmd(unsigned int iDeviceId, uint8_t command, uint32_t data)
+*/
+napi_value nf_openThings_cache_cmd(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    size_t argc = 3; // passed in args
+    napi_value argv[3];
+    napi_value nv_ret;
+    int ret = -10;
+    napi_valuetype type_of_argument;
+
+    unsigned int iDeviceId;
+    uint32_t command;
+    uint32_t data;
+
+    // get args
+    status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+
+    if (status != napi_ok)
+    {
+        // we cant recover from this error
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+    }
+    else
+    {
+        // Parse all the arguments, all need to be valid to proceed
+        // 0: unsigned int iDeviceId
+        status = napi_typeof(env, argv[0], &type_of_argument);
+        if (status != napi_ok || type_of_argument != napi_number)
+        {
+            napi_throw_type_error(env, NULL, "DeviceId not number");
+        }
+        else
+        {
+            status = napi_get_value_uint32(env, argv[0], &iDeviceId);
+
+            if (status != napi_ok)
+                napi_throw_error(env, NULL, "Invalid DeviceId");
+        }
+
+        // 1: uint8_t command
+        status = napi_typeof(env, argv[1], &type_of_argument);
+        if (status != napi_ok || type_of_argument != napi_number)
+        {
+            napi_throw_type_error(env, NULL, "command not number");
+        }
+        else
+        {
+            status = napi_get_value_uint32(env, argv[1], &command);
+
+            if (status != napi_ok)
+                napi_throw_error(env, NULL, "Invalid command");
+        }
+
+        // 2: uint32_t data
+        status = napi_typeof(env, argv[2], &type_of_argument);
+        if (status != napi_ok || type_of_argument != napi_number)
+        {
+            napi_throw_type_error(env, NULL, "data not number");
+        }
+        else
+        {
+            status = napi_get_value_uint32(env, argv[2], &data);
+
+            if (status != napi_ok)
+                napi_throw_error(env, NULL, "Invalid data");
+        }
+
+        // Call C routine
+
+        ret = openThings_cache_cmd(iDeviceId, command, data);
+    }
+
+    // convert return value into JS value
+    status = napi_create_int32(env, ret, &nv_ret);
+
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Unable to create return value");
+    }
+
+    return nv_ret;
+}
 
 // ----------FILE--------- ook_send.c
 /*
@@ -451,7 +542,8 @@ napi_value bye_async(napi_env env, napi_callback_info info)
                                    void* data,
                                    napi_async_work* result);
 	 * async_resource_name should be a null-terminated, UTF-8-encoded string.
-	 * Note: The async_resource_name identifier is provided by the user and should be representative of the type of async work being performed. It is also recommended to apply namespacing to the identifier, e.g. by including the module name.
+	 * Note: The async_resource_name identifier is provided by the user and should be representative of the type of async work being performed. 
+     * It is also recommended to apply namespacing to the identifier, e.g. by including the module name.
 	 * See the async_hooks documentation for more information.
 	 //
 	napi_create_string_utf8(env, "bye:sleep", -1, &async_resource_name);
@@ -465,7 +557,6 @@ napi_value bye_async(napi_env env, napi_callback_info info)
 */
 
 // ----------------- END WRAPPERS -----------------------------
-
 
 /*
 ** Initialise N-API functions and properties for the C library to be used from node.js / node-red
@@ -512,6 +603,13 @@ napi_value Init(napi_env env, napi_value exports)
          .data = NULL},
         {.utf8name = "openThingsReceive",
          .method = nf_openThings_receive,
+         .getter = NULL,
+         .setter = NULL,
+         .value = NULL,
+         .attributes = napi_default,
+         .data = NULL},
+        {.utf8name = "openThingsCacheCmd",
+         .method = nf_openThings_cache_cmd,
          .getter = NULL,
          .setter = NULL,
          .value = NULL,

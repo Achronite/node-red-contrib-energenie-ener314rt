@@ -1,0 +1,142 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openThings-trv', {
+        category: 'Energenie 314RT',
+        color: '#82529e',
+        defaults: {
+            name: { value: "Radiator Valve" },
+            device: { type: "openThings-device", required: true },
+            board: { type: "energenie-board", required: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        align: "right",
+        icon: "TRV2.png",
+        paletteLabel: 'Radiator Valve',
+        label: function () {
+            return (this.name || this.label || this.paletteLabel);
+        },
+        // Update the label to the select device on save (displayed if node name is undefined)
+        oneditsave: function () {
+            this.label = $('#node-input-device option:selected').text();
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="openThings-trv">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-board"><i class="fa fa-microchip"></i> Board</label>
+        <input type="text" id="node-input-board"/>
+    </div>
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-plug"></i> Device</label>
+        <input type="text" id="node-input-device"/>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="openThings-trv">
+    <h3>Details</h3>
+        <p>Node that monitors and controls the energenie thermostatic radiator valve (eTRV) supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+                <p>The status of the node shows '.. sent' when a signal is sent to device, it then reads the temperature from the device, confirming it has received the request, e.g.
+        <ul>
+            <li>'Temp nn.n' > 'Current Temperature'</li>
+        </ul>
+        <p>NOTE: The radiator valve can only accept commands after it has reported, by default this is every 5 minutes. Only the latest command will be cached and sent to the radiator valve</p>
+    <h3>Inputs</h3>
+        <dl class="message-properties">
+            <dt>payload
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>The state that you want the radiator valve to be in, where true=on, false=off</dd>
+        </dl>
+        <p>OR</p>
+        <dl class="message-properties">
+            <dt>payload
+                <span class="property-type">Integer</span>
+            </dt>
+            <dd>The target temperature for the radiator in degrees Celcius</dd>
+        </dl>
+        <p>OR (ADVANCED MODE)</p>
+        <dl class="message-properties">
+            <dt>payload.command
+                <span class="property-type">Integer</span>
+            </dt>
+            <dd>The numeric command to send (see commands below)</dd>
+            <dt>payload.data
+                <span class="property-type">Integer</span>
+            </dt>
+            <dd>The data associated with the command</dd>
+        </dl>
+            
+    <h3>Outputs</h3>
+        <p>Device Information</p>
+        <dl class="message-properties">
+            <dt>payload.deviceId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>The unique Id of the device</dd>
+            <dt>payload.mfrId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Usually 4 for energenie devices</dd>
+            <dt>payload.productId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Product code (2 for Adapter Plus)</dd>
+            <dt>payload.timestamp
+                <span class="property-type">timestamp</span>
+            </dt>
+            <dd>Date & Time the message was received</dd>
+        </dl>
+        <p>Monitored Values</p>
+        <dl class="message-properties">
+            <dt>payload.TEMPERATURE
+                <span class="property-type">float</span>
+            </dt>
+            <dd>The current temperature in Celcius</dd>    
+        </dl>
+        <p>NOTE: As this node also receives, input messages do not get outputted.</p>
+    <h3>Advanced Commands</h3>
+        <p>Send the numeric value for the command to execute.</p>   
+        <dl class="message-properties">    
+            <dt>EXERCISE_VALVE
+                <span class="property-type">163</span>   
+            </dt>
+            <dd>Send exercise valve command to driver board.</dd>
+
+            <dt>SET_LOW_POWER_MODE
+                    <span class="property-type">164</span>
+            </dt> 
+            <dd>0=Low power mode off</dd
+            <dd>1=Low power mode on</dd>
+
+            <dt>REQUEST_DIAGNOTICS
+                    <span class="property-type">166</span>  
+            </dt>
+            <dd>Set valve state</dl>
+            <dd>.data=
+                <br >0 = Set Valve Fully Open
+                <br> 1 = Set Valve Fully Closed
+                <br>2 = Set Normal Operation</dd>
+
+            <dt>SET_REPORTING_INTERVAL
+                <span class="property-type">210</span>
+            </dt>
+            <dd>Update reporting interval in seconds to requested value</dd>
+            <dd>.data = 300-3600</dl>
+
+            <dt>REQUEST_VOLTAGE
+                    <span class="property-type">226</span>   
+            </dt>
+            <dd>Request battery voltage.</dd>
+
+            <dt>TEMP_SET
+                    <span class="property-type">244</span>
+                </dt>
+                <dd>Send new target temperature to driver board</dd>
+                <dd>.data='temperature in C'</dd>
+            </dl>
+</script>

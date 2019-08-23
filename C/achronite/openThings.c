@@ -19,64 +19,63 @@
 // OpenThings FSK paramters (known)  [{ParamName, paramId}]
 // I've moved the likely ones to the top for speed, and included in .c file to prevent compiler warnings
 static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
-    {"UNKNOWN",         0x00},
-    {"FREQUENCY",       0x66},
-    {"REAL_POWER",      0x70},
-    {"REACTIVE_POWER",  0x71},
-    {"VOLTAGE",         0x76},
-    {"TEMPERATURE",     0x74},
-    {"ALARM",           0x21},
-    {"DEBUG_OUTPUT",    0x2D},
-    {"IDENTIFY",        0x3F},
+    {"UNKNOWN", 0x00},
+    {"FREQUENCY", 0x66},
+    {"REAL_POWER", 0x70},
+    {"REACTIVE_POWER", 0x71},
+    {"VOLTAGE", 0x76},
+    {"TEMPERATURE", 0x74},
+    {"ALARM", 0x21},
+    {"DEBUG_OUTPUT", 0x2D},
+    {"IDENTIFY", 0x3F},
     {"SOURCE_SELECTOR", 0x40}, // write only
-    {"WATER_DETECTOR",  0x41},
-    {"GLASS_BREAKAGE",  0x42},
-    {"CLOSURES",        0x43},
-    {"DOOR_BELL",       0x44},
-    {"ENERGY",          0x45},
-    {"FALL_SENSOR",     0x46},
-    {"GAS_VOLUME",      0x47},
-    {"AIR_PRESSURE",    0x48},
-    {"ILLUMINANCE",     0x49},
-    {"LEVEL",           0x4C},
-    {"RAINFALL",        0x4D},
-    {"APPARENT_POWER",  0x50},
-    {"POWER_FACTOR",    0x51},
-    {"REPORT_PERIOD",   0x52},
-    {"SMOKE_DETECTOR",  0x53},
-    {"TIME_AND_DATE",   0x54},
-    {"VIBRATION",       0x56},
-    {"WATER_VOLUME",    0x57},
-    {"WIND_SPEED",      0x58},
-    {"GAS_PRESSURE",    0x61},
-    {"BATTERY_LEVEL",   0x62},
-    {"CO_DETECTOR",     0x63},
-    {"DOOR_SENSOR",     0x64},
-    {"EMERGENCY",       0x65},
-    {"GAS_FLOW_RATE",   0x67},
-    {"REL_HUMIDITY",    0x68},
-    {"CURRENT",         0x69},
-    {"JOIN",            0x6A},
-    {"LIGHT_LEVEL",     0x6C},
+    {"WATER_DETECTOR", 0x41},
+    {"GLASS_BREAKAGE", 0x42},
+    {"CLOSURES", 0x43},
+    {"DOOR_BELL", 0x44},
+    {"ENERGY", 0x45},
+    {"FALL_SENSOR", 0x46},
+    {"GAS_VOLUME", 0x47},
+    {"AIR_PRESSURE", 0x48},
+    {"ILLUMINANCE", 0x49},
+    {"LEVEL", 0x4C},
+    {"RAINFALL", 0x4D},
+    {"APPARENT_POWER", 0x50},
+    {"POWER_FACTOR", 0x51},
+    {"REPORT_PERIOD", 0x52},
+    {"SMOKE_DETECTOR", 0x53},
+    {"TIME_AND_DATE", 0x54},
+    {"VIBRATION", 0x56},
+    {"WATER_VOLUME", 0x57},
+    {"WIND_SPEED", 0x58},
+    {"GAS_PRESSURE", 0x61},
+    {"BATTERY_LEVEL", 0x62},
+    {"CO_DETECTOR", 0x63},
+    {"DOOR_SENSOR", 0x64},
+    {"EMERGENCY", 0x65},
+    {"GAS_FLOW_RATE", 0x67},
+    {"REL_HUMIDITY", 0x68},
+    {"CURRENT", 0x69},
+    {"JOIN", 0x6A},
+    {"LIGHT_LEVEL", 0x6C},
     {"MOTION_DETECTOR", 0x6D},
-    {"OCCUPANCY",       0x6F},
-    {"ROTATION_SPEED",  0x72},
-    {"SWITCH_STATE",    0x73},
+    {"OCCUPANCY", 0x6F},
+    {"ROTATION_SPEED", 0x72},
+    {"SWITCH_STATE", 0x73},
     {"WATER_FLOW_RATE", 0x77},
-    {"WATER_PRESSURE",  0x78},
-    {"TEST",            0xAA}
-};
+    {"WATER_PRESSURE", 0x78},
+    {"TEST", 0xAA}};
 
 // OpenThings FSK products (known)  [{mfrId, productId, control (boolean), product}]
 static struct OT_PRODUCT OTproducts[NUM_OT_PRODUCTS] = {
-    {4, 0x00, true,  "Unknown"       },
-    {4, 0x01, false, "Monitor Plug"  },
-    {4, 0x02, true,  "Adapter Plus"  },
-    {4, 0x05, false, "House Monitor" },
-    {4, 0x03, true,  "Radiator Valve"},
-    {4, 0x0C, false, "Motion Sensor" },
-    {4, 0x0D, false, "Open Sensor"   },
-    {4, 0x0E, true,  "Thermostat"    }   // I dont know the productId of this yet, guessing at 0E
+    {4, 0x00, true, "Unknown"},
+    {4, 0x01, false, "Monitor Plug"},
+    {4, 0x02, true, "Adapter Plus"},
+    {4, 0x05, false, "House Monitor"},
+    {4, 0x03, true, "Radiator Valve"},
+    {4, 0x0C, false, "Motion Sensor"},
+    {4, 0x0D, false, "Open Sensor"},
+    {4, 0x0E, true, "Thermostat"} // I dont know the productId of this yet, guessing at 0E
 };
 
 // Globals - yuck
@@ -292,9 +291,11 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
     // A good indication this is an OpenThings msg, is to check the length first, abort if too long or short
     if (length > MAX_FIFO_BUFFER || length < 10)
     {
+        /*
         TRACE_OUTS("ERROR openThings_decode(): Not OT Message, invalid length=");
         TRACE_OUTN(length);
         TRACE_NL();
+        */
         return -1;
     }
 
@@ -323,7 +324,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
     if (crc != crca)
     {
         // CRC does not match
-        TRACE_OUTS("openThings_decode(%d): Not OT Message, CRC error\n");
+        //TRACE_OUTS("openThings_decode(%d): Not OT Message, CRC error\n");
         return -2;
     }
     else
@@ -499,6 +500,16 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
     radio_msg[OTS_MSGLEN - 2] = ((crc >> 8) & 0xFF); // MSB
     radio_msg[OTS_MSGLEN - 1] = (crc & 0xFF);        // LSB
 
+#if defined(TRACE)
+    TRACE_OUTS("switch tx payload (unencrypted):\n");
+    for (int i = 0; i < OTS_MSGLEN; i++)
+    {
+        TRACE_OUTN(radio_msg[i]);
+        TRACE_OUTC(',');
+    }
+    TRACE_NL();
+#endif
+
     // Stage 1d: encrypt body part of message
     cryptMsg(CRYPT_PID, CRYPT_PIP, &radio_msg[5], (OTS_MSGLEN - 5));
 
@@ -531,6 +542,236 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
 }
 
 /*
+** openThings_cmd()
+** ===================
+** Send a command to a 'Control and Monitor' RF FSK OpenThings based Energenie smart device
+** Currently this covers the 'HiHome Adaptor Plus' and 'MiHome Heating' TRV
+**
+** SUPPORTED Commands (x)
+** ----------------------
+** x OTCP_SWITCH_STATE              0xF3  Set status of switched device
+** - OTCP_JOIN                      0xEA  Acknowledge a JOIN request
+** x OTCP_TEMP_SET                  0xF4  Send new target temperature
+** x OTCP_EXERCISE_VALVE            0xA3  Send exercise valve command to TRV 
+** x OTCP_REQUEST_VOLTAGE           0xE2  Request battery voltage 
+** x OTCP_REQUEST_DIAGNOTICS        0xA6  Request diagnostic flags
+** x OTCP_SET_VALVE_STATE           0xA5  Set TRV valve state
+** - OTCP_SET_LOW_POWER_MODE        0xA4  Set TRV 0=Low power mode off, 1=Low power mode on
+** - OTCP_SET_REPORTING_INTERVAL    0xD2  Update reporting interval to requested value
+**
+** The OpenThings messages are comprised of 3 parts:
+**  Header  - msgLength, manufacturerId, productId, encryptionPIP, and deviceId
+**  Records - The body of the message, in this case a single command to switch the state
+**  Footer  - CRC
+**
+** Functions performed include:
+**    initialising the radio and setting the modulation
+**    encoding of the device and command
+**    formatting and encoding the OpenThings FSK radio request
+**    sending the radio request via the ENER314-RT RaspberryPi adaptor
+*/
+int openThings_cmd(unsigned char iProductId, unsigned int iDeviceId, unsigned char iCommand, unsigned int iData, unsigned char xmits)
+{
+    int ret = 0;
+    unsigned short crc;
+    unsigned char radio_msg[MAX_R1_MSGLEN] = {OTS_MSGLEN, ENERGENIE_MFRID, PRODUCTID_MIHO005, OT_DEFAULT_PIP, OT_DEFAULT_DEVICEID, 0x00, 0x00, 0x00, 0x00};
+    unsigned char msglen;
+    unsigned char iType = 0x00;
+
+#if defined(TRACE)
+    printf("openThings_cmd: productId=%d, deviceId=%d, cmd=%d, data=%d, xmits=%d\n", iProductId, iDeviceId, iCommand, iData, xmits);
+#endif
+
+    switch (iCommand)
+    {
+    case OTCP_SET_VALVE_STATE:
+        msglen = MIN_R1_MSGLEN + 1;
+        iType = 0x01;
+        break;
+
+    case OTCP_TEMP_SET:
+        msglen = MIN_R1_MSGLEN + 2;
+        iType = 0x92;
+        break;
+
+    case OTCP_REQUEST_DIAGNOTICS:
+        msglen = MIN_R1_MSGLEN;
+        break;
+        
+    case OTCP_EXERCISE_VALVE:
+        msglen = MIN_R1_MSGLEN;
+        break;
+
+    case OTCP_REQUEST_VOLTAGE:
+        msglen = MIN_R1_MSGLEN;
+        break;
+
+    case OTCP_SWITCH_STATE:
+        msglen = MIN_R1_MSGLEN + 1;
+        iType = 0x01;
+        break;
+            
+    default:
+        // unknown command, abort
+        return -1;
+    }
+
+    /*
+    ** Stage 1: Build the message to send
+    */
+
+    /* Stage 1a: OpenThings HEADER
+    */
+    // message length
+    radio_msg[0] = msglen - 1;
+
+    // productId (usually 2 for MIHO005)
+    radio_msg[OTH_INDEX_PRODUCTID] = iProductId;
+
+    /*
+    ** Stage 1b: OpenThings RECORDS (Commands)
+    */
+    // deviceId
+    radio_msg[OTH_INDEX_DEVICEID] = (iDeviceId >> 16) & 0xFF;    //MSB
+    radio_msg[OTH_INDEX_DEVICEID + 1] = (iDeviceId >> 8) & 0xFF; //MID
+    radio_msg[OTH_INDEX_DEVICEID + 2] = iDeviceId & 0xFF;        //LSB
+
+    // command
+    radio_msg[OT_INDEX_R1_CMD] = iCommand;
+
+    // type
+    radio_msg[OT_INDEX_R1_TYPE] = iType;
+
+    // data value, base encoding off the msglen
+    switch(msglen-MIN_R1_MSGLEN)
+    {
+        case 0:
+            break;
+        case 1:
+            radio_msg[OT_INDEX_R1_VALUE] = iData & 0xFF;
+            break;
+        case 2:
+            radio_msg[OT_INDEX_R1_VALUE] = iData & 0xFF;
+            radio_msg[OT_INDEX_R1_VALUE+1] = (iData >> 8) & 0xFF;
+            break;
+    }
+
+    /*
+    ** Stage 1c: OpenThings FOOTER (CRC)
+    */
+    crc = calculateCRC(&radio_msg[5], (msglen - 7));
+    radio_msg[msglen - 2] = ((crc >> 8) & 0xFF); // MSB
+    radio_msg[msglen - 1] = (crc & 0xFF);        // LSB
+
+#if defined(TRACE)
+    TRACE_OUTS("tx payload (unencrypted):\n");
+    for (int i = 0; i < msglen; i++)
+    {
+        TRACE_OUTN(radio_msg[i]);
+        TRACE_OUTC(',');
+    }
+    TRACE_NL();
+#endif
+
+    // Stage 1d: encrypt body part of message
+    cryptMsg(CRYPT_PID, CRYPT_PIP, &radio_msg[5], (msglen - 5));
+
+    /*
+    ** Stage 2: Empty Rx buffer if required
+    */
+
+    // mutex access radio adaptor to set mode
+    if ((ret = lock_ener314rt()) != 0)
+    {
+        TRACE_FAIL("openthings_switch(): error getting lock\n");
+        return -1;
+    }
+    else
+    {
+        ret = empty_radio_Rx_buffer(DT_CONTROL);
+        //printf("openThings_switch(%d): Rx_Buffer ", ret);
+
+        /*
+        ** Stage 3: Transmit via radio adaptor, using mutex to block the radio
+        */
+        // Transmit encoded payload 26ms per payload * xmits
+        radio_mod_transmit(RADIO_MODULATION_FSK, radio_msg, msglen, xmits);
+
+        // release mutex lock
+        unlock_ener314rt();
+    }
+
+    return ret;
+}
+
+/*
+** openThings_cache_cmd()
+** ===================
+** Cache a command to be sent to a 'Control and Monitor' RF FSK OpenThings based Energenie smart device
+** This is designed for devices that have a small receive window such as the 'MiHome Heating' TRV
+**
+*/
+char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigned int data)
+{
+    int ret = 0, index;
+
+#if defined(TRACE)
+    printf("openThings_cache_cmd(): deviceId=%d, cmd=%d, value=%d\n", iDeviceId, command, data);
+#endif
+
+    /*
+    ** We store the command in the OTdevices array for the device if we have record of it (i.e. we have Rx a msg from it)
+    */
+    index = openThings_getDeviceIndex(iDeviceId);
+    if (index >= 0)
+    {
+        OTdevices[index].command = command;
+        OTdevices[index].data = data;
+    }
+    else
+    {
+        TRACE_OUTS("openThings_cache_cmd() ERROR: unable to cache command for unknown device.\n");      
+        ret = -1;
+    }
+
+    return ret;
+}
+
+/*
+** openThings_cache_send()
+** ===================
+** Send any cached command to a 'Control and Monitor' RF FSK OpenThings based Energenie smart device
+** This is designed for devices that have a small receive window such as the 'MiHome Heating' TRV
+**
+** set cached command using openThings_cmd()
+*/
+int openThings_cache_send(unsigned int iDeviceId)
+{
+    int ret = 0, index;
+
+    /*
+    ** The command is cached in the OTdevices array
+    */
+    index = openThings_getDeviceIndex(iDeviceId);
+    if ((index >= 0) && (OTdevices[index].command > 0))
+    {
+        // we have a cached command
+
+#if defined(TRACE)
+        printf("openThings_cache_send(): deviceId=%d, cmd=%d, value=%d\n", iDeviceId, OTdevices[index].command, OTdevices[index].data);
+#endif
+
+        ret = openThings_cmd(OTdevices[index].productId, iDeviceId, OTdevices[index].command, OTdevices[index].data, 20);
+
+        // clear cached command
+        //OTdevices[index].command = 0;
+
+    }
+    
+    return ret;
+}
+
+/*
 ** openThings_receive()
 ** =======
 ** Receive a single FSK OpenThings message (if one waiting)
@@ -545,6 +786,8 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
 **    Setting radio to receive mode
 **    receiving data via the ENER314-RT device
 **    formatting and decoding the OpenThings FSK radio responses
+**    auto add any devices to device list, responding to join requests if applicable
+**NEW If a cached command is outstanding for a device that only has a small receive window, send the command
 **    returning array of returned parameters for a deviceId
 */
 int openThings_receive(char *OTmsg)
@@ -594,7 +837,11 @@ int openThings_receive(char *OTmsg)
 
         if (records > 0)
         {
-            //printf("openThings_receive(): Valid OT: \n");
+            // likely to be a valid OpenThings message
+
+            // Send any cached commands for the device, to cope with small receive windows (eg eTRV)
+            openThings_cache_send(iDeviceId);
+
             // build response JSON
             sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
 
@@ -604,7 +851,7 @@ int openThings_receive(char *OTmsg)
 #if defined(TRACE)
                 TRACE_OUTS("openThings_receive(): rec:");
                 TRACE_OUTN(i);
-                sprintf(OTrecord, " {\"name\":\"%s\",\"id\":%d,\"type\":%d,\"str\":\"%s\",\"int\":%d,\"float\":%f}\n",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].typeIndex, OTrecs[i].retChar, OTrecs[i].retInt,OTrecs[i].retFloat);
+                sprintf(OTrecord, " {\"name\":\"%s\",\"id\":%d,\"type\":%d,\"str\":\"%s\",\"int\":%d,\"float\":%f}\n", OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].typeIndex, OTrecs[i].retChar, OTrecs[i].retInt, OTrecs[i].retFloat);
                 TRACE_OUTS(OTrecord);
 #endif
                 switch (OTrecs[i].typeIndex)
@@ -616,14 +863,17 @@ int openThings_receive(char *OTmsg)
                 case OTR_INT:
                     // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
                     sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
-                    if (OTrecs[i].paramId == 0x6A) {
+                    if (OTrecs[i].paramId == 0x6A)
+                    {
                         // We seem to have stumbled upon an instruction to join outside of discovery loop, may as well autojoin the device
                         TRACE_OUTS("openThings_receive(): New device found, sending ACK: deviceId:");
                         TRACE_OUTN(iDeviceId);
                         TRACE_NL();
                         joining = true;
                         openThings_joinACK(productId, iDeviceId, 20);
-                    } else if (OTrecs[i].paramId == 0x74) {
+                    }
+                    else if (OTrecs[i].paramId == 0x74)
+                    {
                         // Seems that TEMPERATURE (0x74) received as type OTR_INT=1, and it should be OTR_FLOAT=2 from the eTRV, so override and return a float instead
                         sprintf(OTrecord, ",\"%s\":%.1f", OTrecs[i].paramName, OTrecs[i].retFloat);
                     }
