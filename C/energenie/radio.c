@@ -400,7 +400,7 @@ void radio_send_payload(uint8_t *payload, uint8_t len, uint8_t times)
     HRF_writereg(HRF_ADDR_FIFOTHRESH, len - 1);
 
     /* TRANSMIT: Transmit a number of payloads back to back */
-    TRACE_OUTS("tx multiple payloads in a single burst, payload:\n");
+    TRACE_OUTS("tx multiple payloads in a single burst, payload (encoded):\n");
 
 #if defined(TRACE)
     for (i = 0; i < len; i++)
@@ -440,7 +440,7 @@ void radio_send_payload(uint8_t *payload, uint8_t len, uint8_t times)
     //TODO: make this TRACE_ASSERT()
     if (((irqflags2 & HRF_MASK_FIFONOTEMPTY) != 0) || ((irqflags2 & HRF_MASK_FIFOOVERRUN) != 0))
     {
-        TRACE_FAIL("FIFO not empty or overrun at end of burst");
+        TRACE_FAIL("ERROR: FIFO not empty or overrun at end of burst");
     }
 #endif
 }
