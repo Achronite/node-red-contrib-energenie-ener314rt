@@ -47,7 +47,7 @@ module.exports = function (RED) {
                     case 'number':
                         var data = msg.payload;
                         if (msg.payload >= 0 && msg.payload <= 2)
-                            var cmd = 0xA5; // set valve state
+                            var cmd = 0xA5; // set valve state                            
                         else
                             var cmd = 0xF4; // set temperature
                         break;
@@ -71,9 +71,6 @@ module.exports = function (RED) {
                         this.error(`Invalid payload: ${msg.payload}`);
                         return false;
                 }
-
-
-
 
                 // Set command to be sent, next time radiator wakes up
                 var res = ener314rt.openThingsCacheCmd(deviceId, cmd, data);

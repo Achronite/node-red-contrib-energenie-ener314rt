@@ -6,6 +6,7 @@
 #include "openThings.h"
 #include "lock_radio.h"
 #include "../energenie/radio.h"
+#include "../energenie/hrfm69.h"
 #include "../energenie/trace.h"
 #include "../energenie/delay.h"
 
@@ -66,16 +67,16 @@ static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
     {"WATER_PRESSURE", 0x78},
     {"TEST", 0xAA}};
 
-// OpenThings FSK products (known)  [{mfrId, productId, control (boolean), product}]
+// OpenThings FSK products (known)  [{mfrId, productId, control (0=no, 1=yes, 2=cached), product}]
 static struct OT_PRODUCT OTproducts[NUM_OT_PRODUCTS] = {
-    {4, 0x00, true, "Unknown"},
-    {4, 0x01, false, "Monitor Plug"},
-    {4, 0x02, true, "Adapter Plus"},
-    {4, 0x05, false, "House Monitor"},
-    {4, 0x03, true, "Radiator Valve"},
-    {4, 0x0C, false, "Motion Sensor"},
-    {4, 0x0D, false, "Open Sensor"},
-    {4, 0x0E, true, "Thermostat"} // I dont know the productId of this yet, guessing at 0E
+    {4, 0x00, 1, "Unknown"},
+    {4, 0x01, 0, "Monitor Plug"},
+    {4, 0x02, 1, "Adapter Plus"},
+    {4, 0x05, 0, "House Monitor"},
+    {4, 0x03, 2, "Radiator Valve"},
+    {4, 0x0C, 0, "Motion Sensor"},
+    {4, 0x0D, 0, "Open Sensor"},
+    {4, 0x0E, 1, "Thermostat"} // I dont know the productId of this yet, guessing at 0E
 };
 
 // Globals - yuck
@@ -147,7 +148,12 @@ void cryptMsg(unsigned char pid, unsigned short pip, unsigned char *msg, unsigne
 {
     unsigned char i;
 
-    ran = (((pid & 0xFF) << 8) ^ pip);
+    // old whaleygeek
+    //ran = (((pid & 0xFF) << 8) ^ pip);
+
+    // new from gpbenton
+    ran = ((((unsigned short)pid) << 8) ^ pip);
+
     for (i = 0; i < length; i++)
     {
         msg[i] = cryptByte(msg[i]);
@@ -510,7 +516,7 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
     TRACE_NL();
 #endif
 
-    // Stage 1d: encrypt body part of message
+    // Stage 1d: encrypt body part of message, using the pip stored
     cryptMsg(CRYPT_PID, CRYPT_PIP, &radio_msg[5], (OTS_MSGLEN - 5));
 
     /*
@@ -542,10 +548,15 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
 }
 
 /*
-** openThings_cmd()
+** openThings_build_msg()
 ** ===================
-** Send a command to a 'Control and Monitor' RF FSK OpenThings based Energenie smart device
-** Currently this covers the 'HiHome Adaptor Plus' and 'MiHome Heating' TRV
+** Creates a fully-formed radio message to be sent to an FSK OpenThings based device
+** Message is not sent here
+**
+** TODO: Make this the only msg builder and sender, caching if device requires it
+**
+** Currently this has been tested with 'HiHome Adaptor Plus' and 'MiHome Heating' TRV
+** Other OpenThings devices should work
 **
 ** SUPPORTED Commands (x)
 ** ----------------------
@@ -565,21 +576,22 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
 **  Footer  - CRC
 **
 ** Functions performed include:
-**    initialising the radio and setting the modulation
-**    encoding of the device and command
-**    formatting and encoding the OpenThings FSK radio request
-**    sending the radio request via the ENER314-RT RaspberryPi adaptor
+**  NO initialising the radio and setting the modulation
+**     encoding of the device and command
+**     formatting and encoding the OpenThings FSK radio request
+**  NO sending the radio request via the ENER314-RT RaspberryPi adaptor
+**     returning built message
 */
-int openThings_cmd(unsigned char iProductId, unsigned int iDeviceId, unsigned char iCommand, unsigned int iData, unsigned char xmits)
+int openThings_build_msg(unsigned char iProductId, unsigned int iDeviceId, unsigned char iCommand, unsigned int iData, unsigned char *radio_msg)
 {
     int ret = 0;
-    unsigned short crc;
-    unsigned char radio_msg[MAX_R1_MSGLEN] = {OTS_MSGLEN, ENERGENIE_MFRID, PRODUCTID_MIHO005, OT_DEFAULT_PIP, OT_DEFAULT_DEVICEID, 0x00, 0x00, 0x00, 0x00};
-    unsigned char msglen;
+    unsigned short crc, pip;
+    //unsigned char radio_msg[MAX_R1_MSGLEN] = {0x00, ENERGENIE_MFRID, PRODUCTID_MIHO005, OT_DEFAULT_PIP, OT_DEFAULT_DEVICEID, 0x00, 0x00, 0x00, 0x00};
+    unsigned char msglen = 0;
     unsigned char iType = 0x00;
 
 #if defined(TRACE)
-    printf("openThings_cmd: productId=%d, deviceId=%d, cmd=%d, data=%d, xmits=%d\n", iProductId, iDeviceId, iCommand, iData, xmits);
+    printf("openThings_build_msg: productId=%d, deviceId=%d, cmd=%d, data=%d cmd=", iProductId, iDeviceId, iCommand, iData);
 #endif
 
     switch (iCommand)
@@ -587,30 +599,55 @@ int openThings_cmd(unsigned char iProductId, unsigned int iDeviceId, unsigned ch
     case OTCP_SET_VALVE_STATE:
         msglen = MIN_R1_MSGLEN + 1;
         iType = 0x01;
+#if defined(TRACE)
+        printf("SET_VALVE_STATE msglen=%d\n", msglen);
+#endif
         break;
 
     case OTCP_TEMP_SET:
         msglen = MIN_R1_MSGLEN + 2;
         iType = 0x92;
+#if defined(TRACE)
+        printf("OTCP_TEMP_SET msglen=%d\n", msglen);
+#endif
         break;
 
     case OTCP_REQUEST_DIAGNOTICS:
         msglen = MIN_R1_MSGLEN;
+#if defined(TRACE)
+        printf("OTCP_REQUEST_DIAGNOTICS msglen=%d\n", msglen);
+#endif
         break;
-        
+
     case OTCP_EXERCISE_VALVE:
         msglen = MIN_R1_MSGLEN;
+#if defined(TRACE)
+        printf("OTCP_EXERCISE_VALVE msglen=%d\n", msglen);
+#endif
         break;
 
     case OTCP_REQUEST_VOLTAGE:
         msglen = MIN_R1_MSGLEN;
+#if defined(TRACE)
+        printf("OTCP_REQUEST_VOLTAGE msglen=%d\n", msglen);
+#endif
         break;
 
     case OTCP_SWITCH_STATE:
         msglen = MIN_R1_MSGLEN + 1;
         iType = 0x01;
+#if defined(TRACE)
+        printf("OTCP_SWITCH_STATE msglen=%d\n", msglen);
+#endif
         break;
-            
+
+    case OTCP_IDENTIFY:
+        msglen = MIN_R1_MSGLEN;
+#if defined(TRACE)
+        printf("OTCP_IDENTIFY msglen=%d\n", msglen);
+#endif
+        break;
+
     default:
         // unknown command, abort
         return -1;
@@ -626,7 +663,12 @@ int openThings_cmd(unsigned char iProductId, unsigned int iDeviceId, unsigned ch
     radio_msg[0] = msglen - 1;
 
     // productId (usually 2 for MIHO005)
+    radio_msg[OTH_INDEX_MFRID] = ENERGENIE_MFRID;
     radio_msg[OTH_INDEX_PRODUCTID] = iProductId;
+
+    // pip (hardcoded for now)
+    radio_msg[OTH_INDEX_PIP] = 109;
+    radio_msg[OTH_INDEX_PIP + 1] = 73;
 
     /*
     ** Stage 1b: OpenThings RECORDS (Commands)
@@ -643,17 +685,17 @@ int openThings_cmd(unsigned char iProductId, unsigned int iDeviceId, unsigned ch
     radio_msg[OT_INDEX_R1_TYPE] = iType;
 
     // data value, base encoding off the msglen
-    switch(msglen-MIN_R1_MSGLEN)
+    switch (msglen - MIN_R1_MSGLEN)
     {
-        case 0:
-            break;
-        case 1:
-            radio_msg[OT_INDEX_R1_VALUE] = iData & 0xFF;
-            break;
-        case 2:
-            radio_msg[OT_INDEX_R1_VALUE] = iData & 0xFF;
-            radio_msg[OT_INDEX_R1_VALUE+1] = (iData >> 8) & 0xFF;
-            break;
+    case 0:
+        break;
+    case 1:
+        radio_msg[OT_INDEX_R1_VALUE] = iData & 0xFF;
+        break;
+    case 2:
+        radio_msg[OT_INDEX_R1_VALUE] = iData & 0xFF;
+        radio_msg[OT_INDEX_R1_VALUE + 1] = (iData >> 8) & 0xFF;
+        break;
     }
 
     /*
@@ -664,7 +706,7 @@ int openThings_cmd(unsigned char iProductId, unsigned int iDeviceId, unsigned ch
     radio_msg[msglen - 1] = (crc & 0xFF);        // LSB
 
 #if defined(TRACE)
-    TRACE_OUTS("tx payload (unencrypted):\n");
+    TRACE_OUTS("Built payload (unencrypted): ");
     for (int i = 0; i < msglen; i++)
     {
         TRACE_OUTN(radio_msg[i]);
@@ -674,32 +716,9 @@ int openThings_cmd(unsigned char iProductId, unsigned int iDeviceId, unsigned ch
 #endif
 
     // Stage 1d: encrypt body part of message
-    cryptMsg(CRYPT_PID, CRYPT_PIP, &radio_msg[5], (msglen - 5));
-
-    /*
-    ** Stage 2: Empty Rx buffer if required
-    */
-
-    // mutex access radio adaptor to set mode
-    if ((ret = lock_ener314rt()) != 0)
-    {
-        TRACE_FAIL("openthings_switch(): error getting lock\n");
-        return -1;
-    }
-    else
-    {
-        ret = empty_radio_Rx_buffer(DT_CONTROL);
-        //printf("openThings_switch(%d): Rx_Buffer ", ret);
-
-        /*
-        ** Stage 3: Transmit via radio adaptor, using mutex to block the radio
-        */
-        // Transmit encoded payload 26ms per payload * xmits
-        radio_mod_transmit(RADIO_MODULATION_FSK, radio_msg, msglen, xmits);
-
-        // release mutex lock
-        unlock_ener314rt();
-    }
+    //pip = (unsigned short)((radio_msg[OTH_INDEX_PIP]<<8)|radio_msg[OTH_INDEX_PIP+1]);
+    pip = (radio_msg[3] << 8) + radio_msg[4];
+    cryptMsg(CRYPT_PID, pip, &radio_msg[5], (msglen - 5));
 
     return ret;
 }
@@ -710,10 +729,13 @@ int openThings_cmd(unsigned char iProductId, unsigned int iDeviceId, unsigned ch
 ** Cache a command to be sent to a 'Control and Monitor' RF FSK OpenThings based Energenie smart device
 ** This is designed for devices that have a small receive window such as the 'MiHome Heating' TRV
 **
+** Build the full message here, as Rx window is quite small for eTRV
+**
 */
 char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigned int data)
 {
     int ret = 0, index;
+    unsigned char radio_msg[MAX_R1_MSGLEN] = {0};
 
 #if defined(TRACE)
     printf("openThings_cache_cmd(): deviceId=%d, cmd=%d, value=%d\n", iDeviceId, command, data);
@@ -725,13 +747,19 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
     index = openThings_getDeviceIndex(iDeviceId);
     if (index >= 0)
     {
-        OTdevices[index].command = command;
-        OTdevices[index].data = data;
+        // Device known, build full radio message
+        ret = openThings_build_msg(OTdevices[index].productId, iDeviceId, command, data, radio_msg);
+
+        if (ret == 0)
+        {
+            // store message against the Device array, only 1 cached command is supported at any one time
+            memcpy(OTdevices[index].cachedCmd, radio_msg, MAX_R1_MSGLEN);
+        }
     }
     else
     {
-        TRACE_OUTS("openThings_cache_cmd() ERROR: unable to cache command for unknown device.\n");      
-        ret = -1;
+        TRACE_OUTS("openThings_cache_cmd() ERROR: unable to cache command for unknown device.\n");
+        ret = -2;
     }
 
     return ret;
@@ -748,26 +776,41 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
 int openThings_cache_send(unsigned int iDeviceId)
 {
     int ret = 0, index;
+    unsigned char msglen;
 
     /*
-    ** The command is cached in the OTdevices array
+    ** The full command is cached in the OTdevices array
     */
     index = openThings_getDeviceIndex(iDeviceId);
-    if ((index >= 0) && (OTdevices[index].command > 0))
+    if (index >= 0)
     {
-        // we have a cached command
-
+        msglen = OTdevices[index].cachedCmd[0] + 1; // msglen in radio message doesn't include the length byte :)
+        if (msglen > 1)
+        {
+            // we have a cached command, send it ASAP
 #if defined(TRACE)
-        printf("openThings_cache_send(): deviceId=%d, cmd=%d, value=%d\n", iDeviceId, OTdevices[index].command, OTdevices[index].data);
+            printf("openThings_cache_send(): deviceId=%d\n", iDeviceId);
 #endif
+            if ((lock_ener314rt()) == 0)
+            {
+                radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_TRANSMITTER);
+                
+                //radio_mod_transmit(RADIO_MODULATION_FSK, OTdevices[index].cachedCmd, msglen, 10); //TODO make xmits configurable
+                radio_send_payload(OTdevices[index].cachedCmd, msglen, 1); // already in correct mode, no need to switch
 
-        ret = openThings_cmd(OTdevices[index].productId, iDeviceId, OTdevices[index].command, OTdevices[index].data, 20);
+                // set mode to receive, as cached commands usually expect a reply
+                //radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
+                
+                // empty incoming buffer immediately
+                empty_radio_Rx_buffer(DT_MONITOR);
 
-        // clear cached command
-        //OTdevices[index].command = 0;
-
+                unlock_ener314rt();
+                // clear cached command by setting the length to zero
+                //OTdevices[index].cachedCmd[0] = 0;
+            }
+        }
     }
-    
+
     return ret;
 }
 
@@ -897,14 +940,14 @@ int openThings_receive(char *OTmsg)
             // Add to deviceList
             openThings_devicePut(iDeviceId, mfrId, productId, joining);
 
+            TRACE_OUTS("openThings_receive: Returning: ");
+            TRACE_OUTS(OTmsg);
+            TRACE_NL();
+
             // valid message, break while loop
             break;
         }
     }
-
-    TRACE_OUTS("openThings_receive: Returning: ");
-    TRACE_OUTS(OTmsg);
-    TRACE_NL();
 
     return records;
 }
@@ -1078,6 +1121,16 @@ unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceI
     crc = calculateCRC(&radio_msg[5], (OTA_MSGLEN - 7));
     radio_msg[OTA_MSGLEN - 2] = ((crc >> 8) & 0xFF); // MSB
     radio_msg[OTA_MSGLEN - 1] = (crc & 0xFF);        // LSB
+
+#if defined(TRACE)
+    TRACE_OUTS("ACK tx payload (unencrypted):\n");
+    for (int i = 0; i < OTA_MSGLEN; i++)
+    {
+        TRACE_OUTN(radio_msg[i]);
+        TRACE_OUTC(',');
+    }
+    TRACE_NL();
+#endif
 
     // Stage 1d: encrypt body part of message
     cryptMsg(CRYPT_PID, CRYPT_PIP, &radio_msg[5], (OTA_MSGLEN - 5));

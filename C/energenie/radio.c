@@ -392,7 +392,7 @@ void radio_send_payload(uint8_t *payload, uint8_t len, uint8_t times)
     }
 
     /* CONFIGURE: Setup the radio for transmit of the correct payload length */
-    TRACE_OUTS("config\n");
+    // TRACE_OUTS("config\n");
     // Start transmitting when a full payload is loaded. So for '15':
     // level triggers when it 'strictly exceeds' level (i.e. 16 bytes starts tx,
     // and <=15 bytes triggers fifolevel irqflag to be cleared)
@@ -428,7 +428,7 @@ void radio_send_payload(uint8_t *payload, uint8_t len, uint8_t times)
 
     /* CONFIRM: Was the transmit ok? */
     // Check final flags in case of overruns etc
-#if defined(TRACE)
+#if defined(FULLTRACE)
     uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
     uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
     TRACE_OUTS("irqflags1,2=");
