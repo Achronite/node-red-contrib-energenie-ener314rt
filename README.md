@@ -19,10 +19,11 @@ on a Raspberry Pi with an **ENER314-RT** board installed using node-red (see bel
 
 **'Control'**, **'Monitor'** and **'Control & Monitor'** radio based devices are supported from the legacy and MiHome range.
 
-There are 4 nodes in total:
+There are 5 nodes in total:
 * **Blue** for switching '**Control**' (OOK) based devices
 * **Pink** for monitoring MiHome **'Monitor'** devices
-* **Purple** for monitoring and controlling **'Control & Monitor'** devices, including confirmed switching
+* **Purple Switch** for monitoring and switching **'Control & Monitor'** devices
+* **Purple eTRV** for monitoring and controlling **'Control & Monitor'** MiHome Thermostatic Radiator values (eTRV)
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
@@ -52,11 +53,11 @@ The number of individual devices this node can control is over 4 million, so it 
 
 4) Perform one-time only setup to **discover** your **'Monitor'** and **'Control & Monitor'** devices (if applicable)
 
-    * Drag the pink or purple nodes onto the canvas
+    * Drag one of the pink or purple nodes onto the canvas
     * Open the node by double clicking
     * If required, add a board config (only done once for all devices), by clicking pencil next to board, and then clicking 'add'
     * Click 'pencil' icon to add a new device
-    * The device config node will open and perform an auto-scan; after 10 seconds it returns a list of devices that it has found. I do not believe that you need to get the device to 'join' the network by holding the button.  You can click the search button if the device is not found.  If you find that it is still not working, please raise a bug request.
+    * The device config node will open and perform an auto-scan; after 10 seconds it returns a list of devices that it has found. If your device is not found you get it to 'join' the network by holding the button.  You can click the search button if the device is not found.  If you find that it is still not working, please raise a bug request.
     * Select the device in the 'Devices' drop down
     * The Product name, ID and type will populate
     * (Optional) Change the 'Name' of the device if desired
@@ -90,7 +91,7 @@ I've tested the nodes with all devices that I currently own.  Here is a table sh
 |MIHO006|MiHome House Monitor| | x
 |MIHO007|MiHome Socket (White)| x|||x
 |MIHO008|MiHome Light Switch (White)| x
-|MIHO013|MiHome Radiator Valve| | x | soon |
+|MIHO013|MiHome Radiator Valve| | x | use eTRV node | beta
 |MIHO014|Single Pole Relay (inline)| x
 |MIHO015|MiHome Relay| x
 |MIHO021|MiHome Socket (Nickel)|x|||White
@@ -106,13 +107,13 @@ I've tested the nodes with all devices that I currently own.  Here is a table sh
 
 
 ### NOT SUPPORTED:
-Specific nodes are required to send the correct control signals to other **'control & monitor'** devices such as the MiHome Heating TRV.  I now have an eTRV and I will be creating a new node for them. The current build supports temperature reporting via the monitor node; but I want to refactor the code to use N-API first.
+Specific nodes are required to send the correct control signals to other **'control & monitor'** devices.  This version now has basic support for the MiHome Heating thermostatic radiator valve (eTRV), but it is a bit temperamental on receiving instruction signals (see issues).  I believe this is caused by timing issues with the receive window on these devices.
 
 
 ## Processing Monitor Messages
 
-The **'Monitor'** & **'Control & Monitor'** nodes receive monitoring information from the devices and emit the received paramter values on their output.  These messages conform to the OpenThings parameter standard.
-All OpenThings parameters received from the device are decoded and returned in the ```msg.payload```.  I use the returned *SWITCH_STATE* parameter to set the *node.status* of the node to say if it is 'ON' or 'OFF'.
+The **'Monitor'**, **'Control & Monitor'** & **'eTRV'  nodes receive monitoring information from the devices and emit the received parameter values on their output.  These messages conform to the OpenThings parameter standard.
+All OpenThings parameters received from the device are decoded and returned in the ```msg.payload```.  I use the returned *SWITCH_STATE* parameter to set the *node.status* of the C&M nodes to say if it is 'ON' or 'OFF', and the *TEMPERATURE* value is used on the eTRV node to show the current temperature.
 
 For example the 'Adapter Plus' returns the following parameters in the ```msg.payload```:
 ```
@@ -128,11 +129,19 @@ Connect up a debug node to see what your specific devices output.
 
 A full parameter list can be found in C/src/achronite/openThings.c if required.
 
+## Change History
+| Version | Change details
+|---|---|
+0.1.0|Initial Release
+0.2.0|Full NPM & node-red catalogue release
+0.3.0|Switched to use node.js Native API (N-API) for calling C functions.  Added new node to support MiHome Radiator Valve, but it does not always process commands (see [issue](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues/4)).
+
 
 ## Built With
 
 * [NodeJS](https://nodejs.org/dist/latest-v6.x/docs/api/) - JavaScript runtime built on Chrome's V8 JavaScript engine.
 * [Node-RED](http://nodered.org/docs/creating-nodes/) - for wiring together hardware devices, APIs and online services.
+* [N-API](https://nodejs.org/docs/latest-v10.x/api/n-api.html)- *NEW in v0.3* - Used to wrap C code as a native node.js Addon. N-API is maintained as part of Node.js itself, and produces Application Binary Interface (ABI) stable across all versions of Node.js.
 
 ## Authors
 
@@ -151,4 +160,5 @@ Future work is detailed on the [github issues page](https://github.com/Achronite
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - August 2019 - v0.2.2 Beta
+
+@Achronite - August 2019 - v0.3.0 Beta
