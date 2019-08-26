@@ -26,7 +26,7 @@ struct OT_PARAM {
   char paramName[15];
   char paramId;
 };
-#define NUM_OT_PARAMS 46
+#define NUM_OT_PARAMS 47
 
 
 /* OpenThings Command Parameters - 0x80 added */

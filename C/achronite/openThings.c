@@ -26,6 +26,7 @@ static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
     {"REACTIVE_POWER", 0x71},
     {"VOLTAGE", 0x76},
     {"TEMPERATURE", 0x74},
+    {"DIAGNOSTICS", 0x26},
     {"ALARM", 0x21},
     {"DEBUG_OUTPUT", 0x2D},
     {"IDENTIFY", 0x3F},
@@ -351,8 +352,15 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
             param = payload[i++];
             recs[record].wr = ((param & 0x80) == 0x80);
             recs[record].paramId = param & 0x7F;
-            strcpy(recs[record].paramName, OTparams[openThings_getParamIndex(recs[record].paramId)].paramName);
-
+            int paramIndex = openThings_getParamIndex(recs[record].paramId);
+            if (paramIndex != 0)
+            {
+                strcpy(recs[record].paramName, OTparams[paramIndex].paramName);
+            }
+            else
+            {
+                sprintf(recs[record].paramName, "UNKNOWN_0x%2x", recs[record].paramId);
+            }
             // no equivalent of 'in' for C, probably messy to code this here anyway as they are strings; do it in calling function instead (javascript in my case)
             /*
                 if paramid in param_info:
@@ -368,6 +376,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
             rlen = payload[i++] & 0x0F;
             //printf("openThings_decode(): record[%d] paramid=0x%02x typeId=0x%02x values:[", record, recs[record].paramId, recs[record].typeId);
 
+// PTG: CHECK THE BITS HERE, Type is returning 1, but these are bitwuse ******************************************************
             // In C, it is not great at returning different types for a function; so we are just going to have to code it here rather than be a modular coder :(
             switch (recs[record].typeId)
             {
@@ -382,7 +391,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
             case OT_UINT:
                 for (j = 0; j < rlen; j++)
                 {
-                    // printf("%d,", payload[i + j]);
+                    printf("%d,", payload[i + j]);
                     result <<= 8;
                     result += payload[i + j];
                 }
@@ -396,7 +405,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
             case OT_UINT24:
                 for (j = 0; j < rlen; j++)
                 {
-                    // printf("%d,", payload[i + j]);
+                    printf("%d,", payload[i + j]);
                     result <<= 8;
                     result += payload[i + j];
                 }
@@ -720,6 +729,16 @@ int openThings_build_msg(unsigned char iProductId, unsigned int iDeviceId, unsig
     pip = (radio_msg[3] << 8) + radio_msg[4];
     cryptMsg(CRYPT_PID, pip, &radio_msg[5], (msglen - 5));
 
+#if defined(TRACE)
+    TRACE_OUTS("Built payload (encrypted): ");
+    for (int i = 0; i < msglen; i++)
+    {
+        TRACE_OUTN(radio_msg[i]);
+        TRACE_OUTC(',');
+    }
+    TRACE_NL();
+#endif
+
     return ret;
 }
 
@@ -754,6 +773,7 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
         {
             // store message against the Device array, only 1 cached command is supported at any one time
             memcpy(OTdevices[index].cachedCmd, radio_msg, MAX_R1_MSGLEN);
+            TRACE_OUTS("payload cached\n");
         }
     }
     else
@@ -794,13 +814,13 @@ int openThings_cache_send(unsigned int iDeviceId)
             if ((lock_ener314rt()) == 0)
             {
                 radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_TRANSMITTER);
-                
+
                 //radio_mod_transmit(RADIO_MODULATION_FSK, OTdevices[index].cachedCmd, msglen, 10); //TODO make xmits configurable
                 radio_send_payload(OTdevices[index].cachedCmd, msglen, 1); // already in correct mode, no need to switch
 
                 // set mode to receive, as cached commands usually expect a reply
                 //radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
-                
+
                 // empty incoming buffer immediately
                 empty_radio_Rx_buffer(DT_MONITOR);
 
@@ -906,19 +926,45 @@ int openThings_receive(char *OTmsg)
                 case OTR_INT:
                     // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
                     sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
-                    if (OTrecs[i].paramId == 0x6A)
+
+                    // Special record processing
+                    switch (OTrecs[i].paramId)
                     {
+                    case 0x6A: // JOIN_ACK
                         // We seem to have stumbled upon an instruction to join outside of discovery loop, may as well autojoin the device
                         TRACE_OUTS("openThings_receive(): New device found, sending ACK: deviceId:");
                         TRACE_OUTN(iDeviceId);
                         TRACE_NL();
                         joining = true;
                         openThings_joinACK(productId, iDeviceId, 20);
-                    }
-                    else if (OTrecs[i].paramId == 0x74)
-                    {
+                        break;
+                    case 0x74: // TEMPERATURE
                         // Seems that TEMPERATURE (0x74) received as type OTR_INT=1, and it should be OTR_FLOAT=2 from the eTRV, so override and return a float instead
                         sprintf(OTrecord, ",\"%s\":%.1f", OTrecs[i].paramName, OTrecs[i].retFloat);
+                        break;
+                    case 0x26: // eTRV DIAGNOSTICS, sent as binary
+                        // adapted from gpbenton MQTT code
+                        if (OTrecs[i].retInt != 0){
+                            // at least 1 flag is set
+                            if (OTrecs[i].retInt & 0x0001) sprintf(OTrecord,",\"Message\":\"Motor current below expectation\"");
+                            if (OTrecs[i].retInt & 0x0002) sprintf(OTrecord,",\"Message\":\"Motor current always high");
+                            if (OTrecs[i].retInt & 0x0004) sprintf(OTrecord,",\"Message\":\"Motor taking too long");
+                            if (OTrecs[i].retInt & 0x0008) sprintf(OTrecord,",\"Message\":\"Discrepancy between air and pipe sensors");
+                            if (OTrecs[i].retInt & 0x0010) sprintf(OTrecord,",\"Message\":\"Air sensor out of expected range");
+                            if (OTrecs[i].retInt & 0x0020) sprintf(OTrecord,",\"Message\":\"Pipe sensor out of expected range");
+                            if (OTrecs[i].retInt & 0x0040) sprintf(OTrecord,",\"Message\":\"Low power mode is enabled");
+                            if (OTrecs[i].retInt & 0x0080) sprintf(OTrecord,",\"Message\":\"No target temperature has been set by host");
+                            if (OTrecs[i].retInt & 0x0100) sprintf(OTrecord,",\"Message\":\"Valve may be sticking");
+                            if (OTrecs[i].retInt & 0x0200) sprintf(OTrecord,",\"Message\":\"Valve exercise was successful");
+                            if (OTrecs[i].retInt & 0x0400) sprintf(OTrecord,",\"Message\":\"Valve exercise was unsuccessful");
+                            if (OTrecs[i].retInt & 0x0800) sprintf(OTrecord,",\"Message\":\"Driver micro has suffered a watchdog reset and needs data refresh");
+                            if (OTrecs[i].retInt & 0x1000) sprintf(OTrecord,",\"Message\":\"Driver micro has suffered a noise reset and needs data refresh");
+                            if (OTrecs[i].retInt & 0x2000) sprintf(OTrecord,",\"Message\":\"Battery voltage has fallen below 2p2V and valve has been opened");
+                            if (OTrecs[i].retInt & 0x4000) sprintf(OTrecord,",\"Message\":\"Request for heat messaging is enabled");
+                            if (OTrecs[i].retInt & 0x8000) sprintf(OTrecord,",\"Message\":\"Request for heat");
+                        }
+
+                        break;
                     }
                     break;
                 case OTR_FLOAT:

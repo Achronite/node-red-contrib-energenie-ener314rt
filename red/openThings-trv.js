@@ -94,6 +94,7 @@ module.exports = function (RED) {
 
                 } else {
                     node.status({ fill: "red", shape: "dot", text: "Device Unknown" });
+                    node.error(`Device currently unknown, retry later`)
                 }
 
                 // dont send any payload for the input messages, as we are also a monitor node

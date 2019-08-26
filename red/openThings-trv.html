@@ -3,7 +3,7 @@
         category: 'Energenie 314RT',
         color: '#82529e',
         defaults: {
-            name: { value: "Radiator Valve" },
+            name: { value: "eTRV" },
             device: { type: "openThings-device", required: true },
             board: { type: "energenie-board", required: true }
         },
@@ -102,6 +102,21 @@
     <h3>Advanced Commands</h3>
         <p>Send the numeric value for the command to execute.</p>   
         <dl class="message-properties">    
+            <dt>TEMP_SET
+                <span class="property-type">244</span>
+            </dt>
+            <dd>Send new target temperature to driver board</dd>
+            <dd>.data='temperature in C'</dd>            
+                
+            <dt>SET_VALVE_STATE
+                <span class="property-type">165</span>  
+            </dt>
+            <dd>Set valve state</dd>
+            <dd>.data=
+                <br>0 = Set Valve Fully Open
+                <br>1 = Set Valve Fully Closed
+                <br>2 = Set Normal Operation</dd>                
+                
             <dt>EXERCISE_VALVE
                 <span class="property-type">163</span>   
             </dt>
@@ -114,13 +129,9 @@
             <dd>1=Low power mode on</dd>
 
             <dt>REQUEST_DIAGNOTICS
-                    <span class="property-type">166</span>  
+                <span class="property-type">166</span>  
             </dt>
-            <dd>Set valve state</dl>
-            <dd>.data=
-                <br >0 = Set Valve Fully Open
-                <br> 1 = Set Valve Fully Closed
-                <br>2 = Set Normal Operation</dd>
+            <dd>Set valve state</dd>
 
             <dt>IDENTIFY
                     <span class="property-type">191</span>
@@ -138,10 +149,5 @@
             </dt>
             <dd>Request battery voltage.</dd>
 
-            <dt>TEMP_SET
-                    <span class="property-type">244</span>
-                </dt>
-                <dd>Send new target temperature to driver board</dd>
-                <dd>.data='temperature in C'</dd>
             </dl>
 </script>
