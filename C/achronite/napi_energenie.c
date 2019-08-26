@@ -107,6 +107,96 @@ napi_value nf_close_ener314rt(napi_env env, napi_callback_info info)
     return 0;
 }
 
+/* N-API function (nf_) wrapper for:
+**  int send_radio_msg(RADIO_MODULATION mod, uint8_t *payload, uint8_t len, uint8_t times)
+*/
+napi_value nf_send_radio_msg(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    size_t argc = 3; // 4 passed in args
+    napi_value argv[3];
+    napi_value nv_ret;
+    int ret;
+    napi_valuetype type_of_argument;
+    unsigned int len, xmits, mod;
+    unsigned char *msg;
+
+    // get args
+    status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+
+    if (status != napi_ok)
+    {
+        // we cant recover from this error
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        ret = -10;
+    }
+    else
+    {
+        // Parse all the arguments
+        // 0: RADIO_MODULATION mod
+        status = napi_typeof(env, argv[0], &type_of_argument);
+        if (status != napi_ok || type_of_argument != napi_number)
+        {
+            napi_throw_type_error(env, NULL, "modulation not number");
+        }
+        else
+        {
+            status = napi_get_value_uint32(env, argv[0], &mod);
+
+            if (status != napi_ok)
+                napi_throw_error(env, NULL, "Invalid modulation");
+        }
+
+        // 1: uint8_t xmits
+        status = napi_typeof(env, argv[1], &type_of_argument);
+        if (status != napi_ok || type_of_argument != napi_number)
+        {
+            napi_throw_type_error(env, NULL, "xmits not number");
+        }
+        else
+        {
+            status = napi_get_value_uint32(env, argv[1], &xmits);
+
+            if (status != napi_ok)
+                napi_throw_error(env, NULL, "Invalid xmits");
+        }
+
+        // 2: uint8_t *payload and length
+        status = napi_get_buffer_info(env, argv[2], (void **)(&msg), &len);
+        if (status != napi_ok)
+            napi_throw_error(env, NULL, "Invalid Message");
+
+        // 2: uint8_t len
+        /*
+        status = napi_typeof(env, argv[2], &type_of_argument);
+        if (status != napi_ok || type_of_argument != napi_number)
+        {
+            napi_throw_type_error(env, NULL, "Length not number");
+        }
+        else
+        {
+            status = napi_get_value_bool(env, argv[2], &len);
+
+            if (status != napi_ok)
+                napi_throw_error(env, NULL, "Invalid length");
+        }
+        */
+
+        // Call C routine
+        ret = send_radio_msg(mod, msg, len, xmits);
+    }
+
+    // convert return value into JS value
+    status = napi_create_int32(env, ret, &nv_ret);
+
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Unable to create return value");
+    }
+
+    return nv_ret;
+}
+
 // ----------FILE--------- openThings.c
 /*
  unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits);
@@ -617,6 +707,13 @@ napi_value Init(napi_env env, napi_value exports)
          .data = NULL},
         {.utf8name = "ookSend",
          .method = nf_ook_send,
+         .getter = NULL,
+         .setter = NULL,
+         .value = NULL,
+         .attributes = napi_default,
+         .data = NULL},
+        {.utf8name = "sendRadioMsg",
+         .method = nf_send_radio_msg,
          .getter = NULL,
          .setter = NULL,
          .value = NULL,

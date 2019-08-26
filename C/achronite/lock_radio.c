@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <pthread.h>
-#include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
 #include <string.h>
@@ -71,12 +70,13 @@ int init_ener314rt(int lock)
                 {
                     // thread safe, set initialised
                     TRACE_OUTS("init_ener314(): mutex created & locked\n");
-                    if ((ret = radio_init()) == 0) {
+                    if ((ret = radio_init()) == 0)
+                    {
                         // place radio in known modulation and mode - OOK:Standby
                         initialised = true;
                         radio_modulation(RADIO_MODULATION_OOK);
                         radio_standby();
-                    } 
+                    }
 
                     if (!lock)
                     {
@@ -115,7 +115,8 @@ int lock_ener314rt(void)
     //     // };
     // }
     // else
-    if (initialised) {
+    if (initialised)
+    {
         // lock radio now
         TRACE_OUTS("[lock-");
         TRACE_OUTN((int)pthread_self());
@@ -139,7 +140,9 @@ int lock_ener314rt(void)
             }
             //printf("lock_ener314rt(%d): mutex got\n",deviceMode);
         }
-    } else {
+    }
+    else
+    {
         TRACE_OUTS("lock_ener314(): Radio not initialised, call init_ener314rt() first\n");
     }
 
@@ -292,4 +295,28 @@ int get_RxMsg(int msgNum, struct RADIO_MSG *rxMsg)
     //printf("get_RxMsg(%d): %d\n", msgNum, (int)rxMsg->t);
 
     return (int)rxMsg->t;
+}
+
+/*
+** send_radio_msg() - transmits a given payload a number of times
+**
+** Use this function to perform a raw transmit with full locking and mode switching
+** Minimal checking is performed in this function
+*/
+int send_radio_msg(unsigned char mod, unsigned char *payload, unsigned char len, unsigned char times)
+{
+    int ret = 0;
+
+    TRACE_OUTS("radio_mod_transmit(): called\n");
+    if (lock_ener314rt() == 0)
+    {
+        radio_mod_transmit(mod, payload, len, times);
+        ret = unlock_ener314rt();
+    }
+    else
+    {
+        TRACE_OUTS("radio_mod_transmit(): couldn't get lock\n");
+        ret = -1;
+    }
+    return ret;
 }

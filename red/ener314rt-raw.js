@@ -20,42 +20,44 @@
 */
 "use strict";
 
-var libradio = require( './libradio');
+//var libradio = require( './libradio');
+var ener314rt = require('/home/pi/development/node-red-contrib-energenie-ener314rt/build/Release/ener314rt');
 
-module.exports = function(RED) {
+module.exports = function (RED) {
 
     function Ener314RTrawNode(config) {
-        RED.nodes.createNode(this,config);
+        RED.nodes.createNode(this, config);
         var node = this;
         var board = RED.nodes.getNode(config.board);
 
-        // initialise the radio as part of the node constructor
-        libradio.radio_init();
+        // CHECK CONFIG
+        if (!board || board == null) {
+            this.status({ fill: "red", shape: "ring", text: "Not configured" });
+            return false;
+        } else {
 
-        node.on('input', function(msg) {
-            // Check params
-            if ( msg.payload.raw === undefined || msg.payload.raw == null ) {
-                // No payload!
-                this.error("Missing msg.payload.raw", msg);
-            } else {
-                //var a = new IntArray(under);
-                //this.warn("Setting modulation");
-                var modulation = msg.payload.modulation || 0;  //OOK by default
+            node.on('input', function (msg) {
+                // Check params
+                if (msg.payload.raw === undefined || msg.payload.raw == null) {
+                    // No payload!
+                    this.error("Missing msg.payload.raw", msg);
+                } else {
+                    //var a = new IntArray(under);
+                    var modulation = msg.payload.modulation || 0;  //OOK by default
 
-                libradio.radio_modulation(modulation);  // 0=OOK, 1=FSK
+                    this.status({ fill: "yellow", shape: "ring", text: "transmitting" });
 
-                this.status({fill:"yellow",shape:"ring",text:"transmitting"});
+                    // This node transmits a raw payload, it's up to the user to do any encoding first
+                    var tPayload = msg.payload.raw;
 
-                // This node transmits a raw payload, it's up to the user to do any encoding first
-                var tPayload = msg.payload.raw;
+                    this.warn("Sending " + tPayload);
+                    ener314rt.sendRadioMsg(modulation, 20, tPayload );
+                    this.status({ fill: "green", shape: "ring", text: switchString });
+                }
 
-                this.warn("Sending "+ tPayload);
-                libradio.radio_transmit(tPayload,tPayload.length,40);
-                this.status({fill:"green",shape:"ring",text:switchString});
-            }
-
-            node.send(msg);
-        });
+                node.send(msg);
+            });
+        }
     }
-    RED.nodes.registerType("ener314rt-raw",Ener314RTrawNode);
+    RED.nodes.registerType("ener314rt-raw", Ener314RTrawNode);
 }
