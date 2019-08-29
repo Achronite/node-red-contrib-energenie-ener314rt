@@ -68,7 +68,7 @@ module.exports = function (RED) {
                     xmits = Number(msg.payload.repeat);
 
                 // Invoke C function to do the send
-                var ret = ener314rt.ookSend(zone, switchNum, switchState, xmits);
+                var ret = ener314rt.ookSwitch(zone, switchNum, switchState, xmits);
                 if (ret == 0) {
                     switch (switchState) {
                         case true:

@@ -1,4 +1,4 @@
-/* ook_send.h  Achronite, January 2019
+/* ook_send.h  Achronite, January - August 2019
  * 
  * Simplified interface for ENER314-RT devices using OOK protocol on Raspberry Pi
  */
@@ -26,7 +26,7 @@
 
 /***** FUNCTION PROTOTYPES *****/
 void encode_decimal(unsigned int iDecimal, unsigned char bits, unsigned char * encArray );
-unsigned char ook_send(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits);
+unsigned char ook_switch(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits);
 
 
 #endif

@@ -50,7 +50,7 @@ void encode_decimal(unsigned int iDecimal, unsigned char bits, unsigned char *en
 }
 
 /*
-** OokSend
+** ook_switch()
 ** =======
 ** Send a switch signal to a 'Control only' RF OOK based Energenie smart switch adaptors, sockets, switches and relays
 ** Currently this covers all smart switchable devices except the 'HiHome Adaptor Plus' and 'MiHome Heating' TRV
@@ -61,7 +61,7 @@ void encode_decimal(unsigned int iDecimal, unsigned char bits, unsigned char *en
 **    formatting and encoding an OOK radio request
 **    sending the radio request via the ENER314-RT RaspberryPi adaptor
 */
-unsigned char ook_send(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits)
+unsigned char ook_switch(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits)
 {
     int ret = 0;
     unsigned char radio_msg[OOK_MSGLEN] = {PREAMBLE, DEFAULT_HC, 0x00, 0x00};
