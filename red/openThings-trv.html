@@ -100,7 +100,12 @@
         </dl>
         <p>NOTE: As this node also receives, input messages do not get outputted.</p>
     <h3>Advanced Commands</h3>
-        <p>Send the numeric value for the command to execute.</p>   
+        <p>Send advanced command to the device. The <code>command</code> should be set to a numeric value shown below, and parameter (if required) should be passed in as <code>data</code></p>
+        <p>Example <code>msg.payload</code>:</p>
+<pre>{
+    "command": 165,
+    "data": 2
+}</pre>
         <dl class="message-properties">    
             <dt>TEMP_SET
                 <span class="property-type">244</span>
@@ -131,18 +136,18 @@
             <dt>REQUEST_DIAGNOTICS
                 <span class="property-type">166</span>  
             </dt>
-            <dd>Set valve state</dd>
+            <dd>Request diagnostic data from device, if all is OK it will return 0. Otherwise see additional monitored values for status messages.</dd>
 
             <dt>IDENTIFY
                     <span class="property-type">191</span>
                 </dt>
-                <dd>Identify the device</dd>
+                <dd>Identify the device by making the green light flash on the selected eTRV</dd>
 
             <dt>SET_REPORTING_INTERVAL
                 <span class="property-type">210</span>
             </dt>
             <dd>Update reporting interval in seconds to requested value</dd>
-            <dd>.data = 300-3600</dl>
+            <dd>.data = 300-3600</dd>
 
             <dt>REQUEST_VOLTAGE
                     <span class="property-type">226</span>   
