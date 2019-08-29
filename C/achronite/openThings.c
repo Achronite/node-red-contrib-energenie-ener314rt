@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-//#include <unistd.h>
+#include <unistd.h>
 #include <math.h>
 #include "openThings.h"
 #include "lock_radio.h"
@@ -276,6 +276,8 @@ void openThings_devicePut(unsigned int iDeviceId, unsigned char mfrId, unsigned 
 **  Footer  - CRC
 **
 ** Functions performed here include:
+**   Decoding the received OpenThings message
+**   Sending any outstanding commands to an eTRV ASAP
 */
 int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned char *productId, unsigned int *iDeviceId, struct OTrecord recs[])
 {
@@ -292,7 +294,6 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
      * which looking at the spec is max 24bits (excluding FLOAT), so 3-17 bytes / record; so max would be 56/3=18 records
      */
 
-    //printf("openThings_decode(): called\n");
     length = payload[0];
 
     // A good indication this is an OpenThings msg, is to check the length first, abort if too long or short
@@ -345,13 +346,21 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
         while ((i < length) && (payload[i] != 0) && (record < OT_MAX_RECS))
         {
             // reset values
-            memset(recs[record].retChar, '\0', 15);
+            //memset(recs[record].retChar, '\0', 15);
             result = 0;
 
             // PARAM
             param = payload[i++];
             recs[record].wr = ((param & 0x80) == 0x80);
             recs[record].paramId = param & 0x7F;
+
+            //
+            // If we have received a TEMPERATURE (0x74) parameter for an eTRV (3), we need to send any outstanding messages to it ASAP as it only has a small Rx window
+            //
+            if ((recs[record].paramId == 0x74) && (*productId == 3)){
+                openThings_cache_send(*iDeviceId);
+            }
+
             int paramIndex = openThings_getParamIndex(recs[record].paramId);
             if (paramIndex != 0)
             {
@@ -374,78 +383,89 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
             // TYPE/LEN
             recs[record].typeId = payload[i] & 0xF0;
             rlen = payload[i++] & 0x0F;
-            //printf("openThings_decode(): record[%d] paramid=0x%02x typeId=0x%02x values:[", record, recs[record].paramId, recs[record].typeId);
 
-// PTG: CHECK THE BITS HERE, Type is returning 1, but these are bitwuse ******************************************************
-            // In C, it is not great at returning different types for a function; so we are just going to have to code it here rather than be a modular coder :(
-            switch (recs[record].typeId)
+            if (rlen > 0)
             {
-            case OT_CHAR:
+
+                // set MSB always to reduce loops below
+                result = payload[i];
+
+                // In C, it is not great at returning different types for a function; so we are just going to have to code it here rather than be a modular coder :(
+                switch (recs[record].typeId)
+                {
+                case OT_CHAR:
+                    // memcpy is faster
+                    memcpy(recs[record].retChar, &payload[i], rlen);
+                    /*
                 for (j = 0; j < rlen; j++)
                 {
                     // printf("%d,", payload[i + j]);
                     recs[record].retChar[j] = payload[i + j];
                 }
-                recs[record].typeIndex = OTR_CHAR;
-                break;
-            case OT_UINT:
-                for (j = 0; j < rlen; j++)
-                {
-                    printf("%d,", payload[i + j]);
-                    result <<= 8;
-                    result += payload[i + j];
+                */
+                    recs[record].typeIndex = OTR_CHAR;
+                    break;
+                case OT_UINT:
+                    for (j = 1; j < rlen; j++)
+                    {
+                        result <<= 8;
+                        result += payload[i + j];
+                    }
+                    recs[record].typeIndex = OTR_INT;
+                    break;
+                case OT_UINT4:
+                case OT_UINT8:
+                case OT_UINT12:
+                case OT_UINT16:
+                case OT_UINT20:
+                case OT_UINT24:
+                    for (j = 1; j < rlen; j++)
+                    {
+                        result <<= 8;
+                        result += payload[i + j];
+                    }
+                    // adjust BP
+                    recs[record].typeIndex = OTR_FLOAT;
+                    break;
+                case OT_SINT:
+                case OT_SINT8:
+                case OT_SINT16:
+                case OT_SINT24:
+                    for (j = 1; j < rlen; j++)
+                    {
+                        // printf("%d,", payload[i + j]);
+                        result <<= 8;
+                        result += payload[i + j];
+                    } // turn to signed int based on high bit of MSB, 2's comp is 1's comp plus 1
+                    if ((payload[i] & 0x80) == 0x80)
+                    {
+                        // negative
+                        result = -(((!result) & ((2 ^ (length * 8)) - 1)) + 1);
+                        //onescomp = (~result) & ((2**(length*8))-1)
+                        //result = -(onescomp + 1)
+                        // =result = -((~result) & ((2**(length*8))-1) + 1)
+                    }
+                    recs[record].typeIndex = OTR_INT;
+                    break;
+                case OT_FLOAT:
+                    // TODO (@whaleygeek didnt do this either!)
+                    recs[record].typeIndex = -1;
+                    break;
+                default:
+                    // TODO - are there other values?
+                    recs[record].typeIndex = -2;
                 }
-                recs[record].typeIndex = OTR_INT;
-                break;
-            case OT_UINT4:
-            case OT_UINT8:
-            case OT_UINT12:
-            case OT_UINT16:
-            case OT_UINT20:
-            case OT_UINT24:
-                for (j = 0; j < rlen; j++)
-                {
-                    printf("%d,", payload[i + j]);
-                    result <<= 8;
-                    result += payload[i + j];
-                }
-                // adjust BP
-                recs[record].typeIndex = OTR_FLOAT;
-                break;
-            case OT_SINT:
-            case OT_SINT8:
-            case OT_SINT16:
-            case OT_SINT24:
-                for (j = 0; j < rlen; j++)
-                {
-                    // printf("%d,", payload[i + j]);
-                    result <<= 8;
-                    result += payload[i + j];
-                } // turn to signed int based on high bit of MSB, 2's comp is 1's comp plus 1
-                if ((payload[i] & 0x80) == 0x80)
-                {
-                    // negative
-                    result = -(((!result) & ((2 ^ (length * 8)) - 1)) + 1);
-                    //onescomp = (~result) & ((2**(length*8))-1)
-                    //result = -(onescomp + 1)
-                    // =result = -((~result) & ((2**(length*8))-1) + 1)
-                }
-                recs[record].typeIndex = OTR_INT;
-                break;
-            case OT_FLOAT:
-                // TODO (@whaleygeek didnt do this either!)
-                recs[record].typeIndex = -1;
-                break;
-            default:
-                // TODO - are there other values?
-                recs[record].typeIndex = -2;
+
+                // always store the integer result in the record
+                recs[record].retInt = result;
+                // Binary point adjustment (float)
+                recs[record].retFloat = (float)result / pow(2, OTtypelen(recs[record].typeId));
             }
-
-            // always store the integer result in the record
-            recs[record].retInt = result;
-
-            // Binary point adjustment (float)
-            recs[record].retFloat = (float)result / pow(2, OTtypelen(recs[record].typeId));
+            else
+            {
+                TRACE_OUTS("rlen=0\n");
+                recs[record].retInt = 0;
+            }
 
             //printf("] typeIndex:%d Int:%d Float:%f Char:%s\n", recs[record].typeIndex, recs[record].retInt, recs[record].retFloat, recs[record].retChar);
 
@@ -786,55 +806,6 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
 }
 
 /*
-** openThings_cache_send()
-** ===================
-** Send any cached command to a 'Control and Monitor' RF FSK OpenThings based Energenie smart device
-** This is designed for devices that have a small receive window such as the 'MiHome Heating' TRV
-**
-** set cached command using openThings_cmd()
-*/
-int openThings_cache_send(unsigned int iDeviceId)
-{
-    int ret = 0, index;
-    unsigned char msglen;
-
-    /*
-    ** The full command is cached in the OTdevices array
-    */
-    index = openThings_getDeviceIndex(iDeviceId);
-    if (index >= 0)
-    {
-        msglen = OTdevices[index].cachedCmd[0] + 1; // msglen in radio message doesn't include the length byte :)
-        if (msglen > 1)
-        {
-            // we have a cached command, send it ASAP
-#if defined(TRACE)
-            printf("openThings_cache_send(): deviceId=%d\n", iDeviceId);
-#endif
-            if ((lock_ener314rt()) == 0)
-            {
-                radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_TRANSMITTER);
-
-                //radio_mod_transmit(RADIO_MODULATION_FSK, OTdevices[index].cachedCmd, msglen, 10); //TODO make xmits configurable
-                radio_send_payload(OTdevices[index].cachedCmd, msglen, 1); // already in correct mode, no need to switch
-
-                // set mode to receive, as cached commands usually expect a reply
-                //radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
-
-                // empty incoming buffer immediately
-                empty_radio_Rx_buffer(DT_MONITOR);
-
-                unlock_ener314rt();
-                // clear cached command by setting the length to zero
-                //OTdevices[index].cachedCmd[0] = 0;
-            }
-        }
-    }
-
-    return ret;
-}
-
-/*
 ** openThings_receive()
 ** =======
 ** Receive a single FSK OpenThings message (if one waiting)
@@ -861,7 +832,7 @@ int openThings_receive(char *OTmsg)
     unsigned char mfrId, productId;
     unsigned int iDeviceId;
     int records, i;
-    char OTrecord[100];
+    char OTrecord[200];
     struct RADIO_MSG rxMsg;
     bool joining = false;
 
@@ -903,7 +874,7 @@ int openThings_receive(char *OTmsg)
             // likely to be a valid OpenThings message
 
             // Send any cached commands for the device, to cope with small receive windows (eg eTRV)
-            openThings_cache_send(iDeviceId);
+            // Now done in OTdecode above: openThings_cache_send(iDeviceId);
 
             // build response JSON
             sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
@@ -920,11 +891,9 @@ int openThings_receive(char *OTmsg)
                 switch (OTrecs[i].typeIndex)
                 {
                 case OTR_CHAR: //CHAR
-                    //sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%s\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retChar);
                     sprintf(OTrecord, ",\"%s\":\"%s\"", OTrecs[i].paramName, OTrecs[i].retChar);
                     break;
                 case OTR_INT:
-                    // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
                     sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
 
                     // Special record processing
@@ -944,31 +913,47 @@ int openThings_receive(char *OTmsg)
                         break;
                     case 0x26: // eTRV DIAGNOSTICS, sent as binary
                         // adapted from gpbenton MQTT code
-                        if (OTrecs[i].retInt != 0){
+                        if (OTrecs[i].retInt != 0)
+                        {
                             // at least 1 flag is set
-                            if (OTrecs[i].retInt & 0x0001) sprintf(OTrecord,",\"Message\":\"Motor current below expectation\"");
-                            if (OTrecs[i].retInt & 0x0002) sprintf(OTrecord,",\"Message\":\"Motor current always high");
-                            if (OTrecs[i].retInt & 0x0004) sprintf(OTrecord,",\"Message\":\"Motor taking too long");
-                            if (OTrecs[i].retInt & 0x0008) sprintf(OTrecord,",\"Message\":\"Discrepancy between air and pipe sensors");
-                            if (OTrecs[i].retInt & 0x0010) sprintf(OTrecord,",\"Message\":\"Air sensor out of expected range");
-                            if (OTrecs[i].retInt & 0x0020) sprintf(OTrecord,",\"Message\":\"Pipe sensor out of expected range");
-                            if (OTrecs[i].retInt & 0x0040) sprintf(OTrecord,",\"Message\":\"Low power mode is enabled");
-                            if (OTrecs[i].retInt & 0x0080) sprintf(OTrecord,",\"Message\":\"No target temperature has been set by host");
-                            if (OTrecs[i].retInt & 0x0100) sprintf(OTrecord,",\"Message\":\"Valve may be sticking");
-                            if (OTrecs[i].retInt & 0x0200) sprintf(OTrecord,",\"Message\":\"Valve exercise was successful");
-                            if (OTrecs[i].retInt & 0x0400) sprintf(OTrecord,",\"Message\":\"Valve exercise was unsuccessful");
-                            if (OTrecs[i].retInt & 0x0800) sprintf(OTrecord,",\"Message\":\"Driver micro has suffered a watchdog reset and needs data refresh");
-                            if (OTrecs[i].retInt & 0x1000) sprintf(OTrecord,",\"Message\":\"Driver micro has suffered a noise reset and needs data refresh");
-                            if (OTrecs[i].retInt & 0x2000) sprintf(OTrecord,",\"Message\":\"Battery voltage has fallen below 2p2V and valve has been opened");
-                            if (OTrecs[i].retInt & 0x4000) sprintf(OTrecord,",\"Message\":\"Request for heat messaging is enabled");
-                            if (OTrecs[i].retInt & 0x8000) sprintf(OTrecord,",\"Message\":\"Request for heat");
+                            if (OTrecs[i].retInt & 0x0001)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Motor current below expectation\"");
+                            if (OTrecs[i].retInt & 0x0002)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Motor current always high\"");
+                            if (OTrecs[i].retInt & 0x0004)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Motor taking too long\"");
+                            if (OTrecs[i].retInt & 0x0008)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Discrepancy between air and pipe sensors\"");
+                            if (OTrecs[i].retInt & 0x0010)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Air sensor out of expected range\"");
+                            if (OTrecs[i].retInt & 0x0020)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Pipe sensor out of expected range\"");
+                            if (OTrecs[i].retInt & 0x0040)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"LOW_POWER_MODE\":\"on\"");
+                            if (OTrecs[i].retInt & 0x0080)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"No target temperature has been set by host\"");
+                            if (OTrecs[i].retInt & 0x0100)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Valve may be sticking\"");
+                            if (OTrecs[i].retInt & 0x0200)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"EXERCISE_VALVE\":\"success\"");
+                            if (OTrecs[i].retInt & 0x0400)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"EXERCISE_VALVE\":\"fail\"");
+                            if (OTrecs[i].retInt & 0x0800)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Driver micro has suffered a watchdog reset and needs data refresh\"");
+                            if (OTrecs[i].retInt & 0x1000)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Driver micro has suffered a noise reset and needs data refresh\"");
+                            if (OTrecs[i].retInt & 0x2000)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Battery voltage has fallen below 2p2V and valve has been opened\"");
+                            if (OTrecs[i].retInt & 0x4000)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Request for heat messaging is enabled\"");
+                            if (OTrecs[i].retInt & 0x8000)
+                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Request for heat\"");
                         }
 
                         break;
                     }
                     break;
                 case OTR_FLOAT:
-                    // sprintf(OTrecord, "{\"name\":\"%s\",\"id\":%d,\"value\":\"%d\"}",OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].retInt);
                     sprintf(OTrecord, ",\"%s\":%f", OTrecs[i].paramName, OTrecs[i].retFloat);
                 }
 
@@ -981,7 +966,6 @@ int openThings_receive(char *OTmsg)
 
             // close record array
             strcat(OTmsg, "}");
-            // printf("openThings_receive: Returning\n%s",OTmsg);
 
             // Add to deviceList
             openThings_devicePut(iDeviceId, mfrId, productId, joining);
@@ -1092,14 +1076,12 @@ void openthings_scan(int iTimeOut)
     {
         if (get_RxMsg(i, &rxMsg) > 0)
         {
-            // message avaiable
-            //printf("openThings_scan(): msg got, ts=%d\n", (int)rxMsg.t);
+            // message available
             records = openThings_decode(rxMsg.msg, &mfrId, &productId, &iDeviceId, OTrecs);
 
             if (records > 0)
             {
                 joining = false;
-                //printf("openThings_scan(): Valid OT: deviceId:%d mfrId:%d productId:%d recs:%d\n", iDeviceId, mfrId, productId, records);
 
                 // scan records for JOIN requests, and reply to add
                 for (j = 0; j < records; j++)
@@ -1196,6 +1178,64 @@ unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceI
 
         // release mutex lock
         unlock_ener314rt();
+    }
+
+    return ret;
+}
+
+/*
+** openThings_cache_send()
+** ===================
+** Send any cached command to a 'Control and Monitor' RF FSK OpenThings based Energenie smart device
+** This is designed for devices that have a small receive window such as the 'MiHome Heating' TRV
+**
+** set cached command using openThings_cmd()
+*/
+int openThings_cache_send(unsigned int iDeviceId)
+{
+    int ret = 0, index;
+    unsigned char msglen;
+    //    int stime;
+
+    /*
+    ** The full command is cached in the OTdevices array
+    */
+    index = openThings_getDeviceIndex(iDeviceId);
+    if (index >= 0)
+    {
+        msglen = OTdevices[index].cachedCmd[0] + 1; // msglen in radio message doesn't include the length byte :)
+        if (msglen > 1)
+        {
+            // we have a cached command, send it
+#if defined(TRACE)
+            printf("openThings_cache_send(): deviceId=%d\n", iDeviceId);
+#endif
+            if ((lock_ener314rt()) == 0)
+            {
+                //radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_TRANSMITTER);
+
+                //                stime = rand() % 10;
+                //                printf("sleep(%d)\n", stime);
+                //                sleep(stime);
+                radio_mod_transmit(RADIO_MODULATION_FSK, OTdevices[index].cachedCmd, msglen, 1); //TODO make xmits configurable
+                //radio_send_payload(OTdevices[index].cachedCmd, msglen, 1); // already in correct mode, no need to switch
+                //empty_radio_Rx_buffer(DT_MONITOR);
+
+                //sleep(2);
+                //radio_mod_transmit(RADIO_MODULATION_FSK, OTdevices[index].cachedCmd, msglen, 1); //TODO make xmits configurable
+
+                // set mode to receive, as cached commands usually expect a reply
+                //radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
+
+                // empty incoming buffer immediately
+                //empty_radio_Rx_buffer(DT_MONITOR);
+
+                unlock_ener314rt();
+
+                // clear cached command by setting the length to zero
+                //OTdevices[index].cachedCmd[0] = 0;
+            }
+        }
     }
 
     return ret;
