@@ -28,6 +28,11 @@
 **  ccb_  complete callback function for async work
 */
 
+// local prototypes (for async calls)
+void xcb_openThings_receive(napi_env env, void *data);
+void ccb_openThings_receive(napi_env env, napi_status status, void* data);
+
+
 // ----------FILE--------- lock_radio.c
 
 /* N-API function (nf_) wrapper for:
@@ -376,7 +381,7 @@ napi_value nf_openThings_deviceList(napi_env env, napi_callback_info info)
 
 /* N-API function (nf_) wrapper for:
 **  char openThings_receive(char *OTmsg );
-** NOTE: OTmsg is output param, but we will 'return' it
+** NOTE: OTmsg is output param from C call, but we will 'return' it to node
 */
 napi_value nf_openThings_receive(napi_env env, napi_callback_info info)
 {
@@ -412,6 +417,110 @@ napi_value nf_openThings_receive(napi_env env, napi_callback_info info)
 
     return nv_ret;
 }
+
+// Execute callback (xcb_) - called when async function is queued
+void xcb_openThings_receive(napi_env env, void *data)
+{
+    napi_status status;
+    //napi_value nv_ret;
+
+    char buf[500];
+    int ret;
+
+	printf("async execute\n");
+
+    // Call C routine
+    ret = openThings_receive(buf);
+
+    // data should be passed to complete callback for return
+    if (ret > 0)
+    {
+        // convert return string into JS value only if values exist
+        status = napi_create_string_latin1(env, buf, NAPI_AUTO_LENGTH, data);
+    }
+    else
+    {
+        status = napi_create_int32(env, ret, data);
+    }
+
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Unable to create return value from buf");
+    }
+
+}
+
+// Complete callback (ccb_) - called when async function has completed
+void ccb_openThings_receive(napi_env env, napi_status status, void* data)
+{
+	printf("completed async\n");
+}
+
+/* N-API async function (na_) wrapper for:
+**  char openThings_receive(char *OTmsg );
+** NOTE: OTmsg is output param from C call, but we will 'return' it to node
+**
+** NOTE: THIS IS NOT TESTED, use nf_openThings_receive() instead !!!!!!!!!!!!!!!!!!!
+*/
+
+napi_value na_openThings_receive(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value nv_ret;
+    int ret = 0;
+
+	napi_async_work work;
+	napi_value async_resource_name;
+
+    napi_value nv_data_out;
+
+    // no args :)
+
+    printf("calling ASYNC openThings_receive()\n");
+
+    /*
+	 * napi_status napi_create_async_work(napi_env env,
+        napi_value async_resource,             // An optional object associated with the async work that will be passed to possible async_hooks init hooks.
+        napi_value async_resource_name,        // Identifier for the kind of resource that is being provided for diagnostic information exposed by the async_hooks API.
+        napi_async_execute_callback execute,   // The native function which should be called to execute the logic asynchronously.
+                                                  The given function is called from a worker pool thread and can execute in parallel with the main event loop thread.
+        napi_async_complete_callback complete, // The native function which will be called when the asynchronous logic is completed or is cancelled.
+                                                  The given function is called from the main event loop thread.
+        void* data,                            // User-provided data context. This will be passed back into the execute and complete functions.
+        napi_async_work* result);              // (out) napi_async_work* which is the handle to the newly created async work.                                 
+
+	 * async_resource_name should be a null-terminated, UTF-8-encoded string.
+	 * Note: The async_resource_name identifier is provided by the user and should be representative of the type of async work being performed. 
+     * It is also recommended to apply namespacing to the identifier, e.g. by including the module name.
+	 * See the async_hooks documentation for more information.
+     *   xcb_  execute callback function for async work
+     *   ccb_  complete callback function for async work
+	 */
+
+    // TODO - check all status values
+	status = napi_create_string_utf8(env, "ener314rt:OTRecv", -1, &async_resource_name);
+	status = napi_create_async_work(env, NULL, async_resource_name, xcb_openThings_receive, ccb_openThings_receive, &nv_data_out, &work);
+	status = napi_queue_async_work(env, work);
+
+    //printf("openThings_receive() returned %d. message=%s\n", ret, buf);
+
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Unable to create async work");
+        ret = -1;
+    }
+
+    status = napi_create_int32(env, ret, &nv_ret);
+
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Unable to create return value");
+    }
+
+    return nv_ret;
+}
+
+
 
 /* N-API function (nf_) wrapper for:
 **  unsigned char openThings_cache_cmd(unsigned int iDeviceId, uint8_t command, uint32_t data)
@@ -499,14 +608,11 @@ napi_value nf_openThings_cache_cmd(napi_env env, napi_callback_info info)
 }
 
 // ----------FILE--------- ook_send.c
-/*
- unsigned char ook_send(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits);
-*/
 
 /* N-API function (nf_) wrapper for:
-**  unsigned char ook_send(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits)
+**  unsigned char ook_switch(unsigned int iZone, unsigned int iSwitchNum, unsigned char bSwitchState, unsigned char xmits)
 */
-napi_value nf_ook_send(napi_env env, napi_callback_info info)
+napi_value nf_ook_switch(napi_env env, napi_callback_info info)
 {
     napi_status status;
     size_t argc = 4; // 4 passed in args
@@ -589,7 +695,7 @@ napi_value nf_ook_send(napi_env env, napi_callback_info info)
         //printf("calling ook_send(%d,%d,%d,%d)\n", iZone, iSwitchNum, bSwitchState, xmits);
 
         // Call C routine
-        ret = ook_send(iZone, iSwitchNum, bSwitchState, xmits);
+        ret = ook_switch(iZone, iSwitchNum, bSwitchState, xmits);
 
         //printf("OokSend() returned %d\n", ret);
     }
@@ -623,7 +729,7 @@ napi_value bye_async(napi_env env, napi_callback_info info)
 	napi_async_work work;
 	napi_value async_resource_name;
 
-	/*
+	//
 	 * napi_status napi_create_async_work(napi_env env,
                                    napi_value async_resource,
                                    napi_value async_resource_name,
@@ -698,6 +804,13 @@ napi_value Init(napi_env env, napi_value exports)
          .value = NULL,
          .attributes = napi_default,
          .data = NULL},
+        {.utf8name = "asyncOpenThingsReceive",
+         .method = na_openThings_receive,
+         .getter = NULL,
+         .setter = NULL,
+         .value = NULL,
+         .attributes = napi_default,
+         .data = NULL},
         {.utf8name = "openThingsCacheCmd",
          .method = nf_openThings_cache_cmd,
          .getter = NULL,
@@ -705,8 +818,8 @@ napi_value Init(napi_env env, napi_value exports)
          .value = NULL,
          .attributes = napi_default,
          .data = NULL},
-        {.utf8name = "ookSend",
-         .method = nf_ook_send,
+        {.utf8name = "ookSwitch",
+         .method = nf_ook_switch,
          .getter = NULL,
          .setter = NULL,
          .value = NULL,
