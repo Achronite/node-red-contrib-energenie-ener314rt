@@ -118,7 +118,8 @@ int lock_ener314rt(void)
     if (initialised)
     {
         // lock radio now
-        TRACE_OUTS("[lock-");
+
+        TRACE_OUTS("[L");
         TRACE_OUTN((int)pthread_self());
         TRACE_OUTS("]");
 
@@ -155,7 +156,7 @@ int unlock_ener314rt(void)
     //unlock mutex
     TRACE_OUTS("[");
     TRACE_OUTN((int)pthread_self());
-    TRACE_OUTS("-un]");
+    TRACE_OUTS("U]");
 
     ret = pthread_mutex_unlock(&radio_mutex);
     if (ret != 0)
@@ -206,11 +207,13 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
     int i, recs = 0;
 
     // Put us into monitor as soon as we know about it
+/*
     if (rxMode == DT_MONITOR)
         deviceType = DT_MONITOR;
 
     if (deviceType == DT_MONITOR || rxMode == DT_LEARN)
     {
+*/
         // only receive data if we are in monitor mode
         // Set FSK mode receive for OpenThings devices (Energenie OOK devices dont generally transmit!)
         radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
@@ -226,6 +229,7 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
 
                 // record message timestamp
                 RxMsgs[pRxMsgHead].t = time(0);
+                TRACE_OUTC(64);
 
                 // wrap round buffer for next Rx
                 if (++pRxMsgHead == RX_MSGS)
@@ -237,7 +241,7 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
                 break;
             }
         }
-    }
+//    }
     return recs;
 };
 
