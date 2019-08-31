@@ -386,6 +386,8 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
 
             if (rlen > 0)
             {
+                // str can cause probs clear it
+                memset(recs[record].retChar,0,15);
 
                 // set MSB always to reduce loops below
                 result = payload[i];
