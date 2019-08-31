@@ -58,12 +58,12 @@ module.exports = function (RED) {
                         break;
                     case 'object':
                         // Assume Command mode
-                        if (typeof msg.payload.command == 'number' && typeof msg.payload.data == 'number'){
+                        if (typeof msg.payload.command == 'number' && typeof msg.payload.data == 'number') {
                             var cmd = msg.payload.command;
                             var data = msg.payload.data;
                         } else {
                             this.error(`Invalid payload object: ${msg.payload}`);
-                            return false;                           
+                            return false;
                         }
 
                         break;
@@ -78,18 +78,46 @@ module.exports = function (RED) {
                 if (res == 0) {
                     // command successfuly cached
                     // Set the node status in the GUI
-                    switch (data) {
-                        case 0:
-                            node.status({ fill: "green", shape: "ring", text: "Opening" });
+                    switch (cmd) {
+                        case 0xF4:  //TEMP_SET                  Temperature in C
+                            node.status({ fill: "grey", shape: "ring", text: `Set Temp to ${data}C` });
                             break;
-                        case 1:
-                            node.status({ fill: "red", shape: "ring", text: "Closing" });
+                        case 0xA5:  //SET_VALVE_STATE           0,1,2
+                            switch (data) {
+                                case 0:
+                                    node.status({ fill: "grey", shape: "ring", text: "Opening Valve" });
+                                    break;
+                                case 1:
+                                    node.status({ fill: "grey", shape: "ring", text: "Closing Valve" });
+                                    break;
+                                case 2:
+                                    node.status({ fill: "grey", shape: "ring", text: "Temp Controlled" });
+                                    break;
+                            }
+                        case 0xA3:  //EXERCISE_VALVE
+                            node.status({ fill: "grey", shape: "ring", text: "Exercising Valve" });
                             break;
-                        case 2:
-                            node.status({ fill: "grey", shape: "ring", text: "Temp Controlled" });
+                        case 0xA4:  //SET_LOW_POWER_MODE        0,1
+                            if (data){
+                                node.status({ fill: "grey", shape: "ring", text: "Set Low power mode on" });
+                            } else{
+                                node.status({ fill: "grey", shape: "ring", text: "Set Low power mode off" });
+                            }
+                            break;
+                        case 0xA6:  //REQUEST_DIAGNOTICS
+                            node.status({ fill: "grey", shape: "ring", text: "Requesting Diagnostics" });
+                            break;
+                        case 0xBF:  //IDENTIFY
+                            node.status({ fill: "grey", shape: "ring", text: "Identifying Valve" });
+                            break;
+                        case 0xD2:  //SET_REPORTING_INTERVAL    Time in seconds (300-3600, default=300=5mins)
+                            node.status({ fill: "grey", shape: "ring", text: `Set Reporting interval to ${data}secs` });
+                            break;
+                        case 0xE2:  //REQUEST_VOLTAGE
+                            node.status({ fill: "grey", shape: "ring", text: "Requesting Voltage" });
                             break;
                         default:
-                            node.status({ fill: "green", shape: "ring", text: `Set ${data}` });
+                            node.error(`Unknown command ${cmd}`);
                     }
 
                 } else {
