@@ -884,7 +884,7 @@ int openThings_receive(char *OTmsg)
             // add records
             for (i = 0; i < records; i++)
             {
-#if defined(TRACE)
+#if defined(FULLTRACE)
                 TRACE_OUTS("openThings_receive(): rec:");
                 TRACE_OUTN(i);
                 sprintf(OTrecord, " {\"name\":\"%s\",\"id\":%d,\"type\":%d,\"str\":\"%s\",\"int\":%d,\"float\":%f}\n", OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].typeIndex, OTrecs[i].retChar, OTrecs[i].retInt, OTrecs[i].retFloat);
