@@ -70,12 +70,37 @@ module.exports = function (RED) {
             }
         };
 
+        // async version emits string monitor messages directly (collected below), it needs the emitter passing in
+        function asyncGetMonitorMsg () {
+            var ret = ener314rt.asyncOpenThingsReceive(scope.events.emit.bind(scope.events));  //emitter.emit.bind(emitter)
+            //scope.log(`received ${msg}`);
+            
+            // msg returns -ve int value if nothing received, or a string
+            if (ret != 0)  {
+                // bad Rx command
+                scope.error("Monitor unable to retrieve messages");
+            }
+        };
+
+        // listen for valid OT messages to be sent from async Rx, and forward them on to the devices
+        scope.events.on('RxMessage', function (msg) {
+            // msg returns -ve int value if nothing received, or a string
+            if (typeof(msg) === 'string' || msg instanceof String)  {
+                // inform the monitor devices that we have a message
+                var OTmsg = JSON.parse(msg);
+                scope.events.emit('monitor', OTmsg);
+            } else {
+                // no message
+            }
+        });
+
         // start the monitoring loop when we have listeners
         this.events.once('newListener', (event, listener) => {
             if (event === 'monitor' && inited) {
                 scope.log("Monitor listener detected, starting monitor loop, poll interval=" + config.interval + "ms");
                 // Do monitoring as we have listeners!
-                myInterval = setInterval(getMonitorMsg, config.interval);
+                //myInterval = setInterval(getMonitorMsg, config.interval);
+                myInterval = setInterval(asyncGetMonitorMsg, config.interval);
             } else
                 scope.error("Monitor unable to start, board not initialised");
         });

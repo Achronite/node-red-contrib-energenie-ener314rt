@@ -25,7 +25,7 @@ static struct OT_PARAM OTparams[NUM_OT_PARAMS] = {
     {"REAL_POWER", 0x70},
     {"REACTIVE_POWER", 0x71},
     {"VOLTAGE", 0x76},
-    {"TEMPERATURE", 0x74},
+    {"TEMPERATURE", OTP_TEMPERATURE},
     {"DIAGNOSTICS", 0x26},
     {"ALARM", 0x21},
     {"DEBUG_OUTPUT", 0x2D},
@@ -73,8 +73,8 @@ static struct OT_PRODUCT OTproducts[NUM_OT_PRODUCTS] = {
     {4, 0x00, 1, "Unknown"},
     {4, 0x01, 0, "Monitor Plug"},
     {4, 0x02, 1, "Adapter Plus"},
-    {4, 0x05, 0, "House Monitor"},
     {4, 0x03, 2, "Radiator Valve"},
+    {4, 0x05, 0, "House Monitor"},
     {4, 0x0C, 0, "Motion Sensor"},
     {4, 0x0D, 0, "Open Sensor"},
     {4, 0x0E, 1, "Thermostat"} // I dont know the productId of this yet, guessing at 0E
@@ -231,28 +231,59 @@ int openThings_getDeviceIndex(unsigned int id)
 }
 
 /*
-** openThings_devicePut() - add device to deviceList if it is not already there
+** openThings_devicePut() - add device to deviceList if it is not already there, return the index
 */
-void openThings_devicePut(unsigned int iDeviceId, unsigned char mfrId, unsigned char productId, bool joining)
+int openThings_devicePut(unsigned int iDeviceId, unsigned char mfrId, unsigned char productId, bool joining)
 {
-    int OTpi;
+    int OTpi, OTdi;
 
-    if (openThings_getDeviceIndex(iDeviceId) < 0)
+    OTdi = openThings_getDeviceIndex(iDeviceId);
+    if (OTdi < 0)
     {
         // new device
-        OTdevices[NumDevices].mfrId = mfrId;
-        OTdevices[NumDevices].productId = productId;
-        OTdevices[NumDevices].deviceId = iDeviceId;
-        OTdevices[NumDevices].joined = !joining;
+        OTdi = NumDevices;
+        OTdevices[OTdi].mfrId = mfrId;
+        OTdevices[OTdi].productId = productId;
+        OTdevices[OTdi].deviceId = iDeviceId;
+        OTdevices[OTdi].joined = !joining;
 
         // add product characteristics
         OTpi = openThings_getProductIndex(productId);
-        OTdevices[NumDevices].control = OTproducts[OTpi].control;
-        strcpy(OTdevices[NumDevices].product, OTproducts[OTpi].product);
+        OTdevices[OTdi].control = OTproducts[OTpi].control;
+        strcpy(OTdevices[OTdi].product, OTproducts[OTpi].product);
+
+        // add extra structure if it is an eTRV
+        if (productId == PRODUCTID_MIHO013)
+        {
+            OTdevices[OTdi].trv = malloc(sizeof(struct TRV_DEVICE));
+            if (OTdevices[OTdi].trv != NULL)
+            {
+                // malloc OK, set defaults for trv
+                OTdevices[OTdi].trv->valve = UNKNOWN;
+                OTdevices[OTdi].trv->cachedCmd[0] = '\0';
+                OTdevices[OTdi].trv->voltageDate = 0;
+                OTdevices[OTdi].trv->diagnosticDate = 0;
+                OTdevices[OTdi].trv->valveDate = 0;
+                OTdevices[OTdi].trv->retries = 0;
+                OTdevices[OTdi].trv->diagnostics = 0;
+                OTdevices[OTdi].trv->voltage = 0;
+                OTdevices[OTdi].trv->targetC = 0;
+                /*     
+    float         currentC;
+    bool          lowPowerMode;
+    unsigned char command;
+*/
+            }
+        }
+        else
+        {
+            // this isnt a trv, so we dont need an extra struct
+            OTdevices[OTdi].trv = NULL;
+        }
 
 #if defined(TRACE)
         TRACE_OUTS("openThings_devicePut() device added: ");
-        TRACE_OUTN(NumDevices);
+        TRACE_OUTN(OTdi);
         TRACE_OUTC(':');
         TRACE_OUTN(iDeviceId);
         TRACE_NL();
@@ -263,6 +294,7 @@ void openThings_devicePut(unsigned int iDeviceId, unsigned char mfrId, unsigned 
     // {
     //     printf("openThings_devicePut() device %d already exist\n", iDeviceId);
     // }
+    return OTdi;
 }
 
 /*
@@ -355,9 +387,10 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
             recs[record].paramId = param & 0x7F;
 
             //
-            // If we have received a TEMPERATURE (0x74) parameter for an eTRV (3), we need to send any outstanding messages to it ASAP as it only has a small Rx window
+            // If we have received a TEMPERATURE (OTP_TEMPERATURE) parameter for an eTRV (3), we need to send any outstanding messages to it ASAP as it only has a small Rx window
             //
-            if ((recs[record].paramId == 0x74) && (*productId == 3)){
+            if ((recs[record].paramId == OTP_TEMPERATURE) && (*productId == 3))
+            {
                 openThings_cache_send(*iDeviceId);
             }
 
@@ -387,7 +420,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
             if (rlen > 0)
             {
                 // str can cause probs clear it
-                memset(recs[record].retChar,0,15);
+                memset(recs[record].retChar, 0, 15);
 
                 // set MSB always to reduce loops below
                 result = payload[i];
@@ -637,7 +670,7 @@ int openThings_build_msg(unsigned char iProductId, unsigned int iDeviceId, unsig
 
     case OTCP_TEMP_SET:
         msglen = MIN_R1_MSGLEN + 2;
-        iType = 0x92;
+        iType = 0x92; // bit weird, but it works
 #if defined(TRACE)
         printf("OTCP_TEMP_SET msglen=%d\n", msglen);
 #endif
@@ -783,7 +816,8 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
 #endif
 
     /*
-    ** We store the command in the OTdevices array for the device if we have record of it (i.e. we have Rx a msg from it)
+    ** Only eTRVs need cached commands today, so store the command in the trv specific struct for the OTdevice array if we have record of it
+    ** (i.e. we have had an Rx a msg from it)
     */
     index = openThings_getDeviceIndex(iDeviceId);
     if (index >= 0)
@@ -794,7 +828,19 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
         if (ret == 0)
         {
             // store message against the Device array, only 1 cached command is supported at any one time
-            memcpy(OTdevices[index].cachedCmd, radio_msg, MAX_R1_MSGLEN);
+            memcpy(OTdevices[index].trv->cachedCmd, radio_msg, MAX_R1_MSGLEN);
+            OTdevices[index].trv->command = command;
+            OTdevices[index].trv->retries = TRV_TX_RETRIES; // Rx window is really small, so retry the Tx this number of times
+
+            // Store any output only variables in eTRV state
+            switch (command)
+            {
+            case OTCP_TEMP_SET:
+                OTdevices[index].trv->targetC = data;
+                break;
+            case OTCP_SWITCH_STATE:
+                OTdevices[index].trv->valve = data;
+            }
             TRACE_OUTS("payload cached\n");
         }
     }
@@ -837,6 +883,7 @@ int openThings_receive(char *OTmsg)
     char OTrecord[200];
     struct RADIO_MSG rxMsg;
     bool joining = false;
+    int OTdi;
 
     //printf("openthings_receive(): called, msgPtr=%d\n", pRxMsgHead);
 
@@ -875,9 +922,6 @@ int openThings_receive(char *OTmsg)
         {
             // likely to be a valid OpenThings message
 
-            // Send any cached commands for the device, to cope with small receive windows (eg eTRV)
-            // Now done in OTdecode above: openThings_cache_send(iDeviceId);
-
             // build response JSON
             sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
 
@@ -901,7 +945,7 @@ int openThings_receive(char *OTmsg)
                     // Special record processing
                     switch (OTrecs[i].paramId)
                     {
-                    case 0x6A: // JOIN_ACK
+                    case OTP_JOIN: // JOIN_ACK
                         // We seem to have stumbled upon an instruction to join outside of discovery loop, may as well autojoin the device
                         TRACE_OUTS("openThings_receive(): New device found, sending ACK: deviceId:");
                         TRACE_OUTN(iDeviceId);
@@ -909,49 +953,10 @@ int openThings_receive(char *OTmsg)
                         joining = true;
                         openThings_joinACK(productId, iDeviceId, 20);
                         break;
-                    case 0x74: // TEMPERATURE
-                        // Seems that TEMPERATURE (0x74) received as type OTR_INT=1, and it should be OTR_FLOAT=2 from the eTRV, so override and return a float instead
+                    case OTP_TEMPERATURE: // TEMPERATURE
+                        // Seems that TEMPERATURE (OTP_TEMPERATURE) received as type OTR_INT=1, and it should be OTR_FLOAT=2 from the eTRV, so override and return a float instead
                         sprintf(OTrecord, ",\"%s\":%.1f", OTrecs[i].paramName, OTrecs[i].retFloat);
-                        break;
-                    case 0x26: // eTRV DIAGNOSTICS, sent as binary
-                        // adapted from gpbenton MQTT code
-                        if (OTrecs[i].retInt != 0)
-                        {
-                            // at least 1 flag is set
-                            if (OTrecs[i].retInt & 0x0001)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Motor current below expectation\"");
-                            if (OTrecs[i].retInt & 0x0002)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Motor current always high\"");
-                            if (OTrecs[i].retInt & 0x0004)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Motor taking too long\"");
-                            if (OTrecs[i].retInt & 0x0008)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Discrepancy between air and pipe sensors\"");
-                            if (OTrecs[i].retInt & 0x0010)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Air sensor out of expected range\"");
-                            if (OTrecs[i].retInt & 0x0020)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Pipe sensor out of expected range\"");
-                            if (OTrecs[i].retInt & 0x0040)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"LOW_POWER_MODE\":\"on\"");
-                            if (OTrecs[i].retInt & 0x0080)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"No target temperature has been set by host\"");
-                            if (OTrecs[i].retInt & 0x0100)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Valve may be sticking\"");
-                            if (OTrecs[i].retInt & 0x0200)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"EXERCISE_VALVE\":\"success\"");
-                            if (OTrecs[i].retInt & 0x0400)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"EXERCISE_VALVE\":\"fail\"");
-                            if (OTrecs[i].retInt & 0x0800)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Driver micro has suffered a watchdog reset and needs data refresh\"");
-                            if (OTrecs[i].retInt & 0x1000)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Driver micro has suffered a noise reset and needs data refresh\"");
-                            if (OTrecs[i].retInt & 0x2000)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Battery voltage has fallen below 2p2V and valve has been opened\"");
-                            if (OTrecs[i].retInt & 0x4000)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Request for heat messaging is enabled\"");
-                            if (OTrecs[i].retInt & 0x8000)
-                                sprintf(OTrecord + strlen(OTrecord), ",\"Message\":\"Request for heat\"");
-                        }
-
+                        // record temperatue if eTRV
                         break;
                     }
                     break;
@@ -970,7 +975,13 @@ int openThings_receive(char *OTmsg)
             strcat(OTmsg, "}");
 
             // Add to deviceList
-            openThings_devicePut(iDeviceId, mfrId, productId, joining);
+            OTdi = openThings_devicePut(iDeviceId, mfrId, productId, joining);
+
+            // Update eTRV data if applicable, only one record is ever returned
+            if (productId == PRODUCTID_MIHO013)
+            {
+                eTRV_update(OTdi, OTrecs[0], rxMsg.t);
+            }
 
             TRACE_OUTS("openThings_receive: Returning: ");
             TRACE_OUTS(OTmsg);
@@ -1088,7 +1099,7 @@ void openthings_scan(int iTimeOut)
                 // scan records for JOIN requests, and reply to add
                 for (j = 0; j < records; j++)
                 {
-                    if (OTrecs[i].paramId == 0x6A)
+                    if (OTrecs[i].paramId == OTP_JOIN)
                     {
                         TRACE_OUTS("openThings_scan(): New device found, sending ACK: deviceId:");
                         TRACE_OUTN(iDeviceId);
@@ -1188,57 +1199,184 @@ unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceI
 /*
 ** openThings_cache_send()
 ** ===================
-** Send any cached command to a 'Control and Monitor' RF FSK OpenThings based Energenie smart device
+** Send any cached command to an eTRV OpenThings based Energenie smart device
 ** This is designed for devices that have a small receive window such as the 'MiHome Heating' TRV
 **
 ** set cached command using openThings_cmd()
 */
 int openThings_cache_send(unsigned int iDeviceId)
 {
-    int ret = 0, index;
+    int index;
     unsigned char msglen;
     //    int stime;
 
     /*
-    ** The full command is cached in the OTdevices array
+    ** The full command is cached in the OTdevices trv array
     */
     index = openThings_getDeviceIndex(iDeviceId);
     if (index >= 0)
     {
-        msglen = OTdevices[index].cachedCmd[0] + 1; // msglen in radio message doesn't include the length byte :)
-        if (msglen > 1)
+        // first check if we have outstanding cached commands; these take precedence
+        if (OTdevices[index].trv->retries > 0)
         {
-            // we have a cached command, send it
-#if defined(TRACE)
-            printf("openThings_cache_send(): deviceId=%d\n", iDeviceId);
-#endif
-            if ((lock_ener314rt()) == 0)
+            msglen = OTdevices[index].trv->cachedCmd[0] + 1; // msglen in radio message doesn't include the length byte :)
+            if (msglen > 1)
             {
-                //radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_TRANSMITTER);
+                // we have a cached command, send it
+                if ((lock_ener314rt()) == 0)
+                {
+                    //radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_TRANSMITTER);
 
-                //                stime = rand() % 10;
-                //                printf("sleep(%d)\n", stime);
-                //                sleep(stime);
-                radio_mod_transmit(RADIO_MODULATION_FSK, OTdevices[index].cachedCmd, msglen, 1); //TODO make xmits configurable
-                //radio_send_payload(OTdevices[index].cachedCmd, msglen, 1); // already in correct mode, no need to switch
-                //empty_radio_Rx_buffer(DT_MONITOR);
+                    //                stime = rand() % 10;
+                    //                printf("sleep(%d)\n", stime);
+                    //                sleep(stime);
+                    radio_mod_transmit(RADIO_MODULATION_FSK, OTdevices[index].trv->cachedCmd, msglen, 1); //TODO make xmits configurable
 
-                //sleep(2);
-                //radio_mod_transmit(RADIO_MODULATION_FSK, OTdevices[index].cachedCmd, msglen, 1); //TODO make xmits configurable
-
-                // set mode to receive, as cached commands usually expect a reply
-                //radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
-
-                // empty incoming buffer immediately
-                //empty_radio_Rx_buffer(DT_MONITOR);
-
-                unlock_ener314rt();
-
-                // clear cached command by setting the length to zero
-                //OTdevices[index].cachedCmd[0] = 0;
+                    unlock_ener314rt();
+                    OTdevices[index].trv->retries--;
+#if defined(TRACE)
+                    printf("openThings_cache_send(): deviceId=%d, retries=%d\n", iDeviceId, OTdevices[index].trv->retries);
+#endif
+                }
+                else
+                {
+                    return -2;
+                }
             }
+            else
+            {
+                return 0;
+            }
+        }
+        else
+        {
+            // No outstanding cached commands
+            // TO-DO periodic auto-reporting
+            return 0;
         }
     }
 
-    return ret;
+    return index;
+}
+
+/*
+** eTRV_update()
+** ===================
+** Store Rx record data in the eTRV record structure for reporting
+**
+**  OTdi - Index in OTdevices array (for speed)
+**  OTrecord - The record received
+*/
+void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime)
+{
+    struct TRV_DEVICE *trvData;
+    trvData = OTdevices[OTdi].trv; // make a pointer to correct struct in array for speed
+
+    switch (OTrec.paramId)
+    {
+    case OTP_TEMPERATURE:
+        trvData->currentC = OTrec.retFloat;
+        break;
+    case OTP_VOLTAGE:
+        trvData->voltage = OTrec.retFloat;
+        trvData->voltageDate = updateTime;
+        // Do we need to clear cached cmd retries?
+        if (trvData->command == OTCP_REQUEST_VOLTAGE)
+            trvData->retries = 0;
+        break;
+    case OTP_DIAGNOSTICS:
+        trvData->diagnostics = OTrec.retInt;
+        trvData->diagnosticDate = updateTime;
+        trvData->errors = false; // clear errors, will set again below
+        trvData->errString[0] = '\0';
+        // Do we need to clear cached cmd retries? (Exercise valve cmd returns diags too!)
+        if (trvData->command == OTCP_REQUEST_DIAGNOTICS  || trvData->command == OTCP_EXERCISE_VALVE)
+            trvData->retries = 0;
+
+        // Is there any specific diag data we need to store as well?
+        if (OTrec.retInt > 0)
+        {
+            // we have diagnostic flags
+            if (OTrec.retInt & 0x0001)
+            { // Motor current below expectation
+                trvData->errors = true;
+                strcpy(trvData->errString, "Motor current below expectation. ");
+            }
+            if (OTrec.retInt & 0x0002)
+            { // Motor current always high
+                trvData->errors = true;
+                strcat(trvData->errString, "Motor current always high. ");
+            }
+            if (OTrec.retInt & 0x0004)
+            { // Motor taking too long
+                trvData->errors = true;
+                strcat(trvData->errString, "Motor taking too long. ");
+            }
+            if (OTrec.retInt & 0x0008)
+            { // Discrepancy between air and pipe sensors
+                strcat(trvData->errString, "Discrepancy between air and pipe sensors. ");
+            }
+            if (OTrec.retInt & 0x0010)
+            { // Air sensor out of expected range
+                trvData->errors = true;
+                strcat(trvData->errString, "Air sensor out of expected range. ");
+            }
+            if (OTrec.retInt & 0x0020)
+            { // Pipe sensor out of expected range
+                trvData->errors = true;
+                strcat(trvData->errString, "Pipe sensor out of expected range. ");
+            }
+            if (OTrec.retInt & 0x0040)
+            { // LOW_POWER_MODE
+                trvData->lowPowerMode = true;
+            }
+            else
+            {
+                trvData->lowPowerMode = false;
+            }
+            if (OTrec.retInt & 0x0080)
+            { // No target temperature has been set by host
+                trvData->targetC = 0;
+            }
+            if (OTrec.retInt & 0x0100)
+            { // Valve may be sticking
+                trvData->valve = ERROR;
+                trvData->errors = true;
+            }
+            if (OTrec.retInt & 0x0200)
+            { // EXERCISE_VALVE success
+                trvData->exerciseValve = true;
+                trvData->valveDate = updateTime;
+            }
+            if (OTrec.retInt & 0x0400)
+            { // EXERCISE_VALVE fail
+                trvData->exerciseValve = false;
+                trvData->valveDate = updateTime;
+                trvData->errors = true;
+            }
+            if (OTrec.retInt & 0x0800)
+            { // Driver micro has suffered a watchdog reset and needs data refresh
+                trvData->errors = true;
+                strcat(trvData->errString, "Driver micro has suffered a watchdog reset and needs data refresh. ");
+            }
+            if (OTrec.retInt & 0x1000)
+            { // Driver micro has suffered a noise reset and needs data refresh
+                trvData->errors = true;
+                strcat(trvData->errString, "Driver micro has suffered a noise reset and needs data refresh. ");
+            }
+            if (OTrec.retInt & 0x2000)
+            { // Battery voltage has fallen below 2p2V and valve has been opened
+                trvData->errors = true;
+                strcat(trvData->errString, "Battery voltage has fallen below 2p2V and valve has been opened. ");
+            }
+            if (OTrec.retInt & 0x4000)
+            { // Request for heat messaging is enabled - not sure what to do here, or even how to set this!
+                //trvData->
+            }
+            if (OTrec.retInt & 0x8000)
+            { // Request for heat  - not sure what to do here
+                //trvData->
+            }
+        }
+    }
 }

@@ -427,18 +427,17 @@ napi_value nf_openThings_receive(napi_env env, napi_callback_info info)
     return nv_ret;
 }
 
-// Execute callback (xcb_) - called when async function is queued
-// no n-api calls should be made here
+/* Execute callback (xcb_) - called when async function is queued
+ *   xcb_openThings_receive()
+ * Make the call to C function, and populate status & buf
+ * NOTE: n-api calls should be made in xcb
+ */
 void xcb_openThings_receive(napi_env env, void *data)
 {
     carrier *c = (carrier *)data; // data object definition
 
-    printf("xcb_ async execute\n");
-
-    // Call C routine
+    // Call C routine, capture result in c.buf
     c->_result = openThings_receive(c->_buf);
-
-    printf("xcb_ result=%d buf=%s\n", c->_result, c->_buf);
 }
 
 // Complete callback (ccb_) - called when async function has completed to return the data
@@ -453,72 +452,50 @@ void ccb_openThings_receive(napi_env env, napi_status status, void *data)
     napi_value argv[2]; // 0 = event, 1= return value (buf)
     napi_value nv_result;
     napi_value cb;
-    const char *eventname = "monitor";
+    const char *eventname = "RxMessage"; // event to emit (TODO: pass this in)
 
-    printf("ccb_ called\n");
+    //printf("ccb_ called\n");
 
-    // Only do anything if the return value was good
+    // Only do anything if the return value was good i.e. at least 1 OT record returned
     if (c->_result > 0)
     {
-        napi_get_reference_value(env, c->_callback, &cb);
-
-        napi_valuetype val0;
-        napi_typeof(env, cb, &val0);
-        if (val0 == napi_function)
+        // Construct the callback and returned data (event)
+        //   cb = fn pointer to emitter
+        //   argv[0] = eventname
+        //   argv[1] = returned data (buf)
+        status = napi_get_reference_value(env, c->_callback, &cb);
+        if (status != napi_ok)
         {
-            printf("ccb_ OK, data is a function.\n");
-        }
-        else
-        {
-            printf("ccb_ data is not a function.\n");
-            return;
+            TRACE_OUTS("ccb_ cannot get callback reference\n");
+            napi_throw_error(env, NULL, "Unable to cannot get callback reference");
         }
 
-        // data should be passed to complete event emitter callback for return
-        //   argv[0] = event
-        //   argv[1] = callback        
         status = napi_create_string_latin1(env, eventname, NAPI_AUTO_LENGTH, &argv[0]);
         status = napi_create_string_latin1(env, c->_buf, NAPI_AUTO_LENGTH, &argv[1]);
 
         if (status != napi_ok)
         {
-            printf("ccb_ cannot create string\n");
-        }
-        else
-        {
-            printf("ccb_ string created\n");
-        }
-        status = napi_get_global(env, &global); // needed for calling emitter
-        if (status != napi_ok)
-        {
-            printf("ccb_ cannot get global\n");
-            // convert return string into JS value only if values exist
-        }
-        else
-        {
-            printf("ccb_ global got\n");
-        }
-        status = napi_call_function(env, global, cb, 2, argv, &nv_result);
-        if (status == napi_ok)
-        {
-            printf("ccb_ napi_status is OK! Event fired!\n");
-        }
-        else
-        {
-            printf("ccb_ napi_status is NOT OK!\n");
-        }
-        //    }
-
-        if (status != napi_ok)
-        {
-            printf("ccb_ Unable to create return value from buf\n");
+            TRACE_OUTS("ccb_ cannot create string\n");
             napi_throw_error(env, NULL, "Unable to create return value from buf");
         }
+
+        // Retrieve the global context, needed for calling emitter
+        status = napi_get_global(env, &global);
+        if (status != napi_ok)
+        {
+            TRACE_OUTS("ccb_ cannot get global\n");
+            napi_throw_error(env, NULL, "Unable to get global context");
+        }
+
+        // Call the js emitter
+        status = napi_call_function(env, global, cb, 2, argv, &nv_result);
+        if (status != napi_ok)
+        {
+            TRACE_OUTS("ccb_ Error firing event\n");
+            napi_throw_error(env, NULL, "Unable to fire RxMessage event");
+        }
     }
-    else
-    {
-        printf("ccb_ result=%d, emitter not called\n", c->_result);
-    }
+    // TODO: any tidying???
 }
 
 /* N-API async function (na_) wrapper for:
@@ -550,20 +527,16 @@ napi_value na_openThings_receive(napi_env env, napi_callback_info info)
     //napi_async_work work;
     napi_value async_resource_name;
 
-    printf("na_ openThings_receive()\n");
+    //printf("na_ openThings_receive()\n");
 
     // get args()
     napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
 
     napi_valuetype val0;
     napi_typeof(env, argv[0], &val0);
-    if (val0 == napi_function)
+    if (val0 != napi_function)
     {
-        printf("na_ OK, argv[0] is a function.\n");
-    }
-    else
-    {
-        printf("na_ argv[0] is not a function.\n");
+        TRACE_OUTS("na_ argv[0] is not a function.\n");
     }
 
     // convert emitter function into a napi_value for passing into xcb_
@@ -610,63 +583,7 @@ napi_value na_openThings_receive(napi_env env, napi_callback_info info)
     return nv_ret;
 }
 
-/*
-napi_value na_openThings_receive(napi_env env, napi_callback_info info)
-{
-    napi_status status;
-    napi_value nv_ret;
-    int ret = 0;
 
-	napi_async_work work;
-	napi_value async_resource_name;
-
-    napi_value nv_data_out;
-
-    // no args :)
-
-    printf("calling ASYNC openThings_receive()\n");
-
-    /*
-	 * napi_status napi_create_async_work(napi_env env,
-        napi_value async_resource,             // An optional object associated with the async work that will be passed to possible async_hooks init hooks.
-        napi_value async_resource_name,        // Identifier for the kind of resource that is being provided for diagnostic information exposed by the async_hooks API.
-        napi_async_execute_callback execute,   // The native function which should be called to execute the logic asynchronously.
-                                                  The given function is called from a worker pool thread and can execute in parallel with the main event loop thread.
-        napi_async_complete_callback complete, // The native function which will be called when the asynchronous logic is completed or is cancelled.
-                                                  The given function is called from the main event loop thread.
-        void* data,                            // User-provided data context. This will be passed back into the execute and complete functions.
-        napi_async_work* result);              // (out) napi_async_work* which is the handle to the newly created async work.                                 
-
-	 * async_resource_name should be a null-terminated, UTF-8-encoded string.
-	 * Note: The async_resource_name identifier is provided by the user and should be representative of the type of async work being performed. 
-     * It is also recommended to apply namespacing to the identifier, e.g. by including the module name.
-     *   xcb_  execute callback function for async work
-     *   ccb_  complete callback function for async work
-	 *
-
-    // TODO - check all status values
-	status = napi_create_string_utf8(env, "ener314rt:OTRecv", -1, &async_resource_name);
-	status = napi_create_async_work(env, NULL, async_resource_name, xcb_openThings_receive, ccb_openThings_receive, &nv_data_out, &work);
-	status = napi_queue_async_work(env, work);
-
-    //printf("openThings_receive() returned %d. message=%s\n", ret, buf);
-
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Unable to create async work");
-        ret = -1;
-    }
-
-    status = napi_create_int32(env, ret, &nv_ret);
-
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Unable to create return value");
-    }
-
-    return nv_ret;
-}
-*/
 
 /* N-API function (nf_) wrapper for:
 **  unsigned char openThings_cache_cmd(unsigned int iDeviceId, uint8_t command, uint32_t data)
@@ -856,47 +773,6 @@ napi_value nf_ook_switch(napi_env env, napi_callback_info info)
 
     return nv_ret;
 }
-
-/*
-void bye_async_execute(napi_env env, void *data)
-{
-	sleep(1);
-	printf("Hello async\n");
-}
-
-void bye_async_complete(napi_env env, napi_status status, void* data)
-{
-	printf("Hello completed async\n");
-}
-
-napi_value bye_async(napi_env env, napi_callback_info info)
-{
-	napi_value retval;
-	napi_async_work work;
-	napi_value async_resource_name;
-
-	//
-	 * napi_status napi_create_async_work(napi_env env,
-                                   napi_value async_resource,
-                                   napi_value async_resource_name,
-                                   napi_async_execute_callback execute,
-                                   napi_async_complete_callback complete,
-                                   void* data,
-                                   napi_async_work* result);
-	 * async_resource_name should be a null-terminated, UTF-8-encoded string.
-	 * Note: The async_resource_name identifier is provided by the user and should be representative of the type of async work being performed. 
-     * It is also recommended to apply namespacing to the identifier, e.g. by including the module name.
-	 * See the async_hooks documentation for more information.
-	 //
-	napi_create_string_utf8(env, "bye:sleep", -1, &async_resource_name);
-	napi_create_async_work(env, NULL, async_resource_name, bye_async_execute, bye_async_complete, NULL, &work);
-	napi_queue_async_work(env, work);
-
-	napi_create_int64(env, 6473, &retval);
-
-	return retval;
-}
-*/
 
 // ----------------- END WRAPPERS -----------------------------
 
