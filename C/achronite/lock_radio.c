@@ -118,10 +118,11 @@ int lock_ener314rt(void)
     if (initialised)
     {
         // lock radio now
-
+#ifdef LOCKTRACE
         TRACE_OUTS("[L");
         TRACE_OUTN((int)pthread_self());
         TRACE_OUTS("]");
+#endif
 
         ret = pthread_mutex_lock(&radio_mutex);
         //printf("-%d-", (int)pthread_self());
@@ -154,10 +155,11 @@ int unlock_ener314rt(void)
 {
     int ret = 0;
     //unlock mutex
+#ifdef LOCKTRACE
     TRACE_OUTS("[");
     TRACE_OUTN((int)pthread_self());
     TRACE_OUTS("U]");
-
+#endif
     ret = pthread_mutex_unlock(&radio_mutex);
     if (ret != 0)
     {
