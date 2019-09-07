@@ -227,7 +227,7 @@ struct OT_PRODUCT {
 /***** FUNCTION PROTOTYPES *****/
 unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits);
 unsigned char openThings_deviceList(char *devices, bool scan);
-int openThings_receive(char *OTmsg );
+int openThings_receive(char *OTmsg, unsigned int buflen );
 unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceId, unsigned char xmits);
 void openthings_scan(int iTimeOut);
 
@@ -236,6 +236,7 @@ int openThings_cache_send(unsigned int iDeviceId);
 //int openThings_cmd(unsigned char iProductId, unsigned int iDeviceId, unsigned char iCommand, unsigned int iData, unsigned char xmits);
 int openThings_build_msg(unsigned char iProductId, unsigned int iDeviceId, unsigned char iCommand, unsigned int iData, unsigned char *radio_msg);
 void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime);
+void eTRV_get_status(int OTdi, char *buf, unsigned int buflen);
 
 #endif
 

@@ -2,6 +2,7 @@
 #include <node_api.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "lock_radio.h"
 #include "openThings.h"
@@ -405,7 +406,7 @@ napi_value nf_openThings_receive(napi_env env, napi_callback_info info)
     //printf("calling openThings_receive()\n");
 
     // Call C routine
-    ret = openThings_receive(buf);
+    ret = openThings_receive(buf, 500);
 
     //printf("openThings_receive() returned %d. message=%s\n", ret, buf);
 
@@ -437,7 +438,7 @@ void xcb_openThings_receive(napi_env env, void *data)
     carrier *c = (carrier *)data; // data object definition
 
     // Call C routine, capture result in c.buf
-    c->_result = openThings_receive(c->_buf);
+    c->_result = openThings_receive(c->_buf, (unsigned int)sizeof(c->_buf));
 }
 
 // Complete callback (ccb_) - called when async function has completed to return the data
@@ -459,6 +460,8 @@ void ccb_openThings_receive(napi_env env, napi_status status, void *data)
     // Only do anything if the return value was good i.e. at least 1 OT record returned
     if (c->_result > 0)
     {
+        printf("ccb_ len=%d, str=%s\n", strlen(c->_buf), c->_buf);
+
         // Construct the callback and returned data (event)
         //   cb = fn pointer to emitter
         //   argv[0] = eventname
@@ -491,9 +494,34 @@ void ccb_openThings_receive(napi_env env, napi_status status, void *data)
         status = napi_call_function(env, global, cb, 2, argv, &nv_result);
         if (status != napi_ok)
         {
-            TRACE_OUTS("ccb_ Error firing event\n");
+            TRACE_OUTS("ccb_ Error firing event ");
+            //TRACE_OUTS(eventname);
+            TRACE_OUTN(status);
+            TRACE_NL();
+/*
+            bool bresult;
+            status = napi_is_exception_pending(env, &bresult);
+            printf("status+=%d, pending_exception=%d\n", status, bresult);
+
+            napi_extended_error_info neei, *neeip;
+            neeip = &neei;
+            napi_status status2;
+            status2 = napi_get_last_error_info(env, (const napi_extended_error_info **)&neeip);
+
+            printf("status2=%d errmsg=%s, eng_err=%d, err=%d\n",
+            status2,
+            neei.error_message,
+            neei.engine_error_code,
+            neei.error_code );
+            sleep(10);
+*/
             napi_throw_error(env, NULL, "Unable to fire RxMessage event");
         }
+
+        // tidy up
+        napi_delete_reference(env, c->_callback);
+        napi_delete_async_work(env, c->_request);
+
     }
     // TODO: any tidying???
 }
@@ -854,15 +882,6 @@ napi_value Init(napi_env env, napi_value exports)
          .value = NULL,
          .attributes = napi_default,
          .data = NULL}};
-    /*
-        {.utf8name = "numDevices",
-         .method = NULL,
-         .getter = ng_numDevices,
-         .setter = NULL,
-         .value = nv_numDevices,
-         .attributes = napi_writable,
-         .data = NULL}};
-         */
 
     // This method allows definition of multiple properties on a given object 'exports'
     // The properties are defined using property descriptors (see napi_property_descriptor).

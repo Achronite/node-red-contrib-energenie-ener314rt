@@ -268,6 +268,8 @@ int openThings_devicePut(unsigned int iDeviceId, unsigned char mfrId, unsigned c
                 OTdevices[OTdi].trv->diagnostics = 0;
                 OTdevices[OTdi].trv->voltage = 0;
                 OTdevices[OTdi].trv->targetC = 0;
+                OTdevices[OTdi].trv->errors = false;
+                OTdevices[OTdi].trv->lowPowerMode = false;
                 /*     
     float         currentC;
     bool          lowPowerMode;
@@ -712,6 +714,14 @@ int openThings_build_msg(unsigned char iProductId, unsigned int iDeviceId, unsig
 #endif
         break;
 
+    case OTCP_SET_LOW_POWER_MODE:
+        msglen = MIN_R1_MSGLEN + 1;
+        iType = 0x01;
+#if defined(TRACE)
+        printf("OTCP_SET_LOW_POWER_MODE msglen=%d\n", msglen);
+#endif
+        break;
+        
     default:
         // unknown command, abort
         return -1;
@@ -872,7 +882,7 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
 **NEW If a cached command is outstanding for a device that only has a small receive window, send the command
 **    returning array of returned parameters for a deviceId
 */
-int openThings_receive(char *OTmsg)
+int openThings_receive(char *OTmsg, unsigned int buflen)
 {
     //int ret = 0;
     //uint8_t buf[MAX_FIFO_BUFFER];
@@ -885,7 +895,7 @@ int openThings_receive(char *OTmsg)
     bool joining = false;
     int OTdi;
 
-    //printf("openthings_receive(): called, msgPtr=%d\n", pRxMsgHead);
+    //printf("openthings_receive(): called, buflen=%d\n", buflen);
 
     // set default message if no message available
     strcpy(OTmsg, "{\"deviceId\": 0}");
@@ -956,7 +966,6 @@ int openThings_receive(char *OTmsg)
                     case OTP_TEMPERATURE: // TEMPERATURE
                         // Seems that TEMPERATURE (OTP_TEMPERATURE) received as type OTR_INT=1, and it should be OTR_FLOAT=2 from the eTRV, so override and return a float instead
                         sprintf(OTrecord, ",\"%s\":%.1f", OTrecs[i].paramName, OTrecs[i].retFloat);
-                        // record temperatue if eTRV
                         break;
                     }
                     break;
@@ -971,17 +980,23 @@ int openThings_receive(char *OTmsg)
                 // }
             }
 
-            // close record array
-            strcat(OTmsg, "}");
-
             // Add to deviceList
             OTdi = openThings_devicePut(iDeviceId, mfrId, productId, joining);
 
-            // Update eTRV data if applicable, only one record is ever returned
+            // Update eTRV data and append if applicable, only one record is ever returned
             if (productId == PRODUCTID_MIHO013)
             {
                 eTRV_update(OTdi, OTrecs[0], rxMsg.t);
+
+                if (OTrecs[0].paramId == OTP_TEMPERATURE)
+                {
+                    // Add static params too to TEMPERATURE reporting
+                    eTRV_get_status(OTdi, OTmsg, buflen);
+                }
             }
+
+            // close record array
+            strcat(OTmsg, "}");
 
             TRACE_OUTS("openThings_receive: Returning: ");
             TRACE_OUTS(OTmsg);
@@ -1281,6 +1296,7 @@ void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime)
         trvData->voltage = OTrec.retFloat;
         trvData->voltageDate = updateTime;
         // Do we need to clear cached cmd retries?
+
         if (trvData->command == OTCP_REQUEST_VOLTAGE)
             trvData->retries = 0;
         break;
@@ -1290,7 +1306,8 @@ void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime)
         trvData->errors = false; // clear errors, will set again below
         trvData->errString[0] = '\0';
         // Do we need to clear cached cmd retries? (Exercise valve cmd returns diags too!)
-        if (trvData->command == OTCP_REQUEST_DIAGNOTICS  || trvData->command == OTCP_EXERCISE_VALVE)
+
+        if (trvData->command == OTCP_REQUEST_DIAGNOTICS || trvData->command == OTCP_EXERCISE_VALVE)
             trvData->retries = 0;
 
         // Is there any specific diag data we need to store as well?
@@ -1310,7 +1327,7 @@ void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime)
             if (OTrec.retInt & 0x0004)
             { // Motor taking too long
                 trvData->errors = true;
-                strcat(trvData->errString, "Motor taking too long. ");
+                strcat(trvData->errString, "Motor taking too long to open/close. ");
             }
             if (OTrec.retInt & 0x0008)
             { // Discrepancy between air and pipe sensors
@@ -1367,7 +1384,7 @@ void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime)
             if (OTrec.retInt & 0x2000)
             { // Battery voltage has fallen below 2p2V and valve has been opened
                 trvData->errors = true;
-                strcat(trvData->errString, "Battery voltage has fallen below 2p2V and valve has been opened. ");
+                strcat(trvData->errString, "Battery voltage has fallen below 2.2V and valve has been opened. ");
             }
             if (OTrec.retInt & 0x4000)
             { // Request for heat messaging is enabled - not sure what to do here, or even how to set this!
@@ -1379,4 +1396,71 @@ void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime)
             }
         }
     }
+}
+
+/*
+** eTRV_get_status()
+** ===================
+** JSONify stored data for the eTRV record structure for reporting
+** data is appended to incoming buf as key value comma separated pairs
+**
+**  OTdi - Index in OTdevices array (for speed)
+**  buf  - buf appended with new data
+**  buflen - length of buffer to prevent memory errors
+*/
+void eTRV_get_status(int OTdi, char *buf, unsigned int buflen)
+{
+    struct TRV_DEVICE *trvData;
+    trvData = OTdevices[OTdi].trv; // make a pointer to correct struct in array for speed
+    char trvStatus[200] = "";
+    static const char *VALVE_STR[] = {"open", "closed", "auto", "error", "unknown"};
+
+    // populate outstanding command
+    if (trvData->retries > 0)
+    {
+        sprintf(trvStatus, ",\"command\":%d,\"retries\":%d",
+                trvData->command,
+                trvData->retries);
+        strncat(buf, trvStatus, buflen);
+    }
+    if (trvData->targetC > 0)
+    {
+        sprintf(trvStatus, ",\"TARGET_C\":%.1f", trvData->targetC);
+        strncat(buf, trvStatus, buflen);
+    }
+    if (trvData->voltage > 0)
+    {
+        sprintf(trvStatus, ",\"VOLTAGE\":%.2f,\"VOLTAGE_TS\":%d", trvData->voltage, (int)trvData->voltageDate);
+        strncat(buf, trvStatus, buflen);
+    }
+    if (trvData->valve != UNKNOWN)
+    {
+        sprintf(trvStatus, ",\"VALVE_STATE\":\"%s\"", VALVE_STR[trvData->valve]);
+        strncat(buf, trvStatus, buflen);
+    }
+    if (trvData->valveDate > 0)
+    {
+        sprintf(trvStatus, ",\"EXERCISE_VALVE\":\"%s\",\"VALVE_TS\":%d",
+                trvData->exerciseValve ? "success" : "fail",
+                (int)trvData->valveDate);
+        strncat(buf, trvStatus, buflen);
+    }
+    if (trvData->diagnosticDate > 0)
+    {
+        sprintf(trvStatus, ",\"DIAGNOSTICS\":%d,\"DIAGNOSTICS_TS\":%d,\"LOW_POWER_MODE\":%s",
+                trvData->diagnostics,
+                (int)trvData->diagnosticDate,
+                trvData->lowPowerMode ? "true" : "false");
+        strncat(buf, trvStatus, buflen);
+    }
+    if (trvData->errors)
+    {
+        sprintf(trvStatus, ",\"ERRORS\":%s,\"ERROR_TEXT\":\"%s\"",
+                trvData->errors ? "true" : "false",
+                trvData->errString);
+        strncat(buf, trvStatus, buflen);
+    }
+
+    //printf("eTRV_get_status(): %s, strlen=%d buflen:%d\n",trvStatus,strlen(trvStatus),buflen);
+
 }
