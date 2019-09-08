@@ -141,16 +141,18 @@ v0.3+ now supports the MiHome Thermostaic Radiator valve (eTRV).
 |TEMP_SET|244|Send new target temperature for eTRV.<br>NOTE: The VALVE_STATE must be set to 'Auto' for this to work.|int|No|
 |SET_VALVE_STATE|165|Set valve state|0=Open<br>1=Closed<br>2=Auto (default)|DIAGNOSTICS|
 |EXERCISE_VALVE|163|Send exercise valve command, recommended once a week to calibrate eTRV||DIAGNOSTICS|
-|SET_LOW_POWER_MODE|164|This is used to enhance battery life by limiting the hunting of the actuator, ie it limits small adjustments to degree of opening, when the room temperature is close to the *TEMP_SET* point. A consequence of the Low Power mode is that it may cause larger errors in controlling room temperature to the set temperature.|0=Off<br>1=On|DIAGNOSTICS|
+|SET_LOW_POWER_MODE|164|This is used to enhance battery life by limiting the hunting of the actuator, ie it limits small adjustments to degree of opening, when the room temperature is close to the *TEMP_SET* point. A consequence of the Low Power mode is that it may cause larger errors in controlling room temperature to the set temperature.|0=Off<br>1=On|No|
 |REQUEST_DIAGNOTICS|166|Request diagnostic data from device, if all is OK it will return 0. Otherwise see additional monitored values for status messages||DIAGNOSTICS|
 |IDENTIFY|191|Identify the device by making the green light flash on the selected eTRV for 60 seconds||No|
 |SET_REPORTING_INTERVAL|210|Update reporting interval to requested value|300-3600 seconds|No|
 |REQUEST_VOLTAGE|226|Report current voltage of the batteries||VOLTAGE|
 
 ### eTRV Command Caching
-The way the eTRV works there may be a delay from command is sent to it being processed by the device. This is due to the eTRV only listening for commands for 200ms after a temperature report is sent to save battery life.
+The eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes). The receiver is activated after each *TEMPERATURE* report to listen for commands. The receiver only remains active for 200ms or until a message is received.
 
-To cater for this limitation the **'eTRV node'** uses command caching. Any command sent using the eTRV node will be held until a TEMPERATURE report is received; at this point the last cached message (only 1 is supported) will be sent to the eTRV.  Messages will continue to be cached until they have been succesfully received (indicated by the *Response* command in the above table) or until the number of Retries has reached 0.
+To cater for this hardware limitation the **'eTRV node'** uses command caching. Any command sent using the eTRV node will be held until a TEMPERATURE report is received; at this point the most recent cached message (only 1 is supported) will be sent to the eTRV.  Messages will continue to be resent until they have been succesfully received (indicated by the *Response* command in the above table) or until the number of Retries has reached 0.
+
+The reason that a command may be resent multiple times is due to timing issues.  The ENER314-RT monitoring feature is is due to the polling frequency
 
 The eTRV, unfortunately, has no way of checking that certain commands have been received by the device (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  Any commands that  so this is retried the full number of times.
 
@@ -158,23 +160,54 @@ There is a trade-off between how often the ENER314-RT board should be polled for
 
 ### eTRV Monitor Messages
 
-To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above, additional code has been added to cache the monitor information for these devices.  A full list of these possible values is shown below, only 'known' values are returned when the eTRV regularly reports the TEMPERATURE:
+To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above, additional code has been added to cache the monitor information for these devices.  An example of the values is shown below, only 'known' values are returned when the eTRV regularly reports the TEMPERATURE.  See table for types and determining when field was last updated:
 ```
+{
+    "deviceId":3989,
+    "mfrId":4,
+    "productId":3,
+    "timestamp":1567932119,
+    "TEMPERATURE":19.7,
+    "EXERCISE_VALVE":"success",
+    "VALVE_TS":1567927343,
+    "DIAGNOSTICS":512,
+    "DIAGNOSTICS_TS":1567927343,
+    "LOW_POWER_MODE":false
+}
+
 timestamp: <numeric 'epoch based' timestamp, of when message was read>
 command: <number of current command being set to eTRV>
-retries: <the number of remaining retries for 'command' to be sent to eTRV>
-TEMPERATURE: <the current temperature in celcius>
-TARGET_C: <target temperature in celcius>
+retries: 9
+TEMPERATURE: 19.8
+TARGET_C: 22
 VOLTAGE: <current battery voltage>
 VOLTAGE_TS: <timestamp of when battery voltage was last received>
 VALVE_STATE: "open" | "closed" | "auto" | "error"
-EXERCISE_VALVE: "success" |"fail"
+VALVE_TS: <timestamp of last confirmed *EXERCISE_VALVE* cmd>
+EXERCISE_VALVE: "success" | "fail"  <the result of the *EXERCISE_VALVE* command>
 DIAGNOSTICS: <numeric diagnostic code, see "ERRORS" for interpretation>
 DIAGNOSTICS_TS: <timestamp of when diagnostics were last received>
 ERRORS: "true" | "false" <true if an error condition has been detected>
-LOW_POWER_MODE: <eTRV is low power mode state>
+LOW_POWER_MODE: "true" | "false" <eTRV is in low power mode state>
 ERROR_TEXT: <text of error>
 ```
+
+|Parameter|Description|Data Type|Update time|
+|---|---|---|---|
+|command|number of current command being set to eTRV|int|timestamp|
+|retries|The number of remaining retries for 'command' to be sent to eTRV>|int|timestamp|
+|DIAGNOSTICS|Numeric diagnostic code, see "ERRORS" for interpretation|int|DIAGNOSTIC_TS|
+|DIAGNOSTICS_TS|timestamp of when diagnostics were last received|epoch|DIAGNOSTIC_TS|
+|ERRORS|true if an error condition has been detected|boolean|DIAGNOSTIC_TS|
+|ERROR_TEXT|text of error|string|DIAGNOSTIC_TS|
+|EXERCISE_VALVE|The result of the *EXERCISE_VALVE* command| success or fail|DIAGNOSTIC_TS|
+|LOW_POWER_MODE|eTRV is in low power mode state>|boolean|DIAGNOSTIC_TS|
+|TARGET_C|Target temperature in celcius|int|TEMP_SET command|
+|TEMPERATURE|The current temperature in celcius|float|timestamp|
+|VALVE_STATE|Current valve mode/state| open, closed, auto, error|VALVE_STATE command *or* DIAGNOSTIC_TS on error|
+|VALVE_TS|timestamp of when last *EXERCISE_VALVE* took place|epoch|DIAGNOSTIC_TS|
+|VOLTAGE|Current battery voltage|float|VOLTAGE_TS|
+|VOLTAGE_TS|Tmestamp of when battery voltage was last received|epoch|VOLTAGE_TS|
 
 ## Change History
 | Version | Change details
