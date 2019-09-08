@@ -1317,31 +1317,31 @@ void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime)
             if (OTrec.retInt & 0x0001)
             { // Motor current below expectation
                 trvData->errors = true;
-                strcpy(trvData->errString, "Motor current below expectation. ");
+                strncpy(trvData->errString, "Motor current below expectation.", MAX_ERRSTR);
             }
             if (OTrec.retInt & 0x0002)
             { // Motor current always high
                 trvData->errors = true;
-                strcat(trvData->errString, "Motor current always high. ");
+                strncat(trvData->errString, "Motor current always high.", MAX_ERRSTR);
             }
             if (OTrec.retInt & 0x0004)
             { // Motor taking too long
                 trvData->errors = true;
-                strcat(trvData->errString, "Motor taking too long to open/close. ");
+                strncat(trvData->errString, "Motor taking too long to open/close.", MAX_ERRSTR);
             }
             if (OTrec.retInt & 0x0008)
             { // Discrepancy between air and pipe sensors
-                strcat(trvData->errString, "Discrepancy between air and pipe sensors. ");
+                strncat(trvData->errString, "Discrepancy between air and pipe sensors.", MAX_ERRSTR);
             }
             if (OTrec.retInt & 0x0010)
             { // Air sensor out of expected range
                 trvData->errors = true;
-                strcat(trvData->errString, "Air sensor out of expected range. ");
+                strncat(trvData->errString, "Air sensor out of expected range.", MAX_ERRSTR);
             }
             if (OTrec.retInt & 0x0020)
             { // Pipe sensor out of expected range
                 trvData->errors = true;
-                strcat(trvData->errString, "Pipe sensor out of expected range. ");
+                strncat(trvData->errString, "Pipe sensor out of expected range.", MAX_ERRSTR);
             }
             if (OTrec.retInt & 0x0040)
             { // LOW_POWER_MODE
@@ -1374,17 +1374,17 @@ void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime)
             if (OTrec.retInt & 0x0800)
             { // Driver micro has suffered a watchdog reset and needs data refresh
                 trvData->errors = true;
-                strcat(trvData->errString, "Driver micro has suffered a watchdog reset and needs data refresh. ");
+                strncat(trvData->errString, "Driver micro has suffered a watchdog reset and needs data refresh.", MAX_ERRSTR);
             }
             if (OTrec.retInt & 0x1000)
             { // Driver micro has suffered a noise reset and needs data refresh
                 trvData->errors = true;
-                strcat(trvData->errString, "Driver micro has suffered a noise reset and needs data refresh. ");
+                strncat(trvData->errString, "Driver micro has suffered a noise reset and needs data refresh.", MAX_ERRSTR);
             }
             if (OTrec.retInt & 0x2000)
             { // Battery voltage has fallen below 2p2V and valve has been opened
                 trvData->errors = true;
-                strcat(trvData->errString, "Battery voltage has fallen below 2.2V and valve has been opened. ");
+                strncat(trvData->errString, "Battery voltage has fallen below 2.2V and valve has been opened.", MAX_ERRSTR);
             }
             if (OTrec.retInt & 0x4000)
             { // Request for heat messaging is enabled - not sure what to do here, or even how to set this!
@@ -1394,6 +1394,9 @@ void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime)
             { // Request for heat  - not sure what to do here
                 //trvData->
             }
+        } else {
+            // some flags may need clearing as we have 0
+            trvData->lowPowerMode = false;
         }
     }
 }
