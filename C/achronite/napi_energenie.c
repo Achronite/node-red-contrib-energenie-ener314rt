@@ -460,7 +460,7 @@ void ccb_openThings_receive(napi_env env, napi_status status, void *data)
     // Only do anything if the return value was good i.e. at least 1 OT record returned
     if (c->_result > 0)
     {
-        printf("ccb_ len=%d, str=%s\n", strlen(c->_buf), c->_buf);
+        //printf("ccb_ len=%d, str=%s\n", strlen(c->_buf), c->_buf);
 
         // Construct the callback and returned data (event)
         //   cb = fn pointer to emitter
