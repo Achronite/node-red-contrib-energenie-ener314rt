@@ -136,16 +136,18 @@ v0.3+ now supports the MiHome Thermostaic Radiator valve (eTRV).
 
 ### eTRV Commands
 
-| Command | # | Description | .data | Response |
+| Command | # | Description | .data | Response Msg |
 |---|:---:|---|---|:---:|
-|TEMP_SET|244|Send new target temperature for eTRV.<br>NOTE: The VALVE_STATE must be set to 'Auto' for this to work.|int|No|
-|SET_VALVE_STATE|165|Set valve state|0=Open<br>1=Closed<br>2=Auto (default)|DIAGNOSTICS|
 |EXERCISE_VALVE|163|Send exercise valve command, recommended once a week to calibrate eTRV||DIAGNOSTICS|
-|SET_LOW_POWER_MODE|164|This is used to enhance battery life by limiting the hunting of the actuator, ie it limits small adjustments to degree of opening, when the room temperature is close to the *TEMP_SET* point. A consequence of the Low Power mode is that it may cause larger errors in controlling room temperature to the set temperature.|0=Off<br>1=On|No|
+|SET_LOW_POWER_MODE|164|This is used to enhance battery life by limiting the hunting of the actuator, ie it limits small adjustments to degree of opening, when the room temperature is close to the *TEMP_SET* point. A consequence of the Low Power mode is that it may cause larger errors in controlling room temperature to the set temperature.|0=Off<br>1=On|No*|
+|SET_VALVE_STATE|165|Set valve state|0=Open<br>1=Closed<br>2=Auto (default)|No|
 |REQUEST_DIAGNOTICS|166|Request diagnostic data from device, if all is OK it will return 0. Otherwise see additional monitored values for status messages||DIAGNOSTICS|
 |IDENTIFY|191|Identify the device by making the green light flash on the selected eTRV for 60 seconds||No|
 |SET_REPORTING_INTERVAL|210|Update reporting interval to requested value|300-3600 seconds|No|
 |REQUEST_VOLTAGE|226|Report current voltage of the batteries||VOLTAGE|
+|TEMP_SET|244|Send new target temperature for eTRV.<br>NOTE: The VALVE_STATE must be set to 'Auto' for this to work.|int|No|
+
+> \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
 ### eTRV Command Caching
 The eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes). The receiver is activated after each *TEMPERATURE* report to listen for commands. The receiver only remains active for 200ms or until a message is received.
@@ -172,24 +174,13 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
     "VALVE_TS":1567927343,
     "DIAGNOSTICS":512,
     "DIAGNOSTICS_TS":1567927343,
-    "LOW_POWER_MODE":false
+    "LOW_POWER_MODE":false,
+    "TARGET_C": 10,
+    "VOLTAGE": 3.19,
+    "VOLTAGE_TS": 1568036414,
+    "ERRORS": true,
+    "ERROR_TEXT": ...
 }
-
-timestamp: <numeric 'epoch based' timestamp, of when message was read>
-command: <number of current command being set to eTRV>
-retries: 9
-TEMPERATURE: 19.8
-TARGET_C: 22
-VOLTAGE: <current battery voltage>
-VOLTAGE_TS: <timestamp of when battery voltage was last received>
-VALVE_STATE: "open" | "closed" | "auto" | "error"
-VALVE_TS: <timestamp of last confirmed *EXERCISE_VALVE* cmd>
-EXERCISE_VALVE: "success" | "fail"  <the result of the *EXERCISE_VALVE* command>
-DIAGNOSTICS: <numeric diagnostic code, see "ERRORS" for interpretation>
-DIAGNOSTICS_TS: <timestamp of when diagnostics were last received>
-ERRORS: "true" | "false" <true if an error condition has been detected>
-LOW_POWER_MODE: "true" | "false" <eTRV is in low power mode state>
-ERROR_TEXT: <text of error>
 ```
 
 |Parameter|Description|Data Type|Update time|
@@ -199,7 +190,7 @@ ERROR_TEXT: <text of error>
 |DIAGNOSTICS|Numeric diagnostic code, see "ERRORS" for interpretation|int|DIAGNOSTIC_TS|
 |DIAGNOSTICS_TS|timestamp of when diagnostics were last received|epoch|DIAGNOSTIC_TS|
 |ERRORS|true if an error condition has been detected|boolean|DIAGNOSTIC_TS|
-|ERROR_TEXT|text of error|string|DIAGNOSTIC_TS|
+|ERROR_TEXT|error information|string|DIAGNOSTIC_TS|
 |EXERCISE_VALVE|The result of the *EXERCISE_VALVE* command| success or fail|DIAGNOSTIC_TS|
 |LOW_POWER_MODE|eTRV is in low power mode state>|boolean|DIAGNOSTIC_TS|
 |TARGET_C|Target temperature in celcius|int|TEMP_SET command|
