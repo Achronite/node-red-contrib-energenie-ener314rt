@@ -721,7 +721,7 @@ int openThings_build_msg(unsigned char iProductId, unsigned int iDeviceId, unsig
         printf("OTCP_SET_LOW_POWER_MODE msglen=%d\n", msglen);
 #endif
         break;
-        
+
     default:
         // unknown command, abort
         return -1;
@@ -922,90 +922,103 @@ int openThings_receive(char *OTmsg, unsigned int buflen)
     ** Stage 2 - decode and process next message in RxMsgs buffer
     */
     //printf("<%d-%d>",pRxMsgHead, pRxMsgTail);
-    while (pop_RxMsg(&rxMsg) >= 0)
+    bool gotMessage = false;
+    do
     {
-        // message avaiable
-        //printf("openThings_receive(): msg popped, ts=%d\n", (int)rxMsg.t);
-        records = openThings_decode(rxMsg.msg, &mfrId, &productId, &iDeviceId, OTrecs);
-
-        if (records > 0)
+        if (pop_RxMsg(&rxMsg) >= 0)
         {
-            // likely to be a valid OpenThings message
+            // Rx message avaiable
+            //printf("openThings_receive(): msg popped, ts=%d\n", (int)rxMsg.t);
+            records = openThings_decode(rxMsg.msg, &mfrId, &productId, &iDeviceId, OTrecs);
 
-            // build response JSON
-            sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
-
-            // add records
-            for (i = 0; i < records; i++)
+            if (records > 0)
             {
+                // likely to be a valid OpenThings message
+                gotMessage = true;
+
+                // build response JSON
+                sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
+
+                // add records
+                for (i = 0; i < records; i++)
+                {
 #if defined(FULLTRACE)
-                TRACE_OUTS("openThings_receive(): rec:");
-                TRACE_OUTN(i);
-                sprintf(OTrecord, " {\"name\":\"%s\",\"id\":%d,\"type\":%d,\"str\":\"%s\",\"int\":%d,\"float\":%f}\n", OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].typeIndex, OTrecs[i].retChar, OTrecs[i].retInt, OTrecs[i].retFloat);
-                TRACE_OUTS(OTrecord);
+                    TRACE_OUTS("openThings_receive(): rec:");
+                    TRACE_OUTN(i);
+                    sprintf(OTrecord, " {\"name\":\"%s\",\"id\":%d,\"type\":%d,\"str\":\"%s\",\"int\":%d,\"float\":%f}\n", OTrecs[i].paramName, OTrecs[i].paramId, OTrecs[i].typeIndex, OTrecs[i].retChar, OTrecs[i].retInt, OTrecs[i].retFloat);
+                    TRACE_OUTS(OTrecord);
 #endif
-                switch (OTrecs[i].typeIndex)
-                {
-                case OTR_CHAR: //CHAR
-                    sprintf(OTrecord, ",\"%s\":\"%s\"", OTrecs[i].paramName, OTrecs[i].retChar);
-                    break;
-                case OTR_INT:
-                    sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
-
-                    // Special record processing
-                    switch (OTrecs[i].paramId)
+                    switch (OTrecs[i].typeIndex)
                     {
-                    case OTP_JOIN: // JOIN_ACK
-                        // We seem to have stumbled upon an instruction to join outside of discovery loop, may as well autojoin the device
-                        TRACE_OUTS("openThings_receive(): New device found, sending ACK: deviceId:");
-                        TRACE_OUTN(iDeviceId);
-                        TRACE_NL();
-                        joining = true;
-                        openThings_joinACK(productId, iDeviceId, 20);
+                    case OTR_CHAR: //CHAR
+                        sprintf(OTrecord, ",\"%s\":\"%s\"", OTrecs[i].paramName, OTrecs[i].retChar);
                         break;
-                    case OTP_TEMPERATURE: // TEMPERATURE
-                        // Seems that TEMPERATURE (OTP_TEMPERATURE) received as type OTR_INT=1, and it should be OTR_FLOAT=2 from the eTRV, so override and return a float instead
-                        sprintf(OTrecord, ",\"%s\":%.1f", OTrecs[i].paramName, OTrecs[i].retFloat);
+                    case OTR_INT:
+                        sprintf(OTrecord, ",\"%s\":%d", OTrecs[i].paramName, OTrecs[i].retInt);
+
+                        // Special record processing
+                        switch (OTrecs[i].paramId)
+                        {
+                        case OTP_JOIN: // JOIN_ACK
+                            // We seem to have stumbled upon an instruction to join outside of discovery loop, may as well autojoin the device
+                            TRACE_OUTS("openThings_receive(): New device found, sending ACK: deviceId:");
+                            TRACE_OUTN(iDeviceId);
+                            TRACE_NL();
+                            joining = true;
+                            openThings_joinACK(productId, iDeviceId, 20);
+                            break;
+                        case OTP_TEMPERATURE: // TEMPERATURE
+                            // Seems that TEMPERATURE (OTP_TEMPERATURE) received as type OTR_INT=1, and it should be OTR_FLOAT=2 from the eTRV, so override and return a float instead
+                            sprintf(OTrecord, ",\"%s\":%.1f", OTrecs[i].paramName, OTrecs[i].retFloat);
+                            break;
+                        }
                         break;
+                    case OTR_FLOAT:
+                        sprintf(OTrecord, ",\"%s\":%f", OTrecs[i].paramName, OTrecs[i].retFloat);
                     }
-                    break;
-                case OTR_FLOAT:
-                    sprintf(OTrecord, ",\"%s\":%f", OTrecs[i].paramName, OTrecs[i].retFloat);
+
+                    strcat(OTmsg, OTrecord);
+                    // if ((i+1)<records){
+                    //     // not last record add a ,
+                    //     strcat(OTmsg,",");
+                    // }
                 }
 
-                strcat(OTmsg, OTrecord);
-                // if ((i+1)<records){
-                //     // not last record add a ,
-                //     strcat(OTmsg,",");
-                // }
-            }
+                // Add to deviceList
+                OTdi = openThings_devicePut(iDeviceId, mfrId, productId, joining);
 
-            // Add to deviceList
-            OTdi = openThings_devicePut(iDeviceId, mfrId, productId, joining);
-
-            // Update eTRV data and append if applicable, only one record is ever returned
-            if (productId == PRODUCTID_MIHO013)
-            {
-                eTRV_update(OTdi, OTrecs[0], rxMsg.t);
-
-                if (OTrecs[0].paramId == OTP_TEMPERATURE)
+                // Update eTRV data and append if applicable, only one record is ever returned
+                if (productId == PRODUCTID_MIHO013)
                 {
-                    // Add static params too to TEMPERATURE reporting
-                    eTRV_get_status(OTdi, OTmsg, buflen);
+                    eTRV_update(OTdi, OTrecs[0], rxMsg.t);
+
+                    if (OTrecs[0].paramId == OTP_TEMPERATURE)
+                    {
+                        // Add static params too to TEMPERATURE reporting
+                        eTRV_get_status(OTdi, OTmsg, buflen);
+                    }
                 }
+
+                // close record array
+                strcat(OTmsg, "}");
+
+                TRACE_OUTS("openThings_receive: Returning: ");
+                TRACE_OUTS(OTmsg);
+                TRACE_NL();
+
+                // valid message, break while loop
+                break;
             }
-
-            // close record array
-            strcat(OTmsg, "}");
-
-            TRACE_OUTS("openThings_receive: Returning: ");
-            TRACE_OUTS(OTmsg);
-            TRACE_NL();
-
-            // valid message, break while loop
-            break;
+            else
+            {
+                // Hmmm, it wasnt a valid OTmsg, go round again
+                gotMessage = false;
+            }
+        } else {
+            // no more messages in buffer, quit loop
+            gotMessage = true;
         }
-    }
+    } while (!gotMessage);
 
     return records;
 }
@@ -1146,6 +1159,7 @@ void openthings_scan(int iTimeOut)
 **    sending the radio request via the ENER314-RT RaspberryPi adaptor
 **
 ** NOTE: There is an extremely small chance we could lose an incoming message here, but as we are adding new devices it's not worth bothering
+**
 */
 unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceId, unsigned char xmits)
 {
@@ -1158,6 +1172,8 @@ unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceI
     /*
     ** Stage 1: Build the message to send
     */
+
+    // TODO: remove this, and use build_msg instead
 
     /* Stage 1a: OpenThings HEADER
     */
@@ -1394,7 +1410,9 @@ void eTRV_update(int OTdi, struct OTrecord OTrec, time_t updateTime)
             { // Request for heat  - not sure what to do here
                 //trvData->
             }
-        } else {
+        }
+        else
+        {
             // some flags may need clearing as we have 0
             trvData->lowPowerMode = false;
         }
@@ -1465,5 +1483,4 @@ void eTRV_get_status(int OTdi, char *buf, unsigned int buflen)
     }
 
     //printf("eTRV_get_status(): %s, strlen=%d buflen:%d\n",trvStatus,strlen(trvStatus),buflen);
-
 }
