@@ -251,6 +251,8 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
 ** pop_msg() - returns next unread message from Rx queue
 **
 ** returns -1 if no messages, or # of msg remaining in FIFO
+**
+** TODO: Implement mutex on rxMsg buffer
 */
 int pop_RxMsg(struct RADIO_MSG *rxMsg)
 {
