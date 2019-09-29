@@ -154,11 +154,11 @@ The eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minu
 
 To cater for this hardware limitation the **'eTRV node'** uses command caching. Any command sent using the eTRV node will be held until a TEMPERATURE report is received; at this point the most recent cached message (only 1 is supported) will be sent to the eTRV.  Messages will continue to be resent until they have been succesfully received (indicated by the *Response* command in the above table) or until the number of Retries has reached 0.
 
-The reason that a command may be resent multiple times is due to timing issues.  The ENER314-RT monitoring feature is is due to the polling frequency
+The reason that a command may be resent multiple times is due to timing issues.  The monitor & control & monitor nodes only check for messages determined by the polling frequency, so it is possible that the eTRV has stopped listening when a message is sent to it!
 
-The eTRV, unfortunately, has no way of checking that certain commands have been received by the device (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  Any commands that  so this is retried the full number of times.
+The eTRV, unfortunately, has no way of checking that certain commands have been received by the device (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.
 
-There is a trade-off between how often the ENER314-RT board should be polled for new messages and the performance of node-red.  Having a short polling frequency will increase the chance of a message being received sooner, but could potentially slow down node-red.
+There is a trade-off between how often the ENER314-RT board should be polled for new messages and the performance of node-red.  Having a short polling frequency will increase the chance of a message being correctly received sooner, but could potentially slow down node-red.
 
 ### eTRV Monitor Messages
 
