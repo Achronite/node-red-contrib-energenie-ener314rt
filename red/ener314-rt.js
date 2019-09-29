@@ -12,10 +12,8 @@
 */
 "use strict";
 
-//var libradio = require('./libradio');
 var ener314rt = require('/home/pi/development/node-red-contrib-energenie-ener314rt/build/Release/ener314rt');
 
-//var async = require('async');
 var inited = false;
 
 module.exports = function (RED) {
@@ -70,10 +68,12 @@ module.exports = function (RED) {
             }
         };
 
-        // async version emits string monitor messages directly (collected below), it needs the emitter passing in
+        // async version in ener314rt emits string monitor messages directly (collected below), it needs the emitter passing in
+        // this async call does not have any sleep functions, so we need to deal with that in js code on RxMessage return
         function asyncGetMonitorMsg () {
             var ret = ener314rt.asyncOpenThingsReceive(scope.events.emit.bind(scope.events));  //emitter.emit.bind(emitter)
             //scope.log(`received ${msg}`);
+            //scope.log(`asyncOpenThingsReceive ret=${ret}`);
             
             // msg returns -ve int value if nothing received, or a string
             if (ret != 0)  {
@@ -92,6 +92,10 @@ module.exports = function (RED) {
             } else {
                 // no message
             }
+
+            // function returned, lets trigger getting next message
+            //setImmediate(asyncGetMonitorMsg);
+
         });
 
         // start the monitoring loop when we have listeners
@@ -100,7 +104,12 @@ module.exports = function (RED) {
                 scope.log("Monitor listener detected, starting monitor loop, poll interval=" + config.interval + "ms");
                 // Do monitoring as we have listeners!
                 //myInterval = setInterval(getMonitorMsg, config.interval);
-                myInterval = setInterval(asyncGetMonitorMsg, config.interval);
+
+                // fixed Interval version
+                myInterval = setInterval(asyncGetMonitorMsg, config.interval);                                     // TODO Dynamic sleep time here
+
+                // do once version
+                //setImmediate(asyncGetMonitorMsg);
             } else
                 scope.error("Monitor unable to start, board not initialised");
         });
