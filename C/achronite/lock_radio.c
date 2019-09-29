@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <pthread.h>
-#include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
 #include <string.h>
@@ -71,12 +70,13 @@ int init_ener314rt(int lock)
                 {
                     // thread safe, set initialised
                     TRACE_OUTS("init_ener314(): mutex created & locked\n");
-                    if ((ret = radio_init()) == 0) {
+                    if ((ret = radio_init()) == 0)
+                    {
                         // place radio in known modulation and mode - OOK:Standby
                         initialised = true;
                         radio_modulation(RADIO_MODULATION_OOK);
                         radio_standby();
-                    } 
+                    }
 
                     if (!lock)
                     {
@@ -95,7 +95,7 @@ int init_ener314rt(int lock)
 **
 ** Copes with conditions where we already have the lock
 */
-int lock_ener314rt()
+int lock_ener314rt(void)
 {
     int ret = -1;
 
@@ -115,11 +115,14 @@ int lock_ener314rt()
     //     // };
     // }
     // else
-    if (initialised) {
+    if (initialised)
+    {
         // lock radio now
-        TRACE_OUTS("[lock-");
+#ifdef LOCKTRACE
+        TRACE_OUTS("[L");
         TRACE_OUTN((int)pthread_self());
         TRACE_OUTS("]");
+#endif
 
         ret = pthread_mutex_lock(&radio_mutex);
         //printf("-%d-", (int)pthread_self());
@@ -139,7 +142,9 @@ int lock_ener314rt()
             }
             //printf("lock_ener314rt(%d): mutex got\n",deviceMode);
         }
-    } else {
+    }
+    else
+    {
         TRACE_OUTS("lock_ener314(): Radio not initialised, call init_ener314rt() first\n");
     }
 
@@ -150,10 +155,11 @@ int unlock_ener314rt(void)
 {
     int ret = 0;
     //unlock mutex
+#ifdef LOCKTRACE
     TRACE_OUTS("[");
     TRACE_OUTN((int)pthread_self());
-    TRACE_OUTS("-un]");
-
+    TRACE_OUTS("U]");
+#endif
     ret = pthread_mutex_unlock(&radio_mutex);
     if (ret != 0)
     {
@@ -171,7 +177,7 @@ void close_ener314rt(void)
 {
     //Elegant shutdown of ener314rt
     TRACE_OUTS("close_ener314(): called\n");
-    if (lock_ener314rt(DT_MONITOR) == 0)
+    if (lock_ener314rt() == 0)
     {
         // we have the lock, do all the tidying
         radio_finished();
@@ -203,11 +209,13 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
     int i, recs = 0;
 
     // Put us into monitor as soon as we know about it
+/*
     if (rxMode == DT_MONITOR)
         deviceType = DT_MONITOR;
 
     if (deviceType == DT_MONITOR || rxMode == DT_LEARN)
     {
+*/
         // only receive data if we are in monitor mode
         // Set FSK mode receive for OpenThings devices (Energenie OOK devices dont generally transmit!)
         radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
@@ -223,6 +231,7 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
 
                 // record message timestamp
                 RxMsgs[pRxMsgHead].t = time(0);
+                TRACE_OUTC(64);
 
                 // wrap round buffer for next Rx
                 if (++pRxMsgHead == RX_MSGS)
@@ -234,7 +243,7 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
                 break;
             }
         }
-    }
+//    }
     return recs;
 };
 
@@ -242,6 +251,8 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
 ** pop_msg() - returns next unread message from Rx queue
 **
 ** returns -1 if no messages, or # of msg remaining in FIFO
+**
+** TODO: Implement mutex on rxMsg buffer
 */
 int pop_RxMsg(struct RADIO_MSG *rxMsg)
 {
@@ -292,4 +303,28 @@ int get_RxMsg(int msgNum, struct RADIO_MSG *rxMsg)
     //printf("get_RxMsg(%d): %d\n", msgNum, (int)rxMsg->t);
 
     return (int)rxMsg->t;
+}
+
+/*
+** send_radio_msg() - transmits a given payload a number of times
+**
+** Use this function to perform a raw transmit with full locking and mode switching
+** Minimal checking is performed in this function
+*/
+int send_radio_msg(unsigned char mod, unsigned char *payload, unsigned char len, unsigned char times)
+{
+    int ret = 0;
+
+    TRACE_OUTS("radio_mod_transmit(): called\n");
+    if (lock_ener314rt() == 0)
+    {
+        radio_mod_transmit(mod, payload, len, times);
+        ret = unlock_ener314rt();
+    }
+    else
+    {
+        TRACE_OUTS("radio_mod_transmit(): couldn't get lock\n");
+        ret = -1;
+    }
+    return ret;
 }

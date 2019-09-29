@@ -129,6 +129,8 @@
                     $('#node-config-input-deviceId').val(Number(dev[2]));
                     if (dev[3] == 1) {
                         $('#node-config-input-control').val("Control & Monitor");
+                    } else if (dev[3] == 2){
+                        $('#node-config-input-control').val("Control & Monitor (Cached)");
                     } else {
                         $('#node-config-input-control').val("Monitor");
                     }

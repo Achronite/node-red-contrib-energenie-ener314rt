@@ -8,8 +8,6 @@
 ** Purpose: Node-Red wrapper for call to monitor only node for ENER314-RT FSK/OpenThings (aka Monitor) devices
 **
 */
-// var ref = require('ref');
-// var libradio = require('./libradio');
 
 "use strict";
 

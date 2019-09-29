@@ -11,7 +11,8 @@
 */
 "use strict";
 
-var libradio = require('./libradio');
+//var libradio = require('./libradio');
+var ener314rt = require('/home/pi/development/node-red-contrib-energenie-ener314rt/build/Release/ener314rt');
 
 module.exports = function (RED) {
 
@@ -40,20 +41,20 @@ module.exports = function (RED) {
                 }
 
                 // Check Switch State (default to off=0)
-                var switchState = 0;
+                var switchState = false;
                 if (typeof msg.payload == typeof true)
-                    switchState = msg.payload ? 1 : 0;
+                    switchState = msg.payload ? true : false;
                 else if (typeof msg.payload.powerOn == typeof true)
-                    switchState = msg.payload.powerOn ? 1 : 0;
+                    switchState = msg.payload.powerOn ? true : false;
                 else if (msg.payload === "on" || msg.payload.powerOn === "on")
-                    switchState = 1;
+                    switchState = true;
 
                 // Set the node status in the GUI
                 switch (switchState) {
-                    case 1:
+                    case true:
                         node.status({ fill: "green", shape: "ring", text: "ON sent" });
                         break;
-                    case 0:
+                    case false:
                         node.status({ fill: "red", shape: "ring", text: "OFF sent" });
                         break;
                 }
@@ -61,19 +62,21 @@ module.exports = function (RED) {
                 // Check xmit times (advanced), 26ms per payload transmission
                 var xmits = Number(msg.payload.repeat) || 20;
 
-                // Send payload (async)
-                libradio.openThings_switch.async(productId, deviceId, switchState, xmits, function (err, res) {
+                // Send payload (sync)
+                // TODO: async
+                var res = ener314rt.openThingsSwitch(productId, deviceId, switchState, xmits);
                     // callback
+                    /*
                     if (err) {
                         node.error("openThings_switch err: " + err);
                         node.status({ fill: "red", shape: "dot", text: "ERROR" });
                     }
-                    if (res == 0 && retry) {
-                        // radio send successful, check guaranteed delivery through monitoring
-                        //console.log(`Checking switch to ${switchState}`);
-                        sentState = switchState;
-                    }
-                });
+                    */
+                if (res == 0 && retry) {
+                    // radio send successful, check guaranteed delivery through monitoring
+                    //console.log(`Checking switch to ${switchState}`);
+                    sentState = switchState;
+                }
 
                 // dont send any payload for the input messages, as we are also a monitor node
             });
@@ -94,7 +97,7 @@ module.exports = function (RED) {
                             node.warn(`openThings_switch: device ${deviceId} did not switch to ${sentState}, retrying`);
 
                             //Resend switch message (non-async) overriding xmits
-                            let res = libradio.openThings_switch(productId, deviceId, sentState, 20);
+                            let res = ener314rt.openThingsSwitch(productId, deviceId, sentState, 20);
                         }
                     }
 

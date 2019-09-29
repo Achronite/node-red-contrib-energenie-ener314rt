@@ -2,7 +2,7 @@
 ** Node-red control of Energenie ENER314-RT board for remote control of radio sockets
 ** Author: Achronite, December 2018 - March 2019
 **
-** v0.1
+** v0.1 - FFI Version - deprecated in N-API version
 **
 ** File: libradio.js
 ** Purpose: Wrap the C library calls to interface with the radio device so they are available from javascript

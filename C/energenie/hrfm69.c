@@ -18,11 +18,13 @@
 
 void HRF_writereg(uint8_t addr, uint8_t data)
 {
+    /*
     TRACE_OUTS("writereg ");
     TRACE_OUTN(addr);
     TRACE_OUTC(' ');
     TRACE_OUTN(data);
     TRACE_NL();
+    */
 
     spi_select();
     spi_byte(addr | HRF_MASK_WRITE_DATA);

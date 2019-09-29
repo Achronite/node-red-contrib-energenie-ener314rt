@@ -9,8 +9,8 @@
 */
 "use strict";
 
-var ref = require('ref');
-var libradio = require( './libradio');
+//var ref = require('ref');
+//var libradio = require('./libradio');
 
 module.exports = function(RED) {
     function openThingsDeviceNode(config) {
