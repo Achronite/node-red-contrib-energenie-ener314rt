@@ -1,8 +1,8 @@
 /*
 ** Node-red control of Energenie ENER314-RT board for remote control of radio sockets
-** Author: Achronite, December 2018 - January 2019
+** Author: Achronite, December 2018 - September 2019
 **
-** v0.1 Alpha
+** v0.3 Alpha
 **
 ** File: OpenThings-switch.js
 ** Purpose: Node-Red wrapper for call to switch node for ENER314-RT FSK/OpenThings (aka Monitor) devices
@@ -11,8 +11,10 @@
 */
 "use strict";
 
-//var libradio = require('./libradio');
-var ener314rt = require('/home/pi/development/node-red-contrib-energenie-ener314rt/build/Release/ener314rt');
+var path = require('path');
+
+// TODO: Separate out as npm module
+var ener314rt = require(path.join(__dirname, '../build/Release/ener314rt'));
 
 module.exports = function (RED) {
 

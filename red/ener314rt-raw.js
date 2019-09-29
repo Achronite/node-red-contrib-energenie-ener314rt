@@ -3,9 +3,9 @@
 ** Use this node if you want to control devices other than those provided by energenie, if you have energenie devices use
 ** the other nodes in this module
 **
-** Author: Achronite, December 2018 - April 2019
+** Author: Achronite, December 2018 - September 2019
 **
-** v0.1
+** v0.3
 **
 ** File: ener314rt-raw.js
 ** Purpose: Node-Red wrapper for base ENER314-RT C calls
@@ -20,8 +20,10 @@
 */
 "use strict";
 
-//var libradio = require( './libradio');
-var ener314rt = require('/home/pi/development/node-red-contrib-energenie-ener314rt/build/Release/ener314rt');
+var path = require('path');
+
+// TODO: Separate out as npm module
+var ener314rt = require(path.join(__dirname, '../build/Release/ener314rt'));
 
 module.exports = function (RED) {
 

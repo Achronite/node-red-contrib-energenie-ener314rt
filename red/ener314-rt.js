@@ -2,7 +2,7 @@
 ** Node-red config node for Energenie ENER314-RT board
 ** Author: Achronite, March - August 2019
 **
-** v0.2 Alpha
+** v0.3 Alpha
 **
 ** File: ener314-rt.js
 ** Purpose: The idea behind this node is to centrally handle all the monitor and discover functions for the Energenie ENER314-RT Raspberry Pi adaptor
@@ -12,7 +12,10 @@
 */
 "use strict";
 
-var ener314rt = require('/home/pi/development/node-red-contrib-energenie-ener314rt/build/Release/ener314rt');
+var path = require('path');
+
+// TODO: Separate out as npm module
+var ener314rt = require(path.join(__dirname, '../build/Release/ener314rt'));
 
 var inited = false;
 
