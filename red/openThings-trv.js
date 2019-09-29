@@ -1,8 +1,8 @@
 /*
 ** Node-red control of Energenie ENER314-RT board for remote control of radiator valves
-** Author: Achronite, August 2019
+** Author: Achronite, August - September 2019
 **
-** v0.1 Alpha
+** v0.3 Alpha
 **
 ** File: OpenThings-trv.js
 ** Purpose: Node-Red wrapper for call to eTRV node for ENER314-RT eTRV device (Control & Monitor)
@@ -10,7 +10,10 @@
 */
 "use strict";
 
-var ener314rt = require('/home/pi/development/node-red-contrib-energenie-ener314rt/build/Release/ener314rt');
+var path = require('path');
+
+// TODO: Separate out as npm module
+var ener314rt = require(path.join(__dirname, '../build/Release/ener314rt'));
 
 module.exports = function (RED) {
 
