@@ -2,15 +2,12 @@
 ** Node-red config node for OpenThings devices
 ** Author: Achronite, March 2019
 **
-** v0.1 Alpha
+** v0.3 Alpha
 **
 ** File: OpenThings-device.js
 **
 */
 "use strict";
-
-//var ref = require('ref');
-//var libradio = require('./libradio');
 
 module.exports = function(RED) {
     function openThingsDeviceNode(config) {
