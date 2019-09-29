@@ -212,7 +212,7 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 
 * [NodeJS](https://nodejs.org/dist/latest-v6.x/docs/api/) - JavaScript runtime built on Chrome's V8 JavaScript engine.
 * [Node-RED](http://nodered.org/docs/creating-nodes/) - for wiring together hardware devices, APIs and online services.
-* [N-API](https://nodejs.org/docs/latest-v10.x/api/n-api.html)- *NEW in v0.3* - Used to wrap C code as a native node.js Addon. N-API is maintained as part of Node.js itself, and produces Application Binary Interface (ABI) stable across all versions of Node.js.
+* [N-API](https://nodejs.org/docs/latest-v10.x/api/n-api.html) - *NEW in v0.3* - Used to wrap C code as a native node.js Addon. N-API is maintained as part of Node.js itself, and produces Application Binary Interface (ABI) stable across all versions of Node.js.
 
 ## Authors
 
