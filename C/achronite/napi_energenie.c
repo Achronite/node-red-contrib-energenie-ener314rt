@@ -22,8 +22,8 @@
 ** Author: Phil Grainger - @Achronite, August 2019
 **
 ** Conventions Used:
-**  nf_   n-api wrapper of synchronous function
 **  nv_   n-api value
+**  nf_   n-api wrapper of synchronous function
 **  na_   n-api wrapper of asynchronous functions
 **  xcb_  execute callback function for async work
 **  ccb_  complete callback function for async work
@@ -406,7 +406,7 @@ napi_value nf_openThings_receive(napi_env env, napi_callback_info info)
     //printf("calling openThings_receive()\n");
 
     // Call C routine
-    ret = openThings_receive(buf, 500);
+    ret = openThings_receive(buf, 500, false);
 
     //printf("openThings_receive() returned %d. message=%s\n", ret, buf);
 
@@ -437,8 +437,8 @@ void xcb_openThings_receive(napi_env env, void *data)
 {
     carrier *c = (carrier *)data; // data object definition
 
-    // Call C routine, capture result in c.buf
-    c->_result = openThings_receive(c->_buf, (unsigned int)sizeof(c->_buf));
+    // Call C routine, capture result in c.buf, WAIT FOR RESPONSE = false, as it is a bad idea to have have long running processes in node.js
+    c->_result = openThings_receive(c->_buf, (unsigned int)sizeof(c->_buf), false);
 }
 
 // Complete callback (ccb_) - called when async function has completed to return the data
@@ -490,6 +490,7 @@ void ccb_openThings_receive(napi_env env, napi_status status, void *data)
             napi_throw_error(env, NULL, "Unable to get global context");
         }
 
+        TRACE_OUTS("ccb_ firing event RxMessage\n");
         // Call the js emitter
         status = napi_call_function(env, global, cb, 2, argv, &nv_result);
         if (status != napi_ok)
@@ -518,12 +519,12 @@ void ccb_openThings_receive(napi_env env, napi_status status, void *data)
             napi_throw_error(env, NULL, "Unable to fire RxMessage event");
         }
 
-        // tidy up
-        napi_delete_reference(env, c->_callback);
-        napi_delete_async_work(env, c->_request);
-
     }
-    // TODO: any tidying???
+    // tidy up
+    napi_delete_reference(env, c->_callback);
+    napi_delete_async_work(env, c->_request);
+
+    //TRACE_OUTS("ccb_ done\n");
 }
 
 /* N-API async function (na_) wrapper for:
@@ -534,7 +535,7 @@ void ccb_openThings_receive(napi_env env, napi_status status, void *data)
 **
 ** Using an async process for receive will hopefully not to block the node.js event loop
 **
-** Still working on a promise version...
+** TODO: promise version, which may be better as we can spin in C instead of blocking the node event loop
 **
 ** Inputs:
 **   event emitter handle
