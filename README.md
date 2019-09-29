@@ -23,7 +23,7 @@ There are 5 nodes in total:
 * **Blue** for switching '**Control**' (OOK) based devices
 * **Pink** for monitoring MiHome **'Monitor'** devices
 * **Purple Switch** for monitoring and switching **'Control & Monitor'** devices
-* **Purple eTRV** for monitoring and controlling **'Control & Monitor'** MiHome Thermostatic Radiator values (eTRV)
+* **Purple eTRV** for monitoring and controlling **'Control & Monitor'** MiHome Thermostatic Radiator valves (eTRV)
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
@@ -37,7 +37,7 @@ The number of individual devices this node can control is over 4 million, so it 
 
 2) Install this module as you would any node-red module using the 'Manage palette' option in Node-Red GUI or by using npm.
 
-3) Perform one-time only setup to **teach** your **'Control'** devices to operate with your selected zone code(s) switch number(s) combinations (if applicable): 
+3) If you have any **'Control'** only devices, perform a one-time only setup to **teach** your  devices to operate with your selected zone code(s) switch number(s) combinations: 
 
     * Drag a blue node onto the canvas
     * Open the node by double clicking
@@ -51,13 +51,13 @@ The number of individual devices this node can control is over 4 million, so it 
 
 > TIP: If you already know the house/zone code assigned, for example to an RF hand controller, you can use that in your node to make the device work with both.
 
-4) Perform one-time only setup to **discover** your **'Monitor'** and **'Control & Monitor'** devices (if applicable)
+4)  If you have any **'Monitor'** or **'Control & Monitor'** devices perform one-time only setup to **discover** the devices
 
-    * Drag one of the pink or purple nodes onto the canvas
+    * Drag the appropriate pink or purple node onto the canvas (see Supported Devices table below, if you are unsure which one to use)
     * Open the node by double clicking
     * If required, add a board config (only done once for all devices), by clicking pencil next to board, and then clicking 'add'
     * Click 'pencil' icon to add a new device
-    * The device config node will open and perform an auto-scan; after 10 seconds it returns a list of devices that it has found. If your device is not found you get it to 'join' the network by holding the button.  You can click the search button if the device is not found.  If you find that it is still not working, please raise a bug request.
+    * The device config node will open and perform an auto-scan; after 10 seconds it returns a list of devices that it has found. If your device is not found you can force it to transmit a 'join' request by holding the button on the device for 5 seconds.  You can click the search button as many times as you like if the device is not found.  If you find that it is still not working, please raise a bug request.
     * Select the device in the 'Devices' drop down
     * The Product name, ID and type will populate
     * (Optional) Change the 'Name' of the device if desired
@@ -205,7 +205,7 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |---|---|
 0.1.0|Initial Release
 0.2.0|Full NPM & node-red catalogue release
-0.3.0|Switched to use node.js Native API (N-API) for calling C functions.  Added new node to support MiHome Radiator Valve, but please take into account the 200ms window for receiving commands, which could mean that the valve may not respond to messages immediately (see [issue](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues/4)).
+0.3.0|Switched to use node.js Native API (N-API) for calling C functions.  Added new node to support MiHome Radiator Valve, but please take into account the 200ms window for receiving commands, which means that the valve may not respond to messages immediately (see [issue](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues/4)).
 
 
 ## Built With
@@ -232,4 +232,4 @@ https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
 
-@Achronite - August 2019 - v0.3.0 Beta
+@Achronite - September 2019 - v0.3.0 Beta
