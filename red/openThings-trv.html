@@ -36,15 +36,14 @@
         <input type="text" id="node-input-device"/>
     </div>
     <div class="form-tips">
-        <strong>Tip:</strong> The eTRV node has a very small window when it regularly reports the temperature at it's <strong>REPORTING_INTERVAL</strong> (default every 5 minutes).
+        <strong>Tip:</strong> The eTRV node has a very small receive window when it regularly reports the temperature at it's <strong>REPORTING_INTERVAL</strong> (default every 5 minutes).
         The receiver is activated after each <strong>TEMPERATURE</strong> report to listen for commands for only 200ms.
         <br>To cater for this limitation, this node uses command caching. Any command sent will be held until a <strong>TEMPERATURE</strong> report is received; at this point the most recent
         cached message (only 1 is supported) will be immediately sent to the eTRV.  Messages will continue to be resent until we know they have been succesfully received
         or until the number of Retries has reached 0.      
         <br>The reason that a command could be resent multiple times is due to timing issues, the board only checks for messages every polling interval.
         There is a therefore a chance that the Receive window could be missed.
-        <br>To reduce the risk of this happening you may need to configure the polling interval of the Board to 500ms to
-        if you have eTRV devices (other energenie device do not have this restriction).
+        <br>To reduce the risk of this happening you may need to configure the polling interval of the Board to 500ms if you have eTRV devices (other energenie device do not have this restriction).
     </div>
 </script>
 
