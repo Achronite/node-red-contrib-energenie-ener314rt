@@ -1,5 +1,7 @@
-#define NAPI_VERSION 3
+//#define NAPI_VERSION 3
+#define NAPI_EXPERIMENTAL // needed for threadsafe functions (Dec 2019)
 #include <node_api.h>
+#include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -19,14 +21,20 @@
 ** N-API replaces the older FFI / ref library calls used in v0.1 as these libraries are no longer being maintained.  N-API should allow
 ** this code to be Application Binary (ABI) compatiable across multiples platforms.
 **
-** Author: Phil Grainger - @Achronite, August 2019
+** Author: Phil Grainger - @Achronite, August-December 2019
 **
 ** Conventions Used:
 **  nv_   n-api value
 **  nf_   n-api wrapper of synchronous function
-**  na_   n-api wrapper of asynchronous functions
-**  xcb_  execute callback function for async work
-**  ccb_  complete callback function for async work
+**  af_   n-api wrapper of asynchronous functions
+**  ccb_  complete callback function for async work (private)
+**  xcb_  execute callback function for async work (private)
+**
+** threadsafe versions:
+**  tf_  n-api wrapper for threadsafe asynchronous functions
+**  tr_  return callback function that excutes the callback from a threadsafe function (private)
+**  tx_  execute callback function for threadsafe async work (private)
+**  tc_  complete callback function for threadsafe async work (private)
 */
 
 // local prototypes (for async calls)
@@ -39,9 +47,18 @@ typedef struct carrier
     int32_t _input;
     char _buf[500];
     int _result;
-    napi_ref _callback;
+    napi_value _callback;
     napi_async_work _request;
+    napi_async_work _tsfn;
 } carrier;
+
+typedef struct
+{
+    napi_async_work work;
+    napi_threadsafe_function tsfn;
+    bool monitor;
+    uint32_t timeout;
+} AddonData;
 
 // ----------FILE--------- lock_radio.c
 
@@ -116,7 +133,7 @@ napi_value nf_close_ener314rt(napi_env env, napi_callback_info info)
 {
     TRACE_OUTS("calling close_ener314rt()\n");
 
-    // Call C routine
+    // Call C routine to tidyup radio device
     close_ener314rt();
 
     return 0;
@@ -398,15 +415,37 @@ napi_value nf_openThings_receive(napi_env env, napi_callback_info info)
     napi_status status;
     napi_value nv_ret;
     int ret;
+    size_t argc = 1; // 1 passed in arg
+    napi_value argv[1];
+    uint32_t timeout = 0;
+    const int buflen = 500;
 
-    char buf[500];
+    char buf[buflen];
 
-    // no args
+    // Get the wait option from args
+    status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
 
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+    }
+
+    // Ensure that the first argument 'wait' is a number
+    napi_valuetype type_of_argument;
+    status = napi_typeof(env, argv[0], &type_of_argument);
+    if (status != napi_ok || type_of_argument != napi_number)
+    {
+        napi_throw_type_error(env, NULL, "Param timeout is not an int32");
+    }
+    else
+    {
+        //* Get wait time value from js (int)
+        status = napi_get_value_uint32(env, argv[0], &timeout);
+    }
     //printf("calling openThings_receive()\n");
 
     // Call C routine
-    ret = openThings_receive(buf, 500, false);
+    ret = openThings_receive(buf, buflen, timeout);
 
     //printf("openThings_receive() returned %d. message=%s\n", ret, buf);
 
@@ -428,194 +467,13 @@ napi_value nf_openThings_receive(napi_env env, napi_callback_info info)
     return nv_ret;
 }
 
-/* Execute callback (xcb_) - called when async function is queued
- *   xcb_openThings_receive()
- * Make the call to C function, and populate status & buf
- * NOTE: n-api calls should be made in xcb
- */
-void xcb_openThings_receive(napi_env env, void *data)
-{
-    carrier *c = (carrier *)data; // data object definition
-
-    // Call C routine, capture result in c.buf, WAIT FOR RESPONSE = false, as it is a bad idea to have have long running processes in node.js
-    c->_result = openThings_receive(c->_buf, (unsigned int)sizeof(c->_buf), false);
-}
-
-// Complete callback (ccb_) - called when async function has completed to return the data
-//   ccb_openThings_receive()
-//
-// N-API calls are safe to be made here
-//
-void ccb_openThings_receive(napi_env env, napi_status status, void *data)
-{
-    carrier *c = (carrier *)data; // data object definition
-    napi_value global;
-    napi_value argv[2]; // 0 = event, 1= return value (buf)
-    napi_value nv_result;
-    napi_value cb;
-    const char *eventname = "RxMessage"; // event to emit (TODO: pass this in)
-
-    //printf("ccb_ called\n");
-
-    // Only do anything if the return value was good i.e. at least 1 OT record returned
-    if (c->_result > 0)
-    {
-        //printf("ccb_ len=%d, str=%s\n", strlen(c->_buf), c->_buf);
-
-        // Construct the callback and returned data (event)
-        //   cb = fn pointer to emitter
-        //   argv[0] = eventname
-        //   argv[1] = returned data (buf)
-        status = napi_get_reference_value(env, c->_callback, &cb);
-        if (status != napi_ok)
-        {
-            TRACE_OUTS("ccb_ cannot get callback reference\n");
-            napi_throw_error(env, NULL, "Unable to cannot get callback reference");
-        }
-
-        status = napi_create_string_latin1(env, eventname, NAPI_AUTO_LENGTH, &argv[0]);
-        status = napi_create_string_latin1(env, c->_buf, NAPI_AUTO_LENGTH, &argv[1]);
-
-        if (status != napi_ok)
-        {
-            TRACE_OUTS("ccb_ cannot create string\n");
-            napi_throw_error(env, NULL, "Unable to create return value from buf");
-        }
-
-        // Retrieve the global context, needed for calling emitter
-        status = napi_get_global(env, &global);
-        if (status != napi_ok)
-        {
-            TRACE_OUTS("ccb_ cannot get global\n");
-            napi_throw_error(env, NULL, "Unable to get global context");
-        }
-
-        TRACE_OUTS("ccb_ firing event RxMessage\n");
-        // Call the js emitter
-        status = napi_call_function(env, global, cb, 2, argv, &nv_result);
-        if (status != napi_ok)
-        {
-            TRACE_OUTS("ccb_ Error firing event ");
-            //TRACE_OUTS(eventname);
-            TRACE_OUTN(status);
-            TRACE_NL();
-/*
-            bool bresult;
-            status = napi_is_exception_pending(env, &bresult);
-            printf("status+=%d, pending_exception=%d\n", status, bresult);
-
-            napi_extended_error_info neei, *neeip;
-            neeip = &neei;
-            napi_status status2;
-            status2 = napi_get_last_error_info(env, (const napi_extended_error_info **)&neeip);
-
-            printf("status2=%d errmsg=%s, eng_err=%d, err=%d\n",
-            status2,
-            neei.error_message,
-            neei.engine_error_code,
-            neei.error_code );
-            sleep(10);
-*/
-            napi_throw_error(env, NULL, "Unable to fire RxMessage event");
-        }
-
-    }
-    // tidy up
-    napi_delete_reference(env, c->_callback);
-    napi_delete_async_work(env, c->_request);
-
-    //TRACE_OUTS("ccb_ done\n");
-}
-
-/* N-API async function (na_) wrapper for:
-**  char openThings_receive(char *OTmsg );
-**
-** This version will emit a single 'monitor' event if an OpenThings message is received using the event emitter passed in from node.js then complete.
-** If no message is received the process completes.
-**
-** Using an async process for receive will hopefully not to block the node.js event loop
-**
-** TODO: promise version, which may be better as we can spin in C instead of blocking the node event loop
-**
-** Inputs:
-**   event emitter handle
-**
-*/
-
-napi_value na_openThings_receive(napi_env env, napi_callback_info info)
-{
-    carrier *c = (carrier *)malloc(sizeof(carrier)); // data object allocation
-
-    size_t argc = 2;
-    napi_value argv[2];
-    napi_status status;
-    napi_value nv_ret;
-    int ret = 0;
-    //int refcount;
-
-    //napi_async_work work;
-    napi_value async_resource_name;
-
-    //printf("na_ openThings_receive()\n");
-
-    // get args()
-    napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
-
-    napi_valuetype val0;
-    napi_typeof(env, argv[0], &val0);
-    if (val0 != napi_function)
-    {
-        TRACE_OUTS("na_ argv[0] is not a function.\n");
-    }
-
-    // convert emitter function into a napi_value for passing into xcb_
-    status = napi_create_reference(env, argv[0], 1, &c->_callback);
-
-    /*
-	 * napi_status napi_create_async_work(napi_env env,
-        napi_value async_resource,             // An optional object associated with the async work that will be passed to possible async_hooks init hooks.
-        napi_value async_resource_name,        // Identifier for the kind of resource that is being provided for diagnostic information exposed by the async_hooks API.
-        napi_async_execute_callback execute,   // The native function which should be called to execute the logic asynchronously.
-                                                  The given function is called from a worker pool thread and can execute in parallel with the main event loop thread.
-        napi_async_complete_callback complete, // The native function which will be called when the asynchronous logic is completed or is cancelled.
-                                                  The given function is called from the main event loop thread.
-        void* data,                            // User-provided data context. This will be passed back into the execute and complete functions.
-        napi_async_work* result);              // (out) napi_async_work* which is the handle to the newly created async work.                                 
-
-	 * async_resource_name should be a null-terminated, UTF-8-encoded string.
-	 * Note: The async_resource_name identifier is provided by the user and should be representative of the type of async work being performed. 
-     * It is also recommended to apply namespacing to the identifier, e.g. by including the module name.
-     *   xcb_  execute callback function for async work
-     *   ccb_  complete callback function for async work
-	 */
-
-    // TODO - check all status values
-    status = napi_create_string_utf8(env, "ener314rt:OTRecv", NAPI_AUTO_LENGTH, &async_resource_name);
-    status = napi_create_async_work(env, argv[0], async_resource_name, xcb_openThings_receive, ccb_openThings_receive, c, &c->_request);
-    status = napi_queue_async_work(env, c->_request);
-
-    //printf("openThings_receive() returned %d. message=%s\n", ret, buf);
-
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "na_ Unable to create async work");
-        ret = -1;
-    }
-
-    status = napi_create_int32(env, ret, &nv_ret);
-
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "na_ Unable to create return value");
-    }
-
-    return nv_ret;
-}
-
-
-
 /* N-API function (nf_) wrapper for:
 **  unsigned char openThings_cache_cmd(unsigned int iDeviceId, uint8_t command, uint32_t data)
+**
+** Input params from JS:
+**  0: iDeviceId
+**  1: command
+**  2: data  (set to 0 if unused)
 */
 napi_value nf_openThings_cache_cmd(napi_env env, napi_callback_info info)
 {
@@ -669,7 +527,7 @@ napi_value nf_openThings_cache_cmd(napi_env env, napi_callback_info info)
                 napi_throw_error(env, NULL, "Invalid command");
         }
 
-        // 2: uint32_t data
+        // 2: uint32_t data                                                     TODO: Allow for optional data
         status = napi_typeof(env, argv[2], &type_of_argument);
         if (status != napi_ok || type_of_argument != napi_number)
         {
@@ -697,6 +555,283 @@ napi_value nf_openThings_cache_cmd(napi_env env, napi_callback_info info)
     }
 
     return nv_ret;
+}
+
+/*
+** N-API Continuous monitoring thread version - this uses a continously executing async worker thread and 
+** utilises a threadsafe function to return the monitor messages back to javascript (node.js).
+**
+** This version was specifically designed to cope with the energenie thermostic radiator valves as they
+** only have a small Rx window.
+**
+** @Achronite - December 2019
+**
+*/
+
+// This is the threadsafe function called from the worker thread.  It is responsible for converting data Rx by the worker
+// thread to napi_value items that can be passed into JavaScript, and for calling the JavaScript function
+// passed in by the parent
+static void tr_openThings_receive_thread(napi_env env, napi_value js_cb, void *context, void *data)
+{
+    // This parameter is not used.
+    (void)context;
+    //napi_status status;
+
+    TRACE_OUTS("tr_openThings_receive_thread buf=");
+
+    // Retrieve the buffer from the item created by the worker thread.
+    //int the_prime = *(int*)data;
+    char *buf = (char *)data;
+    TRACE_OUTS(buf);
+
+    // env and js_cb may both be NULL if Node.js is in its cleanup phase, and
+    // items are left over from earlier thread-safe calls from the worker thread.
+    // When env is NULL, we simply skip over the call into Javascript and free the
+    // items.
+    if (env != NULL)
+    {
+        napi_value undefined, js_buf;
+
+        // Convert the integer to a napi_value.
+        //assert(napi_create_int32(env, the_prime, &js_the_prime) == napi_ok);
+        assert(napi_create_string_latin1(env, buf, NAPI_AUTO_LENGTH, &js_buf) == napi_ok);
+        //status = napi_create_string_latin1(env, buf, NAPI_AUTO_LENGTH, &js_buf);
+        //TRACE_OUTS("create_str=");
+        //TRACE_OUTN(status);
+
+        // Retrieve the JavaScript `undefined` value so we can use it as the `this`
+        // value of the JavaScript function call.
+        assert(napi_get_undefined(env, &undefined) == napi_ok);
+
+        // Call the JavaScript function and pass it the prime that the secondary
+        // thread found.
+        assert(napi_call_function(env,
+                                  undefined,
+                                  js_cb,
+                                  1,
+                                  &js_buf,
+                                  NULL) == napi_ok);
+    }
+
+    // Free the item created by the worker thread.
+    free(data);
+}
+
+// N-API Internal function - primary execution thread, runs Rx commands in a loop whilst monitoring is active
+// This function runs on a worker thread. It has no access to the JavaScript
+// environment except through the thread-safe function.
+static void tx_openThings_receive_thread(napi_env env, void *data)
+{
+    AddonData *addon_data = (AddonData *)data;
+    int result;
+    //char buf[500];
+
+    //int idx_inner, idx_outer;
+    //int prime_count = 0;
+
+    TRACE_OUTS("tx_openThings_receive_thread starting\n");
+    // We bracket the use of the thread-safe function by this thread by a call to
+    // napi_acquire_threadsafe_function() here, and by a call to
+    // napi_release_threadsafe_function() immediately prior to thread exit.
+    assert(napi_acquire_threadsafe_function(addon_data->tsfn) == napi_ok);
+
+    // Call the receive in a monitor loop, calling the tsfn when we have recieved a valid message via the radio adaptor
+    addon_data->monitor = true;
+
+    // Call Rx in a loop until we are told to stop, this uses an async function so shouldnt block node.js
+    do
+    {
+        // Allocate the buffer from the heap. The JavaScript marshaller (tr_openThings_receive_thread)
+        // will free this item after having sent it to JavaScript.
+        //int* the_prime = malloc(sizeof(*the_prime));
+        char *buf = malloc(500 * sizeof(char));
+
+        result = openThings_receive(buf, 500, addon_data->timeout);
+        if (result > 0)
+        {
+            // we have received a valid OpenThings message, call threadsafe function to notify js consumer
+            // this also frees the malloc'ed memory
+            assert(napi_call_threadsafe_function(addon_data->tsfn,
+                                                 buf,
+                                                 napi_tsfn_blocking) == napi_ok);
+        }
+        else
+        {
+            // we need to free instead
+            TRACE_OUTS("*");
+            free(buf);
+        }
+    } while (addon_data->monitor);
+
+    // Indicate that this thread will make no further use of the thread-safe function.
+    assert(napi_release_threadsafe_function(addon_data->tsfn, napi_tsfn_release) == napi_ok);
+    TRACE_OUTS("tx_ monitor thread completed\n");
+}
+
+// N-API Internal function - run when ts async function completes
+// This function runs on the main thread after `tx_openThings_receive_thread` completes (when monitoring is stopped).
+static void tc_openThings_receive_thread(napi_env env, napi_status status, void *data)
+{
+    AddonData *addon_data = (AddonData *)data;
+
+    TRACE_OUTS("tc_ monitor thread closing...\n");
+    // Clean up the thread-safe function and the work item associated with this
+    // run.
+    assert(napi_release_threadsafe_function(addon_data->tsfn,
+                                            napi_tsfn_release) == napi_ok);
+    assert(napi_delete_async_work(env, addon_data->work) == napi_ok);
+
+    // Set both values to NULL so JavaScript can order a new run of the thread.
+    addon_data->work = NULL;
+    addon_data->tsfn = NULL;
+
+    TRACE_OUTS("done\n");
+}
+
+/* N-API function (tf_) wrapper for:
+**  static napi_value tf_openThings_receive_thread(napi_env env, napi_callback_info info)
+**
+** Use this function if you have any 'monitor' devices.
+**
+** This version creates a monitoring thread 
+**
+** Create a thread-safe function and an async queue work item. We pass the
+** thread-safe function to the async queue work item so that messages can be returned
+** into JavaScript from the worker thread on which the tx_openThings_receive_thread callback runs.
+**
+** JS Input params:
+**  0: timeout
+**  1: callback
+*/
+static napi_value tf_openThings_receive_thread(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value argv[2];
+    napi_value work_name;
+    napi_status status;
+    AddonData *addon_data;
+
+    //TRACE_OUTS("tf_openThings_receive_thread>\n");
+
+    // Retrieve the JavaScript args
+    assert(napi_get_cb_info(env,
+                            info,
+                            &argc,
+                            argv,
+                            NULL,
+                            (void **)(&addon_data)) == napi_ok);
+
+    // Ensure that the monitor thread isn't already in progress.
+    if (addon_data->work == NULL)
+    {
+        // Ensure that the first argument 'wait' is a number
+        napi_valuetype type_of_argument;
+        status = napi_typeof(env, argv[0], &type_of_argument);
+        if (type_of_argument != napi_number)
+        {
+            TRACE_OUTN(type_of_argument);
+            TRACE_NL();
+            napi_throw_type_error(env, NULL, "Param timeout is not a uint32 number");
+        }
+        else
+        {
+            // 0: get timeout
+            status = napi_get_value_uint32(env, argv[0], &addon_data->timeout);
+
+            if (status != napi_ok)
+            {
+                //timeout value incorrect, set default as 5s
+                TRACE_OUTS("tf_ WARNING: Setting default timeout to 5000ms");
+                addon_data->timeout = 5000;
+            }
+
+            // Create a string to describe this asynchronous operation.
+            assert(napi_create_string_utf8(env,
+                                           "ener314rt:OTRxThread",
+                                           NAPI_AUTO_LENGTH,
+                                           &work_name) == napi_ok);
+
+            // Convert the callback retrieved from JavaScript into a thread-safe function
+            // which we can call from a worker thread.
+            status = napi_create_threadsafe_function(env,
+                                                     argv[1],
+                                                     NULL,
+                                                     work_name,
+                                                     0,
+                                                     1,
+                                                     NULL,
+                                                     NULL,
+                                                     NULL,
+                                                     tr_openThings_receive_thread,
+                                                     &(addon_data->tsfn));
+            if (status != napi_ok)
+            {
+                TRACE_OUTN(status);
+                napi_throw_error(env, NULL, "Unable to create tsfn");
+            }
+            TRACE_OUTS("tf_ napi_create_threadsafe_function done\n");
+
+            // Create an async work item, passing in the addon data, which will give the
+            // worker thread access to the above-created thread-safe function.
+            assert(napi_create_async_work(env,
+                                          NULL,
+                                          work_name,
+                                          tx_openThings_receive_thread,
+                                          tc_openThings_receive_thread,
+                                          addon_data,
+                                          &(addon_data->work)) == napi_ok);
+            TRACE_OUTS("tf_ napi_create_async_work done\n");
+
+            // Queue the work item for execution.
+            assert(napi_queue_async_work(env, addon_data->work) == napi_ok);
+            TRACE_OUTS("tf_ monitor thread started, timeout=");
+            TRACE_OUTN(addon_data->timeout);
+            TRACE_NL();
+            // This causes `undefined` to be returned to JavaScript.
+        }
+    }
+
+    return NULL;
+}
+
+// Free the per-addon-instance data.
+static void addon_getting_unloaded(napi_env env, void *data, void *hint)
+{
+    AddonData *addon_data = (AddonData *)data;
+
+    TRACE_OUTS("addon_getting_unloaded>\n");
+    assert(addon_data->work == NULL &&
+           "No work item in progress at module unload");
+    free(addon_data);
+}
+
+/* N-API function (nf_) for:
+**  stop_monitoring()
+**
+** Calling this function notifies the monitor thread to close
+*/
+static napi_value nf_stop_openThings_receive_thread(napi_env env, napi_callback_info info)
+{
+    size_t argc = 0;
+    napi_value argv[1];
+    AddonData *addon_data;
+
+    TRACE_OUTS("nf_stop_openThings_receive_thread called\n");
+
+    // Retrieve the JavaScript data pointer (not worried about args)
+    assert(napi_get_cb_info(env,
+                            info,
+                            &argc,
+                            argv,
+                            NULL,
+                            (void **)(&addon_data)) == napi_ok);
+    TRACE_OUTN(argc);
+    TRACE_OUTS(" args, nf_stop monitoring\n");
+
+    // Stop monitor thread
+    addon_data->monitor = false;
+
+    return 0;
 }
 
 // ----------FILE--------- ook_send.c
@@ -814,10 +949,14 @@ napi_value Init(napi_env env, napi_value exports)
 
     TRACE_OUTS("napi_energenie.Init() called\n");
 
+    // Define addon-level data associated with tsfn
+    AddonData *addon_data = (AddonData *)malloc(sizeof(*addon_data));
+    addon_data->work = NULL;
+
     // Export all functions to allow javascript calls, just by using something like ener314rt.<function>()
     //
     // Method taken from: https://github.com/1995parham/Napi101/blob/master/src/bye.c
-    // This allows all functions to be defined in 1 go, replacing napi_creat_function() & napi_set_named_property() calls
+    // This allows all functions to be defined in 1 go, replacing napi_create_function() & napi_set_named_property() calls
     //
     napi_property_descriptor props[] = {
         {.utf8name = "initEner314rt",
@@ -855,13 +994,6 @@ napi_value Init(napi_env env, napi_value exports)
          .value = NULL,
          .attributes = napi_default,
          .data = NULL},
-        {.utf8name = "asyncOpenThingsReceive",
-         .method = na_openThings_receive,
-         .getter = NULL,
-         .setter = NULL,
-         .value = NULL,
-         .attributes = napi_default,
-         .data = NULL},
         {.utf8name = "openThingsCacheCmd",
          .method = nf_openThings_cache_cmd,
          .getter = NULL,
@@ -869,6 +1001,20 @@ napi_value Init(napi_env env, napi_value exports)
          .value = NULL,
          .attributes = napi_default,
          .data = NULL},
+        {.utf8name = "openThingsReceiveThread",
+         .method = tf_openThings_receive_thread,
+         .getter = NULL,
+         .setter = NULL,
+         .value = NULL,
+         .attributes = napi_default,
+         .data = addon_data}, // note need to pass data
+        {.utf8name = "stopMonitoring",
+         .method = nf_stop_openThings_receive_thread,
+         .getter = NULL,
+         .setter = NULL,
+         .value = NULL,
+         .attributes = napi_default,
+         .data = addon_data},
         {.utf8name = "ookSwitch",
          .method = nf_ook_switch,
          .getter = NULL,
@@ -893,6 +1039,15 @@ napi_value Init(napi_env env, napi_value exports)
     {
         napi_throw_error(env, NULL, "Unable to populate exports");
     }
+
+    // Associate the addon data with the exports object, to make sure that when
+    // the addon gets unloaded our data gets freed.
+    assert(napi_wrap(env,
+                     exports,
+                     addon_data,
+                     addon_getting_unloaded,
+                     NULL,
+                     NULL) == napi_ok);
 
     return exports;
 }

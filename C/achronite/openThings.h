@@ -227,7 +227,7 @@ struct OT_PRODUCT {
 /***** FUNCTION PROTOTYPES *****/
 unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId, unsigned char bSwitchState, unsigned char xmits);
 unsigned char openThings_deviceList(char *devices, bool scan);
-int openThings_receive(char *OTmsg, unsigned int buflen, bool waitForMsg );
+int openThings_receive(char *OTmsg, unsigned int buflen, unsigned int timeout);
 unsigned char openThings_joinACK(unsigned char iProductId, unsigned int iDeviceId, unsigned char xmits);
 void openthings_scan(int iTimeOut);
 

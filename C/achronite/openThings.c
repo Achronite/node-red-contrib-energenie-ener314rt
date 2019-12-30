@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
+#include <sys/time.h>
 #include "openThings.h"
 #include "lock_radio.h"
 #include "../energenie/radio.h"
@@ -345,7 +346,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
     // DECODE HEADER
     *mfrId = payload[1];
     *productId = payload[2];
-    pip = (unsigned short)((payload[OTH_INDEX_PIP]<<8)|payload[OTH_INDEX_PIP+1]);
+    pip = (unsigned short)((payload[OTH_INDEX_PIP] << 8) | payload[OTH_INDEX_PIP + 1]);
 
     //struct sOTHeader = { length, mfrId, productId, pip };
 #if defined(TRACE)
@@ -563,7 +564,7 @@ unsigned char openThings_switch(unsigned char iProductId, unsigned int iDeviceId
     // pip (random)
     radio_msg[OTH_INDEX_PIP] = rand();
     radio_msg[OTH_INDEX_PIP + 1] = rand();
-    pip = (unsigned short)((radio_msg[OTH_INDEX_PIP]<<8)|radio_msg[OTH_INDEX_PIP+1]);
+    pip = (unsigned short)((radio_msg[OTH_INDEX_PIP] << 8) | radio_msg[OTH_INDEX_PIP + 1]);
 
     if (bSwitchState)
     {
@@ -749,7 +750,7 @@ int openThings_build_msg(unsigned char iProductId, unsigned int iDeviceId, unsig
     // pip random
     radio_msg[OTH_INDEX_PIP] = rand();
     radio_msg[OTH_INDEX_PIP + 1] = rand();
-    pip = (unsigned short)((radio_msg[OTH_INDEX_PIP]<<8)|radio_msg[OTH_INDEX_PIP+1]);
+    pip = (unsigned short)((radio_msg[OTH_INDEX_PIP] << 8) | radio_msg[OTH_INDEX_PIP + 1]);
 
     /*
     ** Stage 1b: Build OpenThings RECORDS (Commands)
@@ -843,7 +844,8 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
         if (ret == 0)
         {
             // store message against the Device array, only 1 cached command is supported at any one time
-            if (g_OTdevices[index].trv->retries <= 0){
+            if (g_OTdevices[index].trv->retries <= 0)
+            {
                 g_CachedCmds++; // record that we have g_CachedCmds for this device
 
                 // belt and braces
@@ -882,8 +884,8 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
 ** openThings_receive()
 ** =======
 ** Receive a single FSK OpenThings message.  This function has 2 modes:
-**   - if waitForMsg = true then the function will not return until a valid message is received
-**   - if waitForMsg = false then the function will return immediately, even if there is no valid message received
+**   - if timeout > 0 then the function will wait 'timeout' ms or until a valid message is received
+**   - if timeout = 0 then the function will return immediately, even if there is no valid message received
 **
 ** This node is designed for all 'monitor' & 'control & monitor' nodes, including the 'HiHome Adaptor Plus' and MiHome Heating'
 **
@@ -904,24 +906,39 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
 ** TODO (optimisations):
 **   - Make wait time dynamic as eTRV Rx window approaches
 */
-int openThings_receive(char *OTmsg, unsigned int buflen, bool waitForMsg)
+int openThings_receive(char *OTmsg, unsigned int buflen, unsigned int timeout)
 {
     //int ret = 0;
     //uint8_t buf[MAX_FIFO_BUFFER];
     struct OTrecord OTrecs[OT_MAX_RECS];
     unsigned char mfrId, productId;
     unsigned int iDeviceId;
-    int records, i;
+    int records, i, msgsInRxBuf;
     char OTrecord[200];
     struct RADIO_MSG rxMsg;
     bool joining = false;
     int OTdi;
+    struct timeval startTime, currentTime, diffTime;
+    unsigned int diff = 0;
 
     //printf("openthings_receive(): called, buflen=%d\n", buflen);
+
+    //record startTime for timeout
+    if (timeout > 0)
+    {
+        gettimeofday(&startTime, NULL);
+    }
+    else
+    {
+        diff = 0;
+    }
 
     // set default message if no message available
     strcpy(OTmsg, "{\"deviceId\": 0}");
 
+    // 2 nested loops here, the plan is to wait until we have a valid message or the 'timeout' is reached:
+    //  - the 1st loop empties the radio buffer
+    //  - the end loops until buffer empty or we have a valid OT msg
     do
     {
         // Clear data
@@ -929,39 +946,33 @@ int openThings_receive(char *OTmsg, unsigned int buflen, bool waitForMsg)
         iDeviceId = 0;
 
         /*
-        ** Stage 1 - always clear the Rx buffer on the radio device (with locking)
+        ** Stage 1 - empty the Rx buffer on the radio device (with locking)
         */
-        if ((i = lock_ener314rt()) != 0)
-        {
-            TRACE_FAIL("openthings_switch(): error getting lock\n");
-            return -1;
-        }
-        else
+        if ((i = lock_ener314rt()) == 0)
         {
             i = empty_radio_Rx_buffer(DT_MONITOR);
             unlock_ener314rt();
+        } else {
+            // probably been asked to close quit loop
+            return -3;
         }
 
         /*
         ** Stage 2 - decode and process next message in RxMsgs buffer
         */
         //printf("<%d-%d>",pRxMsgHead, pRxMsgTail);
-        bool gotMessage = false;
 
-        // loop until we have read a valid OTmsg OR the RxMsg buffer is empty
+        // loop2 - until we have read a valid OTmsg OR the RxMsg buffer is empty
         do
         {
-            if (pop_RxMsg(&rxMsg) >= 0)
+            if ((msgsInRxBuf = pop_RxMsg(&rxMsg)) >= 0)
             {
-                // Rx message avaiable
+                // Rx message avaiable in buffer
                 //printf("openThings_receive(): msg popped, ts=%d\n", (int)rxMsg.t);
                 records = openThings_decode(rxMsg.msg, &mfrId, &productId, &iDeviceId, OTrecs);
 
                 if (records > 0)
                 {
-                    // likely to be a valid OpenThings message, quit the loop when done
-                    gotMessage = true;
-
                     // build response JSON
                     sprintf(OTmsg, "{\"deviceId\":%d,\"mfrId\":%d,\"productId\":%d,\"timestamp\":%d", iDeviceId, mfrId, productId, (int)rxMsg.t);
 
@@ -1010,16 +1021,16 @@ int openThings_receive(char *OTmsg, unsigned int buflen, bool waitForMsg)
                     // Add to deviceList
                     OTdi = openThings_devicePut(iDeviceId, mfrId, productId, joining);
 
-                    // Update eTRV data and append if applicable, only one record is ever returned
+                    // Update eTRV data and append stored info, only one record is ever returned
                     if (productId == PRODUCTID_MIHO013)
                     {
                         eTRV_update(OTdi, OTrecs[0], rxMsg.t);
 
-                        if (OTrecs[0].paramId == OTP_TEMPERATURE)
-                        {
-                            // Add static params too to TEMPERATURE reporting
+                        //if (OTrecs[0].paramId == OTP_TEMPERATURE || )
+                        //{
+                            // Add static params to returned message
                             eTRV_get_status(OTdi, OTmsg, buflen);
-                        }
+                        //}
                     }
 
                     // close record array
@@ -1032,24 +1043,41 @@ int openThings_receive(char *OTmsg, unsigned int buflen, bool waitForMsg)
                     // we have a message, return
                     return records;
                 }
+                else
+                {
+                    // Message read from the buffer was not a valid OpenThings message, loop immediately to get the next msg from buffer
+                }
             }
             else
             {
-                // no more messages in buffer, quit loop
-                gotMessage = true;
+                // no messages remaining in the buffer
+                //bufferEmpty = true;
+            }
 
-                // sleep a very small bit if we are in WaitForMsg mode for eTRVs only, these have an Rx window of 200ms
-                if (waitForMsg){
-                    if (g_CachedCmds > 0){
-                        usleep(5000); // 5ms
-                    } else {
-                        usleep(5000000); // 5s
-                    }
+        } while (msgsInRxBuf > 0); // loop until the RxMsg buffer is empty
+
+        if (timeout > 0)
+        {
+            // Rx buffer is empty, sleep a bit before emptying again
+            gettimeofday(&currentTime, NULL);
+            timersub(&currentTime, &startTime, &diffTime);
+            diff = (diffTime.tv_sec * 1000) + diffTime.tv_usec;
+
+            // sleep a very small bit if we are in WaitForMsg mode for eTRVs only, these have an Rx window of 200ms
+            if (diff < timeout)
+            {
+                if (g_CachedCmds > 0)
+                {
+                    usleep(5000); // 5ms
+                }
+                else
+                {
+                    usleep(5000000); // 5s
                 }
             }
-        } while (!gotMessage); // loop until we have read a valid OTmsg OR the RxMsg buffer is empty
+        }
 
-    } while (waitForMsg);
+    } while (timeout > diff);
 
     return records;
 }
@@ -1275,7 +1303,7 @@ int openThings_cache_send(unsigned int iDeviceId)
     ** The full command is cached in the g_OTdevices trv array
     */
 
-    // check the global first (quick) to see if we have any cached cmds outstanding 
+    // check the global first (quick) to see if we have any cached cmds outstanding
     if (g_CachedCmds > 0)
     {
         index = openThings_getDeviceIndex(iDeviceId);
@@ -1519,5 +1547,5 @@ void eTRV_get_status(int OTdi, char *buf, unsigned int buflen)
         strncat(buf, trvStatus, buflen);
     }
 
-    //printf("eTRV_get_status(): %s, strlen=%d buflen:%d\n",trvStatus,strlen(trvStatus),buflen);
+    printf("eTRV_get_status(): %s, strlen=%d buflen:%d\n",trvStatus,strlen(trvStatus),buflen);
 }
