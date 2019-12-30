@@ -33,9 +33,9 @@ module.exports = function (RED) {
             this.status({ fill: "red", shape: "ring", text: "Not configured" });
             return false;
         } else {
-            node.on('input', function (msg) {
+            node.on('input', function(msg) {
                 // Check all variables before we cache the message to transmit, msg.payload overrides any defaults set in node
-
+                
                 // Check OpenThings deviceId
                 if (deviceId == 0 || isNaN(deviceId)) {
                     this.error("DeviceId err: " + deviceId + " (" + typeof (deviceId) + ")");
@@ -68,7 +68,6 @@ module.exports = function (RED) {
                             this.error(`Invalid payload object: ${msg.payload}`);
                             return false;
                         }
-
                         break;
                     default:
                         this.error(`Invalid payload: ${msg.payload}`);
@@ -95,15 +94,15 @@ module.exports = function (RED) {
                                     break;
                                 case 2:
                                     node.status({ fill: "grey", shape: "ring", text: "Temp Controlled" });
-                                    break;
                             }
+                            break;
                         case 0xA3:  //EXERCISE_VALVE
                             node.status({ fill: "grey", shape: "ring", text: "Exercising Valve" });
                             break;
                         case 0xA4:  //SET_LOW_POWER_MODE        0,1
-                            if (data){
+                            if (data) {
                                 node.status({ fill: "grey", shape: "ring", text: "Set Low power mode on" });
-                            } else{
+                            } else {
                                 node.status({ fill: "grey", shape: "ring", text: "Set Low power mode off" });
                             }
                             break;
@@ -125,10 +124,10 @@ module.exports = function (RED) {
 
                 } else {
                     node.status({ fill: "red", shape: "dot", text: "Device Unknown" });
-                    node.error(`Device currently unknown, retry later`)
+                    node.error(`Device currently unknown, retry later`);
                 }
-
                 // dont send any payload for the input messages, as we are also a monitor node
+
             });
 
             board.events.on('monitor', function (OTmsg) {
@@ -144,10 +143,13 @@ module.exports = function (RED) {
                 }
             });
 
-            board.events.on('error', function () { node.error("Board event error") });
+            board.events.on('error', function () {
+                node.error("Board event error");
+            });
 
             this.on('close', function () {
-                // tidy up state
+                // tidy up state                
+                console.log("openThings-trv: closing");
             });
         }
 
