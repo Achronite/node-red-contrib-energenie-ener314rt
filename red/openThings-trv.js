@@ -143,13 +143,8 @@ module.exports = function (RED) {
                 }
             });
 
-            board.events.on('error', function () {
-                node.error("Board event error");
-            });
-
-            this.on('close', function () {
-                // tidy up state                
-                console.log("openThings-trv: closing");
+            board.events.on('error', function (err) {
+                node.error(`Board event error ${err}`);
             });
         }
 

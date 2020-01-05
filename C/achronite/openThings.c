@@ -904,7 +904,6 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
 **   - returning JSON for the received msg OR returning '{"deviceId": 0}' if no msg available
 **
 ** TODO (optimisations):
-**   - Make wait time dynamic as eTRV Rx window approaches
 */
 int openThings_receive(char *OTmsg, unsigned int buflen, unsigned int timeout)
 {
@@ -1546,7 +1545,7 @@ void eTRV_get_status(int OTdi, char *buf, unsigned int buflen)
                 trvData->errString);
         strncat(buf, trvStatus, buflen);
     }
-    
+
 #if defined(TRACE)
     printf("eTRV_get_status(): %s, strlen=%d buflen:%d\n",trvStatus,strlen(trvStatus),buflen);
 #endif

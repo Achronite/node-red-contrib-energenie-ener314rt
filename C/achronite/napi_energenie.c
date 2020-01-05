@@ -21,7 +21,7 @@
 ** N-API replaces the older FFI / ref library calls used in v0.1 as these libraries are no longer being maintained.  N-API should allow
 ** this code to be Application Binary (ABI) compatiable across multiples platforms.
 **
-** Author: Phil Grainger - @Achronite, August-December 2019
+** Author: Phil Grainger - @Achronite, August 2019 - January 2020
 **
 ** Conventions Used:
 **  nv_   n-api value

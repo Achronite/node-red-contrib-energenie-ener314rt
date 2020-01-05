@@ -99,22 +99,6 @@ int lock_ener314rt(void)
 {
     int ret = -1;
 
-    // Always check that the adaptor & mutex have been initialised, dont continue if not
-    // if (!initialised)
-    // {
-    //     // // init and lock
-    //     // if ((ret = init_ener314rt(true)) != 0)
-    //     // {
-    //     //     // init already done, not locked
-    //     //     ret = pthread_mutex_lock(&radio_mutex);
-    //     //     if (ret == EDEADLK)
-    //     //     {
-    //     //         // Mutex already locked!
-    //     //         ret = 0;
-    //     //     }
-    //     // };
-    // }
-    // else
     if (initialised)
     {
         // lock radio now
@@ -129,18 +113,10 @@ int lock_ener314rt(void)
         //fflush(stdout);
 
         // cater for if we already have the lock
-        if (ret != 0)
+        if (ret == EDEADLK)
         {
-            if (ret == EDEADLK)
-            {
-                // mutex already locked!
-                ret = 0;
-            }
-            else
-            {
-                //printf("ERROR lock_ener314rt(%d): failed\n", ret);
-            }
-            //printf("lock_ener314rt(%d): mutex got\n",deviceMode);
+            // mutex already locked, this is fine!
+            ret = 0;
         }
     }
     else
@@ -162,8 +138,6 @@ int unlock_ener314rt(void)
 #endif
     ret = pthread_mutex_unlock(&radio_mutex);
     return ret;
-
-    // TODO: Place radio back into the correct mode, or standby
 }
 
 /*
@@ -205,41 +179,41 @@ int empty_radio_Rx_buffer(enum deviceTypes rxMode)
     int i, recs = 0;
 
     // Put us into monitor as soon as we know about it
-/*
+    /*
     if (rxMode == DT_MONITOR)
         deviceType = DT_MONITOR;
 
     if (deviceType == DT_MONITOR || rxMode == DT_LEARN)
     {
 */
-        // only receive data if we are in monitor mode
-        // Set FSK mode receive for OpenThings devices (Energenie OOK devices dont generally transmit!)
-        radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
+    // only receive data if we are in monitor mode
+    // Set FSK mode receive for OpenThings devices (Energenie OOK devices dont generally transmit!)
+    radio_setmode(RADIO_MODULATION_FSK, HRF_MODE_RECEIVER);
 
-        i = 0;
-        // do we have any messages waiting?
-        while (radio_is_receive_waiting() && (i++ < RX_MSGS))
+    i = 0;
+    // do we have any messages waiting?
+    while (radio_is_receive_waiting() && (i++ < RX_MSGS))
+    {
+        if (radio_get_payload_cbp(RxMsgs[pRxMsgHead].msg, MAX_FIFO_BUFFER) == RADIO_RESULT_OK)
         {
-            if (radio_get_payload_cbp(RxMsgs[pRxMsgHead].msg, MAX_FIFO_BUFFER) == RADIO_RESULT_OK)
-            {
-                recs++;
-                // TODO: Only store valid OpenThings messages?
+            recs++;
+            // TODO: Only store valid OpenThings messages?
 
-                // record message timestamp
-                RxMsgs[pRxMsgHead].t = time(0);
-                TRACE_OUTC(64);
+            // record message timestamp
+            RxMsgs[pRxMsgHead].t = time(0);
+            TRACE_OUTC(64);
 
-                // wrap round buffer for next Rx
-                if (++pRxMsgHead == RX_MSGS)
-                    pRxMsgHead = 0;
-            }
-            else
-            {
-                TRACE_OUTS("empty_radio_Rx_buffer(): error getting payload\n");
-                break;
-            }
+            // wrap round buffer for next Rx
+            if (++pRxMsgHead == RX_MSGS)
+                pRxMsgHead = 0;
         }
-//    }
+        else
+        {
+            TRACE_OUTS("empty_radio_Rx_buffer(): error getting payload\n");
+            break;
+        }
+    }
+    //    }
     return recs;
 };
 
