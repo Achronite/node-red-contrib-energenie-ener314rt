@@ -1546,6 +1546,8 @@ void eTRV_get_status(int OTdi, char *buf, unsigned int buflen)
                 trvData->errString);
         strncat(buf, trvStatus, buflen);
     }
-
+    
+#if defined(TRACE)
     printf("eTRV_get_status(): %s, strlen=%d buflen:%d\n",trvStatus,strlen(trvStatus),buflen);
+#endif
 }
