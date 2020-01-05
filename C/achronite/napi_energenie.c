@@ -661,7 +661,7 @@ static void tx_openThings_receive_thread(napi_env env, void *data)
     } while (addon_data->monitor);
 
     // Indicate that monitoring is closing so there will be no further use of the thread-safe function.
-    assert(napi_release_threadsafe_function(addon_data->tsfn, napi_tsfn_abort) == napi_ok);
+    assert(napi_release_threadsafe_function(addon_data->tsfn, napi_tsfn_release) == napi_ok);
     TRACE_OUTS("tx_ monitor thread completed\n");
 }
 
