@@ -222,7 +222,6 @@ static void _wait_txready(void)
 
 /*---------------------------------------------------------------------------*/
 
-
 /***** PUBLIC ****************************************************************/
 
 /*---------------------------------------------------------------------------*/
@@ -238,6 +237,7 @@ void radio_reset(void)
 
 /*---------------------------------------------------------------------------*/
 
+// @achronite - Jan 2020 - made init return radio version if error so that it can be reported by caller
 int radio_init(void)
 {
     TRACE_OUTS("radio_init\n");
@@ -254,23 +254,22 @@ int radio_init(void)
     gpio_high(LED_GREEN);
     gpio_high(LED_RED);
 
-    TRACE_OUTS("reset...\n");
     radio_reset();
 
-    TRACE_OUTS("reading radiover...\n");
+    TRACE_OUTS("radio_ver=");
     uint8_t rv = radio_get_ver();
     TRACE_OUTN(rv);
     TRACE_NL();
-    if (rv < EXPECTED_RADIOVER) //TODO: make this ASSERT()
+    if (rv < EXPECTED_RADIOVER)
     {
         TRACE_OUTS("warning:unexpected radio ver<min\n");
         //TRACE_FAIL("unexpected radio ver<min\n");
-        return -1;
+        return rv;
     }
     else if (rv > EXPECTED_RADIOVER)
     {
         TRACE_OUTS("warning:unexpected radio ver>exp\n");
-        return -2;
+        return rv;
     }
 
     radio_standby();
@@ -396,7 +395,7 @@ void radio_send_payload(uint8_t *payload, uint8_t len, uint8_t times)
     /* TRANSMIT: Transmit a number of payloads back to back */
     TRACE_OUTN(times);
     TRACE_OUTS(" tx payloads\n");
-/*
+    /*
 #if defined(TRACE)
     for (i = 0; i < len; i++)
     {
@@ -448,7 +447,7 @@ bool radio_is_receive_waiting(void)
 {
     uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
     return (irqflags2 & HRF_MASK_PAYLOADRDY) == HRF_MASK_PAYLOADRDY;
-/*
+    /*
     if (_payload_waiting())
     {
         return RADIO_RESULT_OK_TRUE;
@@ -516,7 +515,7 @@ void radio_finished(void)
     radio_data.mode = 99;
 }
 
-/* @Achronite - March 2019
+/* @Achronite - March 2019, January 2020
 ** New function that performs all mode switching of radio modulation and mode
 ** This version only writes HRF changes when required by using the previous state
 ** It allows switch between OOK Tx and FSK Rx unlike radio_transmit() above
@@ -532,16 +531,13 @@ void radio_setmode(RADIO_MODULATION mod, RADIO_MODE mode)
         if (mod == RADIO_MODULATION_OOK)
         {
             _config(config_OOK, CONFIG_OOK_COUNT);
-            radio_data.modu = mod;
+            radio_data.modu = RADIO_MODULATION_OOK;
         }
-        else if (mod == RADIO_MODULATION_FSK)
+        else
         {
+            // assume FSK if not OOK
             _config(config_FSK, CONFIG_FSK_COUNT);
-            radio_data.modu = mod;
-        }
-        else //TODO: make this ASSERT()
-        {
-            TRACE_FAIL("Unknown modulation\n");
+            radio_data.modu = RADIO_MODULATION_FSK;
         }
     }
 
@@ -580,7 +576,6 @@ void radio_mod_transmit(RADIO_MODULATION mod, uint8_t *payload, uint8_t len, uin
     }
     else
     {
-        printf("\nREALLY HOPE NOT TO SEE THIS\n");
         // already in correct transmit only mode
         radio_send_payload(payload, len, times);
 
