@@ -161,10 +161,6 @@ int unlock_ener314rt(void)
     TRACE_OUTS("U]");
 #endif
     ret = pthread_mutex_unlock(&radio_mutex);
-    if (ret != 0)
-    {
-        printf("ERROR unlock_ener314rt(%d)\n", ret);
-    }
     return ret;
 
     // TODO: Place radio back into the correct mode, or standby
