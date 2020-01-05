@@ -57,8 +57,9 @@ module.exports = function (RED) {
 
         // start the monitoring loop when we have listeners
         this.events.once('newListener', (event, listener) => {
+            scope.log("newListener()");
             if (event === 'monitor' && inited) {
-                if (Number(config.timeout) == NaN) {
+                if (isNaN(config.timeout) || config.timeout === undefined) {
                     config.timeout = 5000;
                 }
                 startMonitoringThread(Number(config.timeout));
@@ -70,9 +71,21 @@ module.exports = function (RED) {
 
         // Close node, tidy-up and stop radio
         this.on('close', function (done) {
+            this.log("ener314-rt: close triggered");
             ener314rt.stopMonitoring();
-            ener314rt.closeEner314rt();
-            done();
+
+            // Allow time for monitor thread to complete after config.timeout and close properly, do this as a cb to not block main event loop
+            setTimeout(function () {
+                console.log("ener314-rt: finalizing close");
+                ener314rt.closeEner314rt();
+                inited = false;
+                done();
+            }, config.timeout);
+        });
+
+
+        this.on('input', function (msg) {
+            this.log(`input triggered ${msg}`)
         });
 
     }

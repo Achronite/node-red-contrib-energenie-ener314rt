@@ -4,7 +4,7 @@
         defaults: {
             name: {value:"ENER314-RT",required:true},
             id: {value:0, default:0, required:true},
-            interval: {value:5000, default:5000, required:true,
+            timeout: {value:5000, default:5000, required:true,
                 validate: function(v) {
 					return (/^[0-9]+/.test(v) && parseInt(v,10) >= 500);
 				}}
@@ -20,8 +20,8 @@
         <input type="text" id="node-config-input-name">
     </div>
     <div class="form-row">
-		<label for="node-config-input-interval"><i class="fa fa-clock-o"></i> Poll interval (ms)</label>
-		<input type="text" placeholder="1000" id="node-config-input-interval">
+		<label for="node-config-input-timeout"><i class="fa fa-clock-o"></i> Timeout (ms)</label>
+		<input type="text" placeholder="5000" id="node-config-input-timeout">
 	</div>
 </script>
 
@@ -29,9 +29,6 @@
     <h3>Details</h3>
         <p>Configuration node for Energenie ENER314-RT board.</p>
         <p>For most installations the default parameters should not be changed.</p>
-        <p>The <code>Poll interval</code> is only used when monitoring 'Control' and 'Control & Monitor' devices from the Energenie range.  The value contains how often the radio device is emptied of it's buffered contents.</p>
-        <p>The radio buffer can only hold 1 message, so it is best to keep this as short as possible, otherwise you may lose monitoring or alert data.</p>
-        <p>For example, the Adapter+ sends a signal every 10 seconds.</p>
-        <p>5000ms = 5 seconds, seemed to work best in testing with 1 device.
-        <p><code>Poll interval</code> must be set to 500 or above.</p>
+        <p>The <code>timeout</code> is only used when monitoring 'Control' and 'Control & Monitor' devices from the Energenie range.  The value contains how long the radio monitor thread will wait for a message to be received.</p>
+        <p>This value ultimately determines how long it takes for the radio monitoring to shut-down when node-red, or monitoring is stopped.</p>
 </script>

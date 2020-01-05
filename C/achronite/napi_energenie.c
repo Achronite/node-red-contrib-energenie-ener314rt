@@ -624,10 +624,7 @@ static void tx_openThings_receive_thread(napi_env env, void *data)
 {
     AddonData *addon_data = (AddonData *)data;
     int result;
-    //char buf[500];
-
-    //int idx_inner, idx_outer;
-    //int prime_count = 0;
+    //napi_status status;
 
     TRACE_OUTS("tx_openThings_receive_thread starting\n");
     // We bracket the use of the thread-safe function by this thread by a call to
@@ -663,8 +660,8 @@ static void tx_openThings_receive_thread(napi_env env, void *data)
         }
     } while (addon_data->monitor);
 
-    // Indicate that this thread will make no further use of the thread-safe function.
-    assert(napi_release_threadsafe_function(addon_data->tsfn, napi_tsfn_release) == napi_ok);
+    // Indicate that monitoring is closing so there will be no further use of the thread-safe function.
+    assert(napi_release_threadsafe_function(addon_data->tsfn, napi_tsfn_abort) == napi_ok);
     TRACE_OUTS("tx_ monitor thread completed\n");
 }
 
@@ -685,7 +682,7 @@ static void tc_openThings_receive_thread(napi_env env, napi_status status, void 
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
 
-    TRACE_OUTS("done\n");
+    TRACE_OUTS("tc_ done\n");
 }
 
 /* N-API function (tf_) wrapper for:
@@ -780,7 +777,6 @@ static napi_value tf_openThings_receive_thread(napi_env env, napi_callback_info 
                                           tc_openThings_receive_thread,
                                           addon_data,
                                           &(addon_data->work)) == napi_ok);
-            TRACE_OUTS("tf_ napi_create_async_work done\n");
 
             // Queue the work item for execution.
             assert(napi_queue_async_work(env, addon_data->work) == napi_ok);
@@ -789,6 +785,8 @@ static napi_value tf_openThings_receive_thread(napi_env env, napi_callback_info 
             TRACE_NL();
             // This causes `undefined` to be returned to JavaScript.
         }
+    } else {
+        TRACE_OUTS("tf_ monitor thread still active, not started\n");
     }
 
     return NULL;
@@ -818,17 +816,15 @@ static napi_value nf_stop_openThings_receive_thread(napi_env env, napi_callback_
 
     TRACE_OUTS("nf_stop_openThings_receive_thread called\n");
 
-    // Retrieve the JavaScript data pointer (not worried about args)
+    // Retrieve the JavaScript data pointer
     assert(napi_get_cb_info(env,
                             info,
                             &argc,
                             argv,
                             NULL,
                             (void **)(&addon_data)) == napi_ok);
-    TRACE_OUTN(argc);
-    TRACE_OUTS(" args, nf_stop monitoring\n");
 
-    // Stop monitor thread
+    // Ask monitor thread to stop
     addon_data->monitor = false;
 
     return 0;
