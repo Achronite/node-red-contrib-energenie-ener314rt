@@ -1068,7 +1068,7 @@ int openThings_receive(char *OTmsg, unsigned int buflen, unsigned int timeout)
             {
                 if (g_CachedCmds > 0)
                 {
-                    usleep(5000); // 5ms
+                    usleep(50000); // 50ms
                 }
                 else
                 {
