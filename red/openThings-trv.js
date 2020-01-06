@@ -33,9 +33,9 @@ module.exports = function (RED) {
             this.status({ fill: "red", shape: "ring", text: "Not configured" });
             return false;
         } else {
-            node.on('input', function(msg) {
+            node.on('input', function (msg) {
                 // Check all variables before we cache the message to transmit, msg.payload overrides any defaults set in node
-                
+
                 // Check OpenThings deviceId
                 if (deviceId == 0 || isNaN(deviceId)) {
                     this.error("DeviceId err: " + deviceId + " (" + typeof (deviceId) + ")");
@@ -136,7 +136,9 @@ module.exports = function (RED) {
                     // cached commands now handled in C
 
                     // set node status for eTrv temperature
-                    node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
+                    if (typeof(OTmsg.TEMPERATURE) == 'number') {
+                        node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
+                    }
 
                     // send on decoded OpenThings message as is
                     node.send({ 'payload': OTmsg });
