@@ -36,14 +36,21 @@
         <input type="text" id="node-input-device"/>
     </div>
     <div class="form-tips">
-        <strong>Tip:</strong> The eTRV node has a very small receive window when it regularly reports the temperature at it's <strong>REPORTING_INTERVAL</strong> (default every 5 minutes).
-        The receiver is activated after each <strong>TEMPERATURE</strong> report to listen for commands for only 200ms.
-        <br>To cater for this limitation, this node uses command caching. Any command sent will be held until a <strong>TEMPERATURE</strong> report is received; at this point the most recent
-        cached message (only 1 is supported) will be immediately sent to the eTRV.  Messages will continue to be resent until we know they have been succesfully received
-        or until the number of Retries has reached 0.      
-        <br>The reason that a command could be resent multiple times is due to timing issues, the board only checks for messages every polling interval.
-        There is a therefore a chance that the Receive window could be missed.
-        <br>To reduce the risk of this happening you may need to configure the polling interval of the Board to 500ms if you have eTRV devices (other energenie device do not have this restriction).
+        <strong>Tip:</strong><br>After an eTRV reports it's temperature (every <strong>SET_REPORTING_INTERVAL</strong>, default 5 minutes) it listens for commands. 
+        It only listens for these commands for 200ms!
+
+        <br>To cater for this hardware limitation this node uses command caching and dynamic polling. 
+        Any command sent using the eTRV node will be held until a <strong>TEMPERATURE</strong> report is received; 
+        at this point the most recent cached command (only 1 is supported) will be sent to the eTRV.  
+        Cached commands will continue to be resent until they have been succesfully received or until the number of Retries has reached 0.
+        
+        <br>The reason that a command may be resent multiple times is due to reporting and/or timing issues. The eTRV devices, 
+        unfortunately, do not send acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).
+        This includes the <strong>TEMP_SET</strong> command!  So these commands are always resent for the full number of retries.
+        
+        <br><br><strong>NOTE:</strong> The performance of node-red may decrease when an eTRV command is being cached due to dynamic polling. 
+        The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached
+        (it goes from checking every 5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
     </div>
 </script>
 
@@ -128,9 +135,9 @@
             </dt>
             <dd>Set valve state</dd>
             <dd>.data=
-                <br>0 = Set Valve Fully Open
-                <br>1 = Set Valve Fully Closed
-                <br>2 = Set Normal Operation</dd>                
+                <br> 0 = Set Valve Fully Open
+                <br> 1 = Set Valve Fully Closed
+                <br> 2 = Set Normal Operation</dd>                
                 
             <dt>EXERCISE_VALVE
                 <span class="property-type">163</span>   
@@ -138,10 +145,11 @@
             <dd>Send exercise valve command to driver board.</dd>
 
             <dt>SET_LOW_POWER_MODE
-                    <span class="property-type">164</span>
-            </dt> 
-            <dd>0=Low power mode off</dd
-            <dd>1=Low power mode on</dd>
+                <span class="property-type">164</span>
+            </dt>
+            <dd>.data=
+            <br> 0=Low power mode off
+            <br> 1=Low power mode on</dd>
 
             <dt>REQUEST_DIAGNOTICS
                 <span class="property-type">166</span>  

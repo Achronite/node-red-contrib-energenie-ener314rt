@@ -131,11 +131,11 @@ A full parameter list can be found in C/src/achronite/openThings.c if required.
 
 ## MiHome Radiator Valve (eTRV) Support
 
-v0.3+ now supports the MiHome Thermostaic Radiator valve (eTRV).
+v0.3+ now supports the MiHome Thermostatic Radiator valve (eTRV).
 > WARNING: Due to the way the eTRV works there may be a delay from when a command is sent to it being processed by the device. See **eTRV Command Caching** below
 
 ### eTRV Commands
-
+The MiHome Thermostatic Radiator valve (eTRV) can accept commands to perform operations, provide diagnostics or perform self tests.  The documented commands are provided in the table below.
 | Command | # | Description | .data | Response Msg |
 |---|:---:|---|---|:---:|
 |EXERCISE_VALVE|163|Send exercise valve command, recommended once a week to calibrate eTRV||DIAGNOSTICS|
@@ -149,6 +149,22 @@ v0.3+ now supports the MiHome Thermostaic Radiator valve (eTRV).
 
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
+#### Sending eTRV Commands
+Single commands should be sent as a numeric value within a JSON request, for example to Request Diagnostics you can use a template node (Output as Parsed JSON) to send the following ```msg.payload```:
+```
+{
+    "command": 226,
+    "data": 0
+}
+```
+Example for setting temperature to 20C using command mode:
+```
+{
+    "command": 244,
+    "data": 20
+}
+```
+
 ### eTRV Command Caching
 The eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes). The receiver is activated after each *TEMPERATURE* report to listen for commands. The receiver only remains active for 200ms or until a message is received.
 
@@ -156,7 +172,7 @@ To cater for this hardware limitation the **'eTRV node'** uses command caching a
 
 The reason that a command may be resent multiple times is due to reporting issues. The eTRV devices, unfortunately, do not send acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.
 
-> NOTE: The performance of node-red may decrease when an eTRV command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 100 when a command is cached (it goes from checking every 5 seconds to every 50 ms) this dramatically increases the chance of a message being correctly received sooner.
+> **NOTE:** The performance of node-red may decrease when an eTRV command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
 
 ### eTRV Monitor Messages
 
@@ -203,12 +219,12 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |---|---|
 0.1.0|Initial Release
 0.2.0|Full NPM & node-red catalogue release
-0.3.0|Major change - Switched to use node.js Native API (N-API) for calling C functions.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.
+0.3.0|Major change - Switched to use node.js Native API (N-API) for calling C functions.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.  This version requires node.js v10+. 
 
 
 ## Built With
 
-* [NodeJS](https://nodejs.org/dist/latest-v6.x/docs/api/) - JavaScript runtime built on Chrome's V8 JavaScript engine.
+* [NodeJS](https://nodejs.org/dist/latest-v10.x/docs/api/) - JavaScript runtime built on Chrome's V8 JavaScript engine.
 * [Node-RED](http://nodered.org/docs/creating-nodes/) - for wiring together hardware devices, APIs and online services.
 * [N-API](https://nodejs.org/docs/latest-v10.x/api/n-api.html) - *NEW in v0.3* - Used to wrap C code as a native node.js Addon. N-API is maintained as part of Node.js itself, and produces Application Binary Interface (ABI) stable across all versions of Node.js.
 

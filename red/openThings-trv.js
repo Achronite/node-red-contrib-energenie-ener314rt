@@ -61,9 +61,13 @@ module.exports = function (RED) {
                         break;
                     case 'object':
                         // Assume Command mode
-                        if (typeof msg.payload.command == 'number' && typeof msg.payload.data == 'number') {
+                        if (typeof msg.payload.command == 'number') {
                             var cmd = msg.payload.command;
-                            var data = msg.payload.data;
+                            if (typeof msg.payload.data == 'number') {
+                                var data = msg.payload.data;
+                            } else {
+                                var data = 0;
+                            }
                         } else {
                             this.error(`Invalid payload object: ${msg.payload}`);
                             return false;
@@ -136,7 +140,7 @@ module.exports = function (RED) {
                     // cached commands now handled in C
 
                     // set node status for eTrv temperature
-                    if (typeof(OTmsg.TEMPERATURE) == 'number') {
+                    if (typeof (OTmsg.TEMPERATURE) == 'number') {
                         node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
                     }
 
