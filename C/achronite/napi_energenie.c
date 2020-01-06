@@ -577,27 +577,21 @@ static void tr_openThings_receive_thread(napi_env env, napi_value js_cb, void *c
     (void)context;
     //napi_status status;
 
-    TRACE_OUTS("tr_openThings_receive_thread buf=");
-
     // Retrieve the buffer from the item created by the worker thread.
-    //int the_prime = *(int*)data;
     char *buf = (char *)data;
-    TRACE_OUTS(buf);
+
+    //TRACE_OUTS("tr_openThings_receive_thread buf=");
+    //TRACE_OUTS(buf);
 
     // env and js_cb may both be NULL if Node.js is in its cleanup phase, and
     // items are left over from earlier thread-safe calls from the worker thread.
-    // When env is NULL, we simply skip over the call into Javascript and free the
-    // items.
+    // When env is NULL, we simply skip over the call into Javascript and free the items.
     if (env != NULL)
     {
         napi_value undefined, js_buf;
 
-        // Convert the integer to a napi_value.
-        //assert(napi_create_int32(env, the_prime, &js_the_prime) == napi_ok);
+        // Convert the buf to a napi_value string.
         assert(napi_create_string_latin1(env, buf, NAPI_AUTO_LENGTH, &js_buf) == napi_ok);
-        //status = napi_create_string_latin1(env, buf, NAPI_AUTO_LENGTH, &js_buf);
-        //TRACE_OUTS("create_str=");
-        //TRACE_OUTN(status);
 
         // Retrieve the JavaScript `undefined` value so we can use it as the `this`
         // value of the JavaScript function call.
@@ -640,7 +634,6 @@ static void tx_openThings_receive_thread(napi_env env, void *data)
     {
         // Allocate the buffer from the heap. The JavaScript marshaller (tr_openThings_receive_thread)
         // will free this item after having sent it to JavaScript.
-        //int* the_prime = malloc(sizeof(*the_prime));
         char *buf = malloc(500 * sizeof(char));
 
         result = openThings_receive(buf, 500, addon_data->timeout);
