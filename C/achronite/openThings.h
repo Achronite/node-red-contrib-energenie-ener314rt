@@ -206,9 +206,9 @@ struct OT_DEVICE {
     unsigned int  deviceId;
     unsigned char mfrId;
     unsigned char productId;
-    bool          control;
+    unsigned char control;
     bool          joined;
-    char          product[14];
+    char          product[15];
     struct TRV_DEVICE *trv;                     // need to malloc if used
 };
 
@@ -217,9 +217,9 @@ struct OT_DEVICE {
 
 struct OT_PRODUCT {
     unsigned char mfrId;
-    char productId;
-    char control;
-    char product[15];
+    unsigned char productId;
+    unsigned char control;
+    char          product[15];
 };
 #define NUM_OT_PRODUCTS 8
 

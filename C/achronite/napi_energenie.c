@@ -349,7 +349,7 @@ napi_value nf_openThings_deviceList(napi_env env, napi_callback_info info)
     size_t argc = 1; // 2 passed in args
     napi_value argv[1];
     napi_value nv_ret;
-    int ret;
+    //int ret;
     napi_valuetype type_of_argument;
 
     char buf[500];
@@ -383,20 +383,12 @@ napi_value nf_openThings_deviceList(napi_env env, napi_callback_info info)
     //printf("calling openThings_deviceList(buf,%d)\n", scan);
 
     // Call C routine
-    ret = openThings_deviceList(buf, scan);
+    openThings_deviceList(buf, scan);
 
-    if (ret > 0)
-    {
+    //printf("openThings_switch() returned %d. devices=%s\n", ret, buf);
 
-        //printf("openThings_switch() returned %d. devices=%s\n", ret, buf);
-
-        // convert return string into JS value
-        status = napi_create_string_latin1(env, buf, NAPI_AUTO_LENGTH, &nv_ret);
-    }
-    else
-    {
-        status = napi_create_int32(env, ret, &nv_ret);
-    }
+    // convert return string into JS value, ignore ret
+    status = napi_create_string_latin1(env, buf, NAPI_AUTO_LENGTH, &nv_ret);
 
     if (status != napi_ok)
     {
@@ -778,7 +770,9 @@ static napi_value tf_openThings_receive_thread(napi_env env, napi_callback_info 
             TRACE_NL();
             // This causes `undefined` to be returned to JavaScript.
         }
-    } else {
+    }
+    else
+    {
         TRACE_OUTS("tf_ monitor thread still active, not started\n");
     }
 

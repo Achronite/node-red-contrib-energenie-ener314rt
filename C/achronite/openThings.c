@@ -272,11 +272,6 @@ int openThings_devicePut(unsigned int iDeviceId, unsigned char mfrId, unsigned c
                 g_OTdevices[OTdi].trv->targetC = 0;
                 g_OTdevices[OTdi].trv->errors = false;
                 g_OTdevices[OTdi].trv->lowPowerMode = false;
-                /*     
-    float         currentC;
-    bool          lowPowerMode;
-    unsigned char command;
-*/
             }
         }
         else
@@ -335,11 +330,7 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
     // A good indication this is an OpenThings msg, is to check the length first, abort if too long or short
     if (length > MAX_FIFO_BUFFER || length < 10)
     {
-        /*
-        TRACE_OUTS("ERROR openThings_decode(): Not OT Message, invalid length=");
-        TRACE_OUTN(length);
-        TRACE_NL();
-        */
+        // Not OT Message, invalid length
         return -1;
     }
 
@@ -348,18 +339,9 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
     *productId = payload[2];
     pip = (unsigned short)((payload[OTH_INDEX_PIP] << 8) | payload[OTH_INDEX_PIP + 1]);
 
-    //struct sOTHeader = { length, mfrId, productId, pip };
-#if defined(TRACE)
-    printf("openThings_decode(): length=%d, mfrId=%d, productId=%d, pip=%d", length, *mfrId, *productId, pip);
-#endif
-
     // decode encrypted body (destructive - watch for length errors!)
     cryptMsg(CRYPT_PID, pip, &payload[5], (length - 4));
     *iDeviceId = (payload[5] << 16) + (payload[6] << 8) + payload[7];
-
-#if defined(TRACE)
-    printf(", deviceId=%d\n", *iDeviceId);
-#endif
 
     // CHECK CRC from last 2 bytes of message
     crca = (payload[length - 1] << 8) + payload[length];
@@ -368,7 +350,6 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
     if (crc != crca)
     {
         // CRC does not match
-        //TRACE_OUTS("openThings_decode(%d): Not OT Message, CRC error\n");
         return -2;
     }
     else
@@ -377,7 +358,6 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
 
         //DECODE RECORDS
         i = 8; // start at the 1st record
-        //printf("openThings_decode(): message from %d, length:%d\n", *iDeviceId, length);
 
         while ((i < length) && (payload[i] != 0) && (record < OT_MAX_RECS))
         {
@@ -407,15 +387,6 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
             {
                 sprintf(recs[record].paramName, "UNKNOWN_0x%2x", recs[record].paramId);
             }
-            // no equivalent of 'in' for C, probably messy to code this here anyway as they are strings; do it in calling function instead (javascript in my case)
-            /*
-                if paramid in param_info:
-                    paramname = (param_info[paramid])["n"] # name
-                    paramunit = (param_info[paramid])["u"] # units
-                else:
-                    paramname = "UNKNOWN_" + hex(paramid)
-                    paramunit = "UNKNOWN_UNIT"
-                */
 
             // TYPE/LEN
             recs[record].typeId = payload[i] & 0xF0;
@@ -435,13 +406,6 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
                 case OT_CHAR:
                     // memcpy is faster
                     memcpy(recs[record].retChar, &payload[i], rlen);
-                    /*
-                for (j = 0; j < rlen; j++)
-                {
-                    // printf("%d,", payload[i + j]);
-                    recs[record].retChar[j] = payload[i + j];
-                }
-                */
                     recs[record].typeIndex = OTR_CHAR;
                     break;
                 case OT_UINT:
@@ -480,9 +444,6 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
                     {
                         // negative
                         result = -(((!result) & ((2 ^ (length * 8)) - 1)) + 1);
-                        //onescomp = (~result) & ((2**(length*8))-1)
-                        //result = -(onescomp + 1)
-                        // =result = -((~result) & ((2**(length*8))-1) + 1)
                     }
                     recs[record].typeIndex = OTR_INT;
                     break;
@@ -505,8 +466,6 @@ int openThings_decode(unsigned char *payload, unsigned char *mfrId, unsigned cha
                 TRACE_OUTS("rlen=0\n");
                 recs[record].retInt = 0;
             }
-
-            //printf("] typeIndex:%d Int:%d Float:%f Char:%s\n", recs[record].typeIndex, recs[record].retInt, recs[record].retFloat, recs[record].retChar);
 
             // move arrays on
             i += rlen;
@@ -828,7 +787,7 @@ char openThings_cache_cmd(unsigned int iDeviceId, unsigned char command, unsigne
     unsigned char radio_msg[MAX_R1_MSGLEN] = {0};
 
 #if defined(TRACE)
-    printf("openThings_cache_cmd(): deviceId=%d, cmd=%d, value=%d\n", iDeviceId, command, data);
+    printf("openThings_cache_cmd(): deviceId=%d, cmd=%d, data=%d\n", iDeviceId, command, data);
 #endif
 
     /*
@@ -1067,7 +1026,7 @@ int openThings_receive(char *OTmsg, unsigned int buflen, unsigned int timeout)
             {
                 if (g_CachedCmds > 0)
                 {
-                    usleep(50000); // 50ms
+                    usleep(25000); // 25ms
                 }
                 else
                 {
@@ -1102,7 +1061,7 @@ unsigned char openThings_deviceList(char *devices, bool scan)
         openthings_scan(11);
     }
 
-    sprintf(devices, "{\"g_numDevices\":%d, \"devices\":[\n", g_NumDevices);
+    sprintf(devices, "{\"numDevices\":%d, \"devices\":[\n", g_NumDevices);
 
     for (i = 0; i < g_NumDevices; i++)
     {
