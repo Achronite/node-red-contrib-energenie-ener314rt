@@ -910,7 +910,9 @@ int openThings_receive(char *OTmsg, unsigned int buflen, unsigned int timeout)
         {
             i = empty_radio_Rx_buffer(DT_MONITOR);
             unlock_ener314rt();
-        } else {
+        }
+        else
+        {
             // probably been asked to close quit loop
             return -3;
         }
@@ -983,12 +985,8 @@ int openThings_receive(char *OTmsg, unsigned int buflen, unsigned int timeout)
                     if (productId == PRODUCTID_MIHO013)
                     {
                         eTRV_update(OTdi, OTrecs[0], rxMsg.t);
-
-                        //if (OTrecs[0].paramId == OTP_TEMPERATURE || )
-                        //{
-                            // Add static params to returned message
-                            eTRV_get_status(OTdi, OTmsg, buflen);
-                        //}
+                        // Add static params to returned message, this can result in DIAGNOSTICS flag being sent twice, but node copes with that OK
+                        eTRV_get_status(OTdi, OTmsg, buflen);
                     }
 
                     // close record array
@@ -1504,7 +1502,7 @@ void eTRV_get_status(int OTdi, char *buf, unsigned int buflen)
                 trvData->errString);
         strncat(buf, trvStatus, buflen);
     }
-/*
+    /*
 #if defined(TRACE)
     printf("eTRV_get_status(): %s, strlen=%d buflen:%d\n",trvStatus,strlen(trvStatus),buflen);
 #endif
