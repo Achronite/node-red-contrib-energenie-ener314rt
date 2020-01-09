@@ -10,10 +10,7 @@
 */
 "use strict";
 
-var path = require('path');
-
-// TODO: Separate out as npm module
-var ener314rt = require(path.join(__dirname, '../build/Release/ener314rt'));
+var ener314rt = require('energenie-ener314rt');
 
 module.exports = function (RED) {
 

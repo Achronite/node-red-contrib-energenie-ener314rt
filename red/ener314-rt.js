@@ -12,10 +12,7 @@
 */
 "use strict";
 
-var path = require('path');
-
-// TODO: Release n-api functions as a separate npm module
-var ener314rt = require(path.join(__dirname, '../build/Release/ener314rt'));
+var ener314rt = require('energenie-ener314rt');
 
 var inited = false;
 
