@@ -14,8 +14,8 @@ https://energenie4u.co.uk/
 
 ## Purpose
 
-You can use this node-red module to control and monitor the Energenie MiHome radio based smart devices such as adapters, sockets, lights and relays 
-on a Raspberry Pi with an **ENER314-RT** board installed using node-red (see below for full list).  This is *instead* of operating the devices using a MiHome Gateway, so it works without an internet connection.
+You can use this node-red module to control and monitor the Energenie MiHome radio based smart devices such as adapters, sockets, lights, thermostats and relays 
+on a Raspberry Pi with an **ENER314-RT** board installed using node-red (see below for full list).  This is *instead* of operating the devices using a MiHome Gateway, so this node does not require an internet connection.
 
 **'Control'**, **'Monitor'** and **'Control & Monitor'** radio based devices are supported from the legacy and MiHome range.
 
@@ -76,7 +76,7 @@ The number of individual devices this node can control is over 4 million, so it 
 
 ## Supported Devices
 
-This nodes works with all radio devices. It was designed to work with all on/off switchable devices, including devices in the OOK & FSK (OpenThings) ranges.
+These nodes are designed for energenie RF radio devices in the OOK & FSK (OpenThings) ranges.
 
 I've tested the nodes with all devices that I currently own.  Here is a table showing what each node *should* support, and a tag showing if it has been tested (please let me know of any succesful tests, and I'll update the table):
 
@@ -88,12 +88,12 @@ I've tested the nodes with all devices that I currently own.  Here is a table sh
 |MIHO002|MiHome Adapter (Blue)|x
 |MIHO004|MiHome Energy Monitor (Pink)||x
 |MIHO005|MiHome Adapter Plus (Purple)| | x | x|x
-|MIHO006|MiHome House Monitor| | x
-|MIHO007|MiHome Socket (White)| x|||x
+|MIHO006|MiHome House Monitor|| x
+|MIHO007|MiHome Socket (White)|x|||x
 |MIHO008|MiHome Light Switch (White)| x
-|MIHO013|MiHome Radiator Valve| | x | use eTRV node | beta
+|MIHO013|MiHome Radiator Valve| | x | use eTRV node |x
 |MIHO014|Single Pole Relay (inline)| x
-|MIHO015|MiHome Relay| x
+|MIHO015|MiHome Relay|x
 |MIHO021|MiHome Socket (Nickel)|x|||White
 |MIHO022|MiHome Socket (Chrome)|x|||White
 |MIHO023|MiHome Socket (Steel)|x|||White
@@ -131,11 +131,11 @@ A full parameter list can be found in C/src/achronite/openThings.c if required.
 
 ## MiHome Radiator Valve (eTRV) Support
 
-v0.3+ now supports the MiHome Thermostaic Radiator valve (eTRV).
+v0.3+ now supports the MiHome Thermostatic Radiator valve (eTRV).
 > WARNING: Due to the way the eTRV works there may be a delay from when a command is sent to it being processed by the device. See **eTRV Command Caching** below
 
 ### eTRV Commands
-
+The MiHome Thermostatic Radiator valve (eTRV) can accept commands to perform operations, provide diagnostics or perform self tests.  The documented commands are provided in the table below.
 | Command | # | Description | .data | Response Msg |
 |---|:---:|---|---|:---:|
 |EXERCISE_VALVE|163|Send exercise valve command, recommended once a week to calibrate eTRV||DIAGNOSTICS|
@@ -149,16 +149,30 @@ v0.3+ now supports the MiHome Thermostaic Radiator valve (eTRV).
 
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
+#### Sending eTRV Commands
+Single commands should be sent as a numeric value within a JSON request, for example to Request Diagnostics you can use a template node (Output as Parsed JSON) to send the following ```msg.payload```:
+```
+{
+    "command": 226,
+    "data": 0
+}
+```
+Example for setting temperature to 20C using command mode:
+```
+{
+    "command": 244,
+    "data": 20
+}
+```
+
 ### eTRV Command Caching
 The eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes). The receiver is activated after each *TEMPERATURE* report to listen for commands. The receiver only remains active for 200ms or until a message is received.
 
-To cater for this hardware limitation the **'eTRV node'** uses command caching. Any command sent using the eTRV node will be held until a TEMPERATURE report is received; at this point the most recent cached message (only 1 is supported) will be sent to the eTRV.  Messages will continue to be resent until they have been succesfully received (indicated by the *Response* command in the above table) or until the number of Retries has reached 0.
+To cater for this hardware limitation the **'eTRV node'** uses command caching and dynamic polling. Any command sent using the eTRV node will be held until a TEMPERATURE report is received; at this point the most recent cached message (only 1 is supported) will be sent to the eTRV.  Messages will continue to be resent until they have been succesfully received or until the number of Retries has reached 0.
 
-The reason that a command may be resent multiple times is due to timing issues.  The monitor & control & monitor nodes only check for messages determined by the polling frequency, so it is possible that the eTRV has stopped listening when a message is sent to it!
+The reason that a command may be resent multiple times is due to reporting issues. The eTRV devices, unfortunately, do not send acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.
 
-The eTRV, unfortunately, has no way of checking that certain commands have been received by the device (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.
-
-There is a trade-off between how often the ENER314-RT board should be polled for new messages and the performance of node-red.  Having a short polling frequency will increase the chance of a message being correctly received sooner, but could potentially slow down node-red.
+> **NOTE:** The performance of node-red may decrease when an eTRV command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
 
 ### eTRV Monitor Messages
 
@@ -205,20 +219,21 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |---|---|
 0.1.0|Initial Release
 0.2.0|Full NPM & node-red catalogue release
-0.3.0|Switched to use node.js Native API (N-API) for calling C functions.  Added new node to support MiHome Radiator Valve, but please take into account the 200ms window for receiving commands, which means that the valve may not respond to messages immediately (see [issue](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues/4)).
+0.3.0|Major change - Switched to use node.js Native API (N-API) for calling C functions, and split off new node module.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.  This version requires node.js v10+. 
 
+## Dependencies
+
+* [energenie-ener314rt](https://github.com/Achronite/energenie-ener314) - *NEW in v0.3* - Node module (by same author) used to perform all radio intercation, split from original code base in version 0.3.0
 
 ## Built With
 
-* [NodeJS](https://nodejs.org/dist/latest-v6.x/docs/api/) - JavaScript runtime built on Chrome's V8 JavaScript engine.
+* [NodeJS](https://nodejs.org/dist/latest-v10.x/docs/api/) - JavaScript runtime built on Chrome's V8 JavaScript engine.
 * [Node-RED](http://nodered.org/docs/creating-nodes/) - for wiring together hardware devices, APIs and online services.
-* [N-API](https://nodejs.org/docs/latest-v10.x/api/n-api.html) - *NEW in v0.3* - Used to wrap C code as a native node.js Addon. N-API is maintained as part of Node.js itself, and produces Application Binary Interface (ABI) stable across all versions of Node.js.
+
 
 ## Authors
 
 * **Achronite** - *Node-Red wrappers, javascript and additional C code for switching, monitoring and locking* - [Achronite](https://github.com/Achronite/node-red-contrib-energenie-ener314)
-* **David Whale** - *Radio C library and python implementation* - [whaleygeek](https://github.com/whaleygeek/pyenergenie)
-* **Energenie** - *Original C code base* - [Energenie](https://github.com/Energenie)
 
 ## License
 
@@ -232,4 +247,4 @@ https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
 
-@Achronite - September 2019 - v0.3.0 Beta
+@Achronite - January 2020 - v0.3.0 Beta

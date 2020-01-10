@@ -10,10 +10,7 @@
 */
 "use strict";
 
-var path = require('path');
-
-// TODO: Separate out as npm module
-var ener314rt = require(path.join(__dirname, '../build/Release/ener314rt'));
+var ener314rt = require('energenie-ener314rt');
 
 module.exports = function (RED) {
 
@@ -61,14 +58,17 @@ module.exports = function (RED) {
                         break;
                     case 'object':
                         // Assume Command mode
-                        if (typeof msg.payload.command == 'number' && typeof msg.payload.data == 'number') {
+                        if (typeof msg.payload.command == 'number') {
                             var cmd = msg.payload.command;
-                            var data = msg.payload.data;
+                            if (typeof msg.payload.data == 'number') {
+                                var data = msg.payload.data;
+                            } else {
+                                var data = 0;
+                            }
                         } else {
                             this.error(`Invalid payload object: ${msg.payload}`);
                             return false;
                         }
-
                         break;
                     default:
                         this.error(`Invalid payload: ${msg.payload}`);
@@ -95,15 +95,15 @@ module.exports = function (RED) {
                                     break;
                                 case 2:
                                     node.status({ fill: "grey", shape: "ring", text: "Temp Controlled" });
-                                    break;
                             }
+                            break;
                         case 0xA3:  //EXERCISE_VALVE
                             node.status({ fill: "grey", shape: "ring", text: "Exercising Valve" });
                             break;
                         case 0xA4:  //SET_LOW_POWER_MODE        0,1
-                            if (data){
+                            if (data) {
                                 node.status({ fill: "grey", shape: "ring", text: "Set Low power mode on" });
-                            } else{
+                            } else {
                                 node.status({ fill: "grey", shape: "ring", text: "Set Low power mode off" });
                             }
                             break;
@@ -125,10 +125,10 @@ module.exports = function (RED) {
 
                 } else {
                     node.status({ fill: "red", shape: "dot", text: "Device Unknown" });
-                    node.error(`Device currently unknown, retry later`)
+                    node.error(`Device currently unknown, retry later`);
                 }
-
                 // dont send any payload for the input messages, as we are also a monitor node
+
             });
 
             board.events.on('monitor', function (OTmsg) {
@@ -137,17 +137,17 @@ module.exports = function (RED) {
                     // cached commands now handled in C
 
                     // set node status for eTrv temperature
-                    node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
+                    if (typeof (OTmsg.TEMPERATURE) == 'number') {
+                        node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
+                    }
 
                     // send on decoded OpenThings message as is
                     node.send({ 'payload': OTmsg });
                 }
             });
 
-            board.events.on('error', function () { node.error("Board event error") });
-
-            this.on('close', function () {
-                // tidy up state
+            board.events.on('error', function (err) {
+                node.error(`Board event error ${err}`);
             });
         }
 
