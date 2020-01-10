@@ -33,7 +33,7 @@ module.exports = function (RED) {
                 // can also happen if something else has beat us to it!
                 scope.error(`Unable to initialise Energenie ENER314-RT board error: ${ret}`);
             } else {
-                scope.log(`ener314-rt: radio initialised`);
+                scope.log(`ener314rt: radio initialised`);
                 inited = true;
                 RED.nodes.createNode(this, config);
             }
@@ -54,7 +54,7 @@ module.exports = function (RED) {
 
         // start the monitoring loop when we have listeners
         this.events.once('newListener', (event, listener) => {
-            scope.log("newListener()");
+            //scope.log("newListener()");
             if (event === 'monitor' && inited) {
                 if (isNaN(config.timeout) || config.timeout === undefined) {
                     config.timeout = 5000;
