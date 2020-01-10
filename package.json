@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "description": "Node-red module for energenie ENER314-RT board for raspberry pi",
   "dependencies": {
-    "energenie-ener31rt": "^0.3"
+    "energenie-ener314rt": "^0.3"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
