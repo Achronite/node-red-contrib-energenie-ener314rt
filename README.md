@@ -219,20 +219,21 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |---|---|
 0.1.0|Initial Release
 0.2.0|Full NPM & node-red catalogue release
-0.3.0|Major change - Switched to use node.js Native API (N-API) for calling C functions.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.  This version requires node.js v10+. 
+0.3.0|Major change - Switched to use node.js Native API (N-API) for calling C functions, and split off new node module.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.  This version requires node.js v10+. 
 
+## Dependencies
+
+* [energenie-ener314rt](https://github.com/Achronite/energenie-ener314) - *NEW in v0.3* - Node module (by same author) used to perform all radio intercation, split from original code base in version 0.3.0
 
 ## Built With
 
 * [NodeJS](https://nodejs.org/dist/latest-v10.x/docs/api/) - JavaScript runtime built on Chrome's V8 JavaScript engine.
 * [Node-RED](http://nodered.org/docs/creating-nodes/) - for wiring together hardware devices, APIs and online services.
-* [N-API](https://nodejs.org/docs/latest-v10.x/api/n-api.html) - *NEW in v0.3* - Used to wrap C code as a native node.js Addon. N-API is maintained as part of Node.js itself, and produces Application Binary Interface (ABI) stable across all versions of Node.js.
+
 
 ## Authors
 
 * **Achronite** - *Node-Red wrappers, javascript and additional C code for switching, monitoring and locking* - [Achronite](https://github.com/Achronite/node-red-contrib-energenie-ener314)
-* **David Whale** - *Radio C library and python implementation* - [whaleygeek](https://github.com/whaleygeek/pyenergenie)
-* **Energenie** - *Original C code base* - [Energenie](https://github.com/Energenie)
 
 ## License
 
