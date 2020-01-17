@@ -234,7 +234,7 @@ If you have any issues with the code, particularly if your board is not initiali
 
 ## Dependencies
 
-* [energenie-ener314rt](https://github.com/Achronite/energenie-ener314) - *NEW in v0.3* - Node module (by same author) used to perform all radio intercation, split from original code base in version 0.3.0
+* [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt) - *NEW in v0.3* - Node module (by same author) used to perform all radio intercation, split from original code base in version 0.3.0
 
 ## Built With
 
