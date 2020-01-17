@@ -16,6 +16,10 @@
     {"name": "Achronite"}
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Achronite/node-red-contrib-energenie-ener314rt.git"
+  },
   "node-red": {
     "nodes": {
       "ook-switch": "red/ook-switch.js",
