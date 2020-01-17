@@ -68,19 +68,18 @@ module.exports = function (RED) {
                     xmits = Number(msg.payload.repeat);
 
                 // Invoke C function to do the send
-                var ret = ener314rt.ookSwitch(zone, switchNum, switchState, xmits);
-                if (ret == 0) {
-                    switch (switchState) {
-                        case true:
-                            node.status({ fill: "green", shape: "dot", text: "ON " + zone + ":" + switchNum });
-                            break;
-                        case false:
-                            node.status({ fill: "red", shape: "ring", text: "OFF " + zone + ":" + switchNum });
-                            break;
-                    }
-                    // return payload unchanged
-                    node.send(msg);
+                ener314rt.ookSwitch(zone, switchNum, switchState, xmits);
+                switch (switchState) {
+                    case true:
+                        node.status({ fill: "green", shape: "dot", text: "ON " + zone + ":" + switchNum });
+                        break;
+                    case false:
+                        node.status({ fill: "red", shape: "ring", text: "OFF " + zone + ":" + switchNum });
+                        break;
                 }
+                // return payload unchanged
+                node.send(msg);
+
             });
 
             this.on('close', function () {
@@ -92,11 +91,16 @@ module.exports = function (RED) {
 
 
     RED.httpAdmin.get("/ook/teach", function (req, res) {
-        var zone = req.query.zone || 0;
-        var switchNum = req.query.switchNum;
-        if (ener314rt.ookSend(zone, switchNum, true, 20) == 0)
-            res.sendStatus(200);
-        else
-            res.sendStatus(500);
+        var zone = Number(req.query.zone) || 0;
+        var switchNum = Number(req.query.switchNum) || 1;
+        ener314rt.ookSwitch(zone, switchNum, true, 20);
+        res.sendStatus(200);
+    });
+
+    RED.httpAdmin.get("/ook/off", function (req, res) {
+        var zone = Number(req.query.zone) || 0;
+        var switchNum = Number(req.query.switchNum) || 1;
+        ener314rt.ookSwitch(zone, switchNum, false, 20);
+        res.sendStatus(200);
     });
 }

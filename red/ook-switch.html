@@ -23,6 +23,21 @@
                 var tSwitchNum = $('#node-input-switchNum').val();
                 $.get('ook/teach', {'zone': tZone, 'switchNum': tSwitchNum})
                     .done(function (data) {
+                        RED.notify(`${tZone}:${tSwitchNum} ON`);
+                        $('#node-config-teach').removeClass('disabled');
+                    })
+
+                    .fail(function () {
+                        RED.notify("Something went wrong teaching the device", "error")
+                    })
+            }
+
+            function offOOK(selected_device) {
+                var tZone = $('#node-input-zone').val();
+                var tSwitchNum = $('#node-input-switchNum').val();
+                $.get('ook/off', {'zone': tZone, 'switchNum': tSwitchNum})
+                    .done(function (data) {
+                        RED.notify(`${tZone}:${tSwitchNum} OFF`);
                         $('#node-config-teach').removeClass('disabled');
                     })
 
@@ -35,6 +50,13 @@
                 if (!$('#node-config-teach').hasClass('disabled')) {
                     // $('#node-config-teach').addClass('disabled');
                     teachOOK(this.deviceId);
+                }
+            })
+
+            $('#node-config-off').click(function () {
+                if (!$('#node-config-teach').hasClass('disabled')) {
+                    // $('#node-config-teach').addClass('disabled');
+                    offOOK(this.deviceId);
                 }
             })
 
@@ -68,11 +90,13 @@
             <option value=6>6</option>
             <option value=0>0 (all in zone)</option>
         </select>
-        <a id="node-config-teach" class="editor-button" title="Press this button to teach a device this zone and switch combination."><i class="fa fa-graduation-cap"></i></a>
+        <a id="node-config-teach" class="editor-button" title="Press this button to teach / switch on the device."><i class="fa fa-graduation-cap"></i></a>
+        <a id="node-config-off"   class="editor-button" title="Press this button to switch off the device."><i class="fa fa-power-off"></i></a>
     </div>
     <div class="form-tips">
         Tip: You can teach a 'control only' energenie device the above <strong>Zone</strong> and <strong>Switch #</strong>.</br>
         Hold down the power button until the power light flashes on the device, then pressing the 'mortar board' icon above, this sends a 'power on' signal to the device, and the light will flashing faster and then stop when taught.
+        <p>You can test further by hitting the 'power off' icon above to switch off the learned device.</p>
     </div>
 </script>
 

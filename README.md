@@ -8,6 +8,7 @@ https://energenie4u.co.uk/
 [![Downloads](https://img.shields.io/npm/dm/node-red-contrib-energenie-ener314rt.svg)](https://www.npmjs.com/package/node-red-contrib-energenie-ener314rt)
 [![HitCount](http://hits.dwyl.io/achronite/node-red-contrib-energenie-ener314rt.svg)](http://hits.dwyl.io/achronite/node-red-contrib-energenie-ener314rt)
 [![Dependencies Status](https://img.shields.io/david/Achronite/node-red-contrib-energenie-ener314rt.svg)](https://david-dm.org/Achronite/node-red-contrib-energenie-ener314rt)
+![node](https://img.shields.io/node/v/node-red-contrib-energenie-ener314rt)
 [![Release](https://img.shields.io/github/release-pre/achronite/node-red-contrib-energenie-ener314rt.svg)](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/releases)
 [![NPM](https://nodei.co/npm/node-red-contrib-energenie-ener314rt.png)](https://nodei.co/npm/node-red-contrib-energenie-ener314rt/)
 
@@ -47,7 +48,9 @@ The number of individual devices this node can control is over 4 million, so it 
     * Hold the button on your device until it starts to flash. 
     * Click the teach (mortar board) icon in the control node properties.
     * The device should learn the zone code being broadcast by the teach request, the light should stop flashing when successful.
-    * All subsequent calls using the same zone/switch number will cause your device to switch. Pressing the teach button again will cause the device to switch **on**.
+    * All subsequent calls using the same zone/switch number will cause your device to switch.
+    * Pressing the teach button again will cause the device to switch **on**, and pressing the 'power' button will cause the same device to switch **off**.
+
 
 > TIP: If you already know the house/zone code assigned, for example to an RF hand controller, you can use that in your node to make the device work with both.
 
@@ -214,12 +217,20 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |VOLTAGE|Current battery voltage|float|VOLTAGE_TS|
 |VOLTAGE_TS|Tmestamp of when battery voltage was last received|epoch|VOLTAGE_TS|
 
+## Troubleshooting
+If you have any issues with the code, particularly if your board is not initialising, please try [ener314rt-debug](https://github.com/Achronite/ener314rt-debug), which has been created as a standalone node.js application with full debug enabled.  Node-red is not required to execute this test.
+
+*Unable to initialise Energenie ENER314-RT board error: -1*: Check that your card is installed correctly, and that you **do not** have hardware SPI enabled.  On raspbian if the hardware SPI driver was loaded, you will see the device `/dev/spidev0.0`.  If you see this, you will need to switch hardware SPI OFF.
+
+# Package Details
+
 ## Change History
 | Version | Change details
 |---|---|
 0.1.0|Initial Release
 0.2.0|Full NPM & node-red catalogue release
-0.3.0|Major change - Switched to use node.js Native API (N-API) for calling C functions, and split off new node module.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.  This version requires node.js v10+. 
+0.3.0|Major change - Switched to use node.js Native API (N-API) for calling C functions, and split off new node module.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.  This version requires node.js v10+.
+0.3.2|Added node v10+ dependency (via 'engines').  Fixed issue with teaching OOK devices, and added 'off' button. Added troubleshooting section to docs. 
 
 ## Dependencies
 
@@ -229,7 +240,6 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 
 * [NodeJS](https://nodejs.org/dist/latest-v10.x/docs/api/) - JavaScript runtime built on Chrome's V8 JavaScript engine.
 * [Node-RED](http://nodered.org/docs/creating-nodes/) - for wiring together hardware devices, APIs and online services.
-
 
 ## Authors
 
@@ -247,4 +257,4 @@ https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
 
-@Achronite - January 2020 - v0.3.0 Beta
+@Achronite - January 2020 - v0.3.2 Beta
