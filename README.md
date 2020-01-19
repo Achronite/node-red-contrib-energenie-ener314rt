@@ -87,8 +87,8 @@ I've tested the nodes with all devices that I currently own.  Here is a table sh
 |---|---|:---:|:---:|:---:|:---:|
 ||**Node Protocol / Type**|*OOK*|*FSK*|*FSK*
 |ENER002|Green Button Adapter|x|||x
-|ENER010|MiHome 4 gang Multiplug|x
-|MIHO002|MiHome Adapter (Blue)|x
+|ENER010|MiHome 4 gang Multiplug|x|||x
+|MIHO002|MiHome Adapter (Blue)|x|
 |MIHO004|MiHome Energy Monitor (Pink)||x
 |MIHO005|MiHome Adapter Plus (Purple)| | x | x|x
 |MIHO006|MiHome House Monitor|| x
@@ -257,4 +257,4 @@ https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
 
-@Achronite - January 2020 - v0.3.2 Beta
+@Achronite - January 2020 - v0.3.3 Beta
