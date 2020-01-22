@@ -44,24 +44,21 @@ module.exports = function (RED) {
         function startMonitoringThread(timeout) {
             scope.log(`starting monitor thread, timeout=${timeout}`);
             var ret = ener314rt.openThingsReceiveThread(timeout, (msg) => {
-                //scope.log(`ener314-rt cb: Rx=${msg}`);
                 var OTmsg = JSON.parse(msg);
 
-                // TODO: make emits device specific
-                scope.events.emit('monitor', OTmsg);
+                // emit now device specific
+                //console.log(`emitting ${OTmsg.deviceId}`);
+                scope.events.emit(OTmsg.deviceId, OTmsg);
             });
         };
 
-        // start the monitoring loop when we have listeners
+        // start the monitoring loop when we have openThings device listeners
         this.events.once('newListener', (event, listener) => {
-            //scope.log("newListener()");
-            if (event === 'monitor' && inited) {
+            if (inited) {
                 if (isNaN(config.timeout) || config.timeout === undefined) {
                     config.timeout = 5000;
                 }
                 startMonitoringThread(Number(config.timeout));
-
-                // TODO: Handle quit of monitor function (maybe ignore the once?)
             } else
                 scope.error("Monitor unable to start, board not initialised");
         });

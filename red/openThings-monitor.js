@@ -28,22 +28,20 @@ module.exports = function (RED) {
         } else {
             this.status({ fill: "grey", shape: "dot", text: "Waiting…" });
 
-            board.events.on('monitor', function (OTmsg) {
-                if (OTmsg.deviceId == deviceId) {
-                    // received event for me, update status and send monitor message to consuming downstream nodes
-                    if (OTmsg.SWITCH_STATE) {
-                        node.status({ fill: "green", shape: "dot", text: "on" });
-                    } else if (OTmsg.SWITCH_STATE != null) {   // also checks for undefined, assume 0=off
-                        node.status({ fill: "red", shape: "ring", text: "off" });
-                    } else if (OTmsg.TEMPERATURE){
-                        node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
-                    }
-                    // send on decoded OpenThings message as is
-                    node.send({'payload':OTmsg});
+            board.events.on(deviceId, function (OTmsg) {
+                // received event for me, update status and send monitor message to consuming downstream nodes
+                if (OTmsg.SWITCH_STATE) {
+                    node.status({ fill: "green", shape: "dot", text: "on" });
+                } else if (OTmsg.SWITCH_STATE != null) {   // also checks for undefined, assume 0=off
+                    node.status({ fill: "red", shape: "ring", text: "off" });
+                } else if (OTmsg.TEMPERATURE) {
+                    node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
                 }
+                // send on decoded OpenThings message as is
+                node.send({ 'payload': OTmsg });
             });
 
-            board.events.on('error', function () { node.error("Board event error")});
+            board.events.on('error', function () { node.error("Board event error") });
 
             this.on('close', function () {
                 // tidy up state

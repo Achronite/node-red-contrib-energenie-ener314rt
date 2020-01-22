@@ -131,19 +131,15 @@ module.exports = function (RED) {
 
             });
 
-            board.events.on('monitor', function (OTmsg) {
-                if (OTmsg.deviceId == deviceId) {
-                    // received event for me
-                    // cached commands now handled in C
-
-                    // set node status for eTrv temperature
-                    if (typeof (OTmsg.TEMPERATURE) == 'number') {
-                        node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
-                    }
-
-                    // send on decoded OpenThings message as is
-                    node.send({ 'payload': OTmsg });
+            board.events.on(deviceId, function (OTmsg) {
+                // set node status for eTrv temperature
+                if (typeof (OTmsg.TEMPERATURE) == 'number') {
+                    node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
                 }
+
+                // send on decoded OpenThings message as is
+                console.log(`sending payload`);
+                node.send({ 'payload': OTmsg });
             });
 
             board.events.on('error', function (err) {
