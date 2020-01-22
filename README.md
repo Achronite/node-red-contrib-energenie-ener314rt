@@ -232,7 +232,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.2.0|08 May 19|Full NPM & node-red catalogue release
 0.3.0|10 Jan 20|Major change - Switched to use node.js Native API (N-API) for calling C functions, and split off new node module.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.  This version requires node.js v10+.
 0.3.2|17 Jan 20|Added node v10+ dependency (via 'engines').  Fixed issue with teaching OOK devices, and added 'off' button. Added troubleshooting section to docs.
-0.3.3|22 Jan 20|Fixed zone 0 switch all devices. Tested Energenie 4-way gang. Updates to GUI tip shown for eTRV. Made emit monitor device specific to improve performance.
+0.3.4|22 Jan 20|Fixed zone 0 switch all devices. Tested Energenie 4-way gang. Updates to GUI tip shown for eTRV. Made emit monitor device specific to improve performance.
 
 ## Dependencies
 
@@ -259,4 +259,4 @@ https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
 
-@Achronite - January 2020 - v0.3.3 Beta
+@Achronite - January 2020 - v0.3.4 Beta
