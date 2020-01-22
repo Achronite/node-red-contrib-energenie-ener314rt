@@ -64,13 +64,13 @@ module.exports = function (RED) {
                 // Send payload (sync)
                 // TODO: async
                 var res = ener314rt.openThingsSwitch(productId, deviceId, switchState, xmits);
-                    // callback
-                    /*
-                    if (err) {
-                        node.error("openThings_switch err: " + err);
-                        node.status({ fill: "red", shape: "dot", text: "ERROR" });
-                    }
-                    */
+                // callback
+                /*
+                if (err) {
+                    node.error("openThings_switch err: " + err);
+                    node.status({ fill: "red", shape: "dot", text: "ERROR" });
+                }
+                */
                 if (res == 0 && retry) {
                     // radio send successful, check guaranteed delivery through monitoring
                     //console.log(`Checking switch to ${switchState}`);
@@ -80,38 +80,35 @@ module.exports = function (RED) {
                 // dont send any payload for the input messages, as we are also a monitor node
             });
 
-            board.events.on('monitor', function (OTmsg) {
-                if (OTmsg.deviceId == deviceId) {
-                    // received event for me
+            board.events.on(deviceId, function (OTmsg) {
+                // check if we have any confirmations outstanding in retry mode
+                if (retry) {
+                    if (sentState == OTmsg.SWITCH_STATE) {
+                        // switch confirmed
+                        //console.log(`confirmed switch to ${sentState}`);
+                        sentState = -1;
 
-                    // check if we have any confirmations outstanding in retry mode
-                    if (retry) {
-                        if (sentState == OTmsg.SWITCH_STATE) {
-                            // switch confirmed
-                            //console.log(`confirmed switch to ${sentState}`);
-                            sentState = -1;
+                    } else if (sentState >= 0) {
+                        // oh dear, switch didn't actually switch!
+                        node.warn(`openThings_switch: device ${deviceId} did not switch to ${sentState}, retrying`);
 
-                        } else if (sentState >= 0) {
-                            // oh dear, switch didn't actually switch!
-                            node.warn(`openThings_switch: device ${deviceId} did not switch to ${sentState}, retrying`);
-
-                            //Resend switch message (non-async) overriding xmits
-                            let res = ener314rt.openThingsSwitch(productId, deviceId, sentState, 20);
-                        }
+                        //Resend switch message (non-async) overriding xmits
+                        let res = ener314rt.openThingsSwitch(productId, deviceId, sentState, 20);
                     }
-
-                    // set node status for Rx switch status or temperature
-                    if (OTmsg.SWITCH_STATE) {
-                        node.status({ fill: "green", shape: "dot", text: "on" });
-                    } else if (OTmsg.SWITCH_STATE != null) {   // also checks for undefined, assume 0=off
-                        node.status({ fill: "red", shape: "ring", text: "off" });
-                    } else if (OTmsg.TEMPERATURE){
-                        node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
-                    }
-
-                    // send on decoded OpenThings message as is
-                    node.send({ 'payload': OTmsg });
                 }
+
+                // set node status for Rx switch status or temperature
+                if (OTmsg.SWITCH_STATE) {
+                    node.status({ fill: "green", shape: "dot", text: "on" });
+                } else if (OTmsg.SWITCH_STATE != null) {   // also checks for undefined, assume 0=off
+                    node.status({ fill: "red", shape: "ring", text: "off" });
+                } else if (OTmsg.TEMPERATURE) {
+                    node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
+                }
+
+                // send on decoded OpenThings message as is
+                node.send({ 'payload': OTmsg });
+
             });
 
             board.events.on('error', function () { node.error("Board event error") });

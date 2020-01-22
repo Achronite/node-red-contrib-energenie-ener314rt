@@ -36,21 +36,21 @@
         <input type="text" id="node-input-device"/>
     </div>
     <div class="form-tips">
-        <strong>Tip:</strong><br>After an eTRV reports it's temperature (every <strong>SET_REPORTING_INTERVAL</strong>, default 5 minutes) it listens for commands. 
-        It only listens for these commands for 200ms!
+        <p><strong>Tip:</strong> The eTRV is capable of accepting commands.  After an eTRV reports it's temperature (every <strong>SET_REPORTING_INTERVAL</strong>, 
+        default 5 minutes) it listens for these commands for only 200ms!</p>
 
-        <br>To cater for this hardware limitation this node uses command caching and dynamic polling. 
+        <p>To cater for this hardware limitation this node uses command caching and dynamic polling. 
         Any command sent using the eTRV node will be held until a <strong>TEMPERATURE</strong> report is received; 
         at this point the most recent cached command (only 1 is supported) will be sent to the eTRV.  
-        Cached commands will continue to be resent until they have been succesfully received or until the number of Retries has reached 0.
+        Cached commands will continue to be resent until they have been succesfully received or until the number of Retries has reached 0.</p>
         
-        <br>The reason that a command may be resent multiple times is due to reporting and/or timing issues. The eTRV devices, 
-        unfortunately, do not send acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).
-        This includes the <strong>TEMP_SET</strong> command!  So these commands are always resent for the full number of retries.
+        <p>The reason that a command may be resent multiple times is due to reporting and/or timing issues. The eTRV devices, 
+        unfortunately, do not send acknowledgement for every command type (see npm/github for list).
+        This includes the <strong>TEMP_SET</strong> command!  So these commands are always resent for the full number of retries.</p>
         
-        <br><br><strong>NOTE:</strong> The performance of node-red may decrease when an eTRV command is being cached due to dynamic polling. 
+        <p><strong>NOTE:</strong> The performance of node-red may decrease when an eTRV command is being cached due to dynamic polling. 
         The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached
-        (it goes from checking every 5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
+        (it goes from checking every 5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.</p>
     </div>
 </script>
 

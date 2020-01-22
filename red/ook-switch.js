@@ -92,14 +92,14 @@ module.exports = function (RED) {
 
     RED.httpAdmin.get("/ook/teach", function (req, res) {
         var zone = Number(req.query.zone) || 0;
-        var switchNum = Number(req.query.switchNum) || 1;
+        var switchNum = Number(req.query.switchNum);
         ener314rt.ookSwitch(zone, switchNum, true, 20);
         res.sendStatus(200);
     });
 
     RED.httpAdmin.get("/ook/off", function (req, res) {
         var zone = Number(req.query.zone) || 0;
-        var switchNum = Number(req.query.switchNum) || 1;
+        var switchNum = Number(req.query.switchNum);
         ener314rt.ookSwitch(zone, switchNum, false, 20);
         res.sendStatus(200);
     });
