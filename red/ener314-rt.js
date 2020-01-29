@@ -90,8 +90,6 @@ module.exports = function (RED) {
 
         // Call discovery function
         var devices = ener314rt.openThingsDeviceList(false);
-        //var devices = JSON.parse(ref.readCString(buf, 0));
-        //res.end(JSON.stringify(devices));
         res.end(devices);
     });
 
