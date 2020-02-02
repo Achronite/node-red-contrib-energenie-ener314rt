@@ -1,7 +1,7 @@
 # node-red-contrib-energenie-ener314rt
 A node-red module to control the Energenie line of products via the ENER314-RT add-on board for the Raspberry Pi.
 
-https://energenie4u.co.uk/
+https://energenie4u.co.uk/  [node-red-contrib-energenie-ener314rt](https://flows.nodered.org/node/node-red-contrib-energenie-ener314rt)
 
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-brightgreen.svg)](https://github.com/Achronite/node-red-contrib-energenie-ener314/graphs/commit-activity)
@@ -234,6 +234,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.3.2|17 Jan 20|Added node v10+ dependency (via 'engines').  Fixed issue with teaching OOK devices, and added 'off' button. Added troubleshooting section to docs.
 0.3.4|22 Jan 20|Fixed zone 0 switch all devices. Tested Energenie 4-way gang. Updates to GUI tip shown for eTRV. Made emit monitor device specific to improve performance.
 0.3.5|02 Feb 20|Improve error handling for board failure.
+0.3.6||
 
 ## Dependencies
 
@@ -259,5 +260,4 @@ Future work is detailed on the [github issues page](https://github.com/Achronite
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-
-@Achronite - January 2020 - v0.3.5 Beta
+@Achronite - February 2020 - v0.3.6 Beta
