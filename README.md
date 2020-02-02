@@ -1,7 +1,8 @@
 # node-red-contrib-energenie-ener314rt
 A node-red module to control the Energenie line of products via the ENER314-RT add-on board for the Raspberry Pi.
 
-https://energenie4u.co.uk/  [node-red-contrib-energenie-ener314rt](https://flows.nodered.org/node/node-red-contrib-energenie-ener314rt)
+https://energenie4u.co.uk/
+[node-red](https://flows.nodered.org/node/node-red-contrib-energenie-ener314rt)
 
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-brightgreen.svg)](https://github.com/Achronite/node-red-contrib-energenie-ener314/graphs/commit-activity)
