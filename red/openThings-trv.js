@@ -138,7 +138,7 @@ module.exports = function (RED) {
                 }
 
                 // send on decoded OpenThings message as is
-                //console.log(`sending payload`);
+                console.log(`sending payload for ${deviceId} ts=${OTmsg.timestamp}`);
                 node.send({ 'payload': OTmsg });
             });
 

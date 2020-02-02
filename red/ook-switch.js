@@ -40,19 +40,11 @@ module.exports = function (RED) {
                     // Override the zone set in the node properties
                     zone = msg.payload.zone;
                 }
-                // Set default zone if we still dont have one
-                /*
-                if ( zone === "" || zone == null || zone === undefined ) {
-                    // Energenie 'random' 20 bit address is 0x6C6C6 # 0110 1100 0110 1100 0110
-                    zone = 0;  // 0 indicates the C code will use the default zone
-                }
-                */
 
                 // Check Switch Number
                 if (switchNum < 0 || switchNum > 6 || isNaN(switchNum)) {
                     this.error("SwitchNum err: " + switchNum + " (" + typeof (switchNum) + ")");
                 }
-
 
                 // Check Switch State (default to off)
                 var switchState = false;
@@ -68,17 +60,20 @@ module.exports = function (RED) {
                     xmits = Number(msg.payload.repeat);
 
                 // Invoke C function to do the send
-                ener314rt.ookSwitch(zone, switchNum, switchState, xmits);
-                switch (switchState) {
-                    case true:
-                        node.status({ fill: "green", shape: "dot", text: "ON " + zone + ":" + switchNum });
-                        break;
-                    case false:
-                        node.status({ fill: "red", shape: "ring", text: "OFF " + zone + ":" + switchNum });
-                        break;
+                if (ener314rt.ookSwitch(zone, switchNum, switchState, xmits) == 0) {
+                    switch (switchState) {
+                        case true:
+                            node.status({ fill: "green", shape: "dot", text: "ON " + zone + ":" + switchNum });
+                            break;
+                        case false:
+                            node.status({ fill: "red", shape: "ring", text: "OFF " + zone + ":" + switchNum });
+                            break;
+                    }
+                    // return payload unchanged
+                    node.send(msg);
+                } else {
+                    node.status({ fill: "grey", shape: "dot", text: "ERROR" });
                 }
-                // return payload unchanged
-                node.send(msg);
 
             });
 
@@ -93,14 +88,24 @@ module.exports = function (RED) {
     RED.httpAdmin.get("/ook/teach", function (req, res) {
         var zone = Number(req.query.zone) || 0;
         var switchNum = Number(req.query.switchNum);
-        ener314rt.ookSwitch(zone, switchNum, true, 20);
-        res.sendStatus(200);
+        var ret = ener314rt.ookSwitch(zone, switchNum, true, 20);
+        if (ret < 0) {
+            console.error(`[ERROR] ener314rt - OOK teach failed ${ret}`);
+            res.sendStatus(500);
+        } else {
+            res.sendStatus(200);
+        }
     });
 
     RED.httpAdmin.get("/ook/off", function (req, res) {
         var zone = Number(req.query.zone) || 0;
         var switchNum = Number(req.query.switchNum);
-        ener314rt.ookSwitch(zone, switchNum, false, 20);
-        res.sendStatus(200);
+        var ret = ener314rt.ookSwitch(zone, switchNum, false, 20);
+        if (ret < 0) {
+            console.error(`[ERROR] ener314rt - OOK off failed ${ret}`);
+            res.sendStatus(500);
+        } else {
+            res.sendStatus(200);
+        }
     });
 }
