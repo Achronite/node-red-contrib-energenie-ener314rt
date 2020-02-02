@@ -2,6 +2,7 @@
 A node-red module to control the Energenie line of products via the ENER314-RT add-on board for the Raspberry Pi.
 
 https://energenie4u.co.uk/
+[node-red](https://flows.nodered.org/node/node-red-contrib-energenie-ener314rt)
 
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-brightgreen.svg)](https://github.com/Achronite/node-red-contrib-energenie-ener314/graphs/commit-activity)
@@ -169,7 +170,7 @@ Example for setting temperature to 20C using command mode:
 }
 ```
 
-### eTRV Command Caching
+#### eTRV Command Caching
 The eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes). The receiver is activated after each *TEMPERATURE* report to listen for commands. The receiver only remains active for 200ms or until a message is received.
 
 To cater for this hardware limitation the **'eTRV node'** uses command caching and dynamic polling. Any command sent using the eTRV node will be held until a TEMPERATURE report is received; at this point the most recent cached message (only 1 is supported) will be sent to the eTRV.  Messages will continue to be resent until they have been succesfully received or until the number of Retries has reached 0.
@@ -223,6 +224,8 @@ If you have any issues with the code, particularly if your board is not initiali
 
 *Unable to initialise Energenie ENER314-RT board error: -1*: Check that your card is installed correctly, and that you **do not** have hardware SPI enabled.  On raspbian if the hardware SPI driver was loaded, you will see the device `/dev/spidev0.0`.  If you see this, you will need to switch hardware SPI OFF.
 
+*Compile errors during install: 'unknown type/function napi_...'*:  This node module requires node.js v10 or above to work, upgrade your node.js version and retry.
+
 # Package Details
 
 ## Change History
@@ -234,6 +237,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.3.2|17 Jan 20|Added node v10+ dependency (via 'engines').  Fixed issue with teaching OOK devices, and added 'off' button. Added troubleshooting section to docs.
 0.3.4|22 Jan 20|Fixed zone 0 switch all devices. Tested Energenie 4-way gang. Updates to GUI tip shown for eTRV. Made emit monitor device specific to improve performance.
 0.3.5|02 Feb 20|Improve error handling for board failure.
+0.3.6|02 Feb 20|Added compile error to README. Removed console.log for eTRV Rx (left in by mistake).
 
 ## Dependencies
 
@@ -259,5 +263,4 @@ Future work is detailed on the [github issues page](https://github.com/Achronite
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-
-@Achronite - January 2020 - v0.3.5 Beta
+@Achronite - February 2020 - v0.3.6 Beta
