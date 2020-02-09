@@ -46,12 +46,21 @@ module.exports = function (RED) {
 
                     this.status({ fill: "yellow", shape: "ring", text: "transmitting" });
 
-                    // This node transmits a raw payload, it's up to the user to do any encoding first
-                    var tPayload = msg.payload.raw;
+                    if (typeof msg.payload.raw == "object") {
+                        // This node transmits a raw byte array payload, it's up to the user to do any encoding first
+                        var tPayload = Buffer.from(msg.payload.raw);
 
-                    this.warn("Sending " + tPayload);
-                    ener314rt.sendRadioMsg(modulation, 20, tPayload );
-                    this.status({ fill: "green", shape: "ring", text: switchString });
+                        var ret = ener314rt.sendRadioMsg(modulation, 20, tPayload);
+                        msg.payload.status = ret;
+                        if (ret == 0) {
+                            this.status({ fill: "green", shape: "ring", text: "sent "+tPayload.length+" bytes" });
+                        } else {
+                            this.status({ fill: "red", shape: "ring", text: `error ${ret}` });
+                        }
+                    } else {
+                        this.error("msg.payload.raw is not an object");
+                        this.status({ fill: "red", shape: "ring", text: `payload error` });
+                    }
                 }
 
                 node.send(msg);

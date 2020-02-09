@@ -238,6 +238,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.3.4|22 Jan 20|Fixed zone 0 switch all devices. Tested Energenie 4-way gang. Updates to GUI tip shown for eTRV. Made emit monitor device specific to improve performance.
 0.3.5|02 Feb 20|Improve error handling for board failure.
 0.3.6|02 Feb 20|Added compile error to README. Removed console.log for eTRV Rx (left in by mistake).
+0.3.7|09 Feb 20|Fixed raw tx node for v0.3.x
 
 ## Dependencies
 
@@ -263,4 +264,4 @@ Future work is detailed on the [github issues page](https://github.com/Achronite
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - February 2020 - v0.3.6 Beta
+@Achronite - February 2020 - v0.3.7 Beta

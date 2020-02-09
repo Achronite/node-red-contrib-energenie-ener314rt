@@ -1,19 +1,19 @@
 <script type="text/javascript">
-    RED.nodes.registerType('ener314rt-raw',{
+    RED.nodes.registerType('ener314rt-raw', {
         category: 'Energenie 314RT',
         color: '#5ab946',
         defaults: {
-            name: {value:""},
-            modulation: {value:0},
+            name: { value: "" },
+            modulation: { value: 0 },
             board: { type: "energenie-board", required: true }
         },
-        inputs:1,
-        outputs:1,
+        inputs: 1,
+        outputs: 1,
         align: "right",
         icon: "bridge.png",
         paletteLabel: 'Raw Transmit',
-        label: function() {
-            return this.name||"Raw Transmit";
+        label: function () {
+            return this.name || "Raw Transmit";
         }
     });
 </script>
@@ -53,10 +53,22 @@
         </dl>
     <h3>Example</h3>
         <p>msg.payload:</p>
+        <p>Switch ON OOK zone 0, switch 1</p>
         <p><code> 
             {<br>
-                "raw": [142,232,238,136,142,232,238,136,142,232],<br>
+                "raw": [128,0,0,0,142,232,238,136,142,232,238,136,142,232,238,238],<br>
                 "modulation": 0<br>
             }
         </code></p>
+    <h3>Outputs</h3>
+        <dl class="message-properties">
+            <dt>msg
+                <span class="property-type">object</span>
+            </dt>
+            <dd>Passed unchanged</dd>
+            <dt>status
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Status value of send, 0 if OK</dd>
+        </dl>
 </script>
