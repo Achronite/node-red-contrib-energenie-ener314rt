@@ -29,35 +29,30 @@ module.exports = function (RED) {
             this.on('input', function (msg) {
 
                 this.status({ fill: "yellow", shape: "ring", text: "Sending" });
-                var zone = Number(config.zone) || 0;
-                var switchNum = Number(config.switchNum) || 1;
-                var xmits = 20;
 
-                // Check all variables before we call the C routine to transmit, msg.payload overrides any defaults set in node
+                //this.log(`IN ${msg.payload.zone}:${msg.payload.unit} state=${msg.payload.state}`);
 
-                // Check ZONE
-                if (msg.payload.zone !== undefined) {
-                    // Override the zone set in the node properties
-                    zone = msg.payload.zone;
-                }
+                var zone = Number(msg.payload.zone) || Number(config.zone) || 0;
+                var switchNum = Number(msg.payload.switchNum) || Number(msg.payload.unit) || Number(config.switchNum) || 1;
+                var xmits = Number(msg.payload.repeat) || 20;
+
+                // Check Switch State in message (default to off)
+                var switchState = false;
+                if (typeof msg.payload == typeof true)
+                    switchState = msg.payload;
+                else if (typeof msg.payload.powerOn == typeof true)
+                    switchState = msg.payload.powerOn;
+                else if (typeof msg.payload.state == typeof true)
+                    switchState = msg.payload.state;
+                else if (msg.payload === "on" || msg.payload.powerOn === "on" || msg.payload.state === "on")
+                    switchState = true;
 
                 // Check Switch Number
                 if (switchNum < 0 || switchNum > 6 || isNaN(switchNum)) {
                     this.error("SwitchNum err: " + switchNum + " (" + typeof (switchNum) + ")");
                 }
 
-                // Check Switch State (default to off)
-                var switchState = false;
-                if (typeof msg.payload == typeof true)
-                    switchState = msg.payload;
-                else if (typeof msg.payload.powerOn == typeof true)
-                    switchState = msg.payload.powerOn;
-                else if (msg.payload === "on" || msg.payload.powerOn === "on")
-                    switchState = true;
-
-                // Check xmit times (advanced), 26ms per payload transmission
-                if (Number(msg.payload.repeat))
-                    xmits = Number(msg.payload.repeat);
+                //this.log(`${zone}:${switchNum} state=${switchState} xmits=${xmits}`);
 
                 // Invoke C function to do the send
                 if (ener314rt.ookSwitch(zone, switchNum, switchState, xmits) == 0) {
