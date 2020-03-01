@@ -262,4 +262,4 @@ Future work is detailed on the [github issues page](https://github.com/Achronite
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - February 2020 - v0.3.8 Beta
+@Achronite - March 2020 - v0.3.8 Beta
