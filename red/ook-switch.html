@@ -128,7 +128,7 @@
         </dl>
         <p>OR</p>
         <dl class="message-properties">
-            <dt class="optional">payload.switchNum
+            <dt class="optional">payload.switchNum OR .unit
                 <span class="property-type">Integer</span>
             </dt>
             <dd>(Optional) switchNum should be set 0-6, where 0 switches ALL switches assigned to the same zone.</dd>
@@ -136,7 +136,7 @@
                 <span class="property-type">Integer</span>
             </dt>
             <dd>(Optional) 20 bit unsigned integer (ie. 0..1048575), omit to use the default zone 444102 (0x6C6C6).</dd>
-            <dt>payload.powerOn
+            <dt>payload.powerOn OR .state
                 <span class="property-type">boolean</span>
             </dt>
             <dd>The state that you want the switch to be in, where true/'on'=on, false/'off'=off.</dd>
