@@ -55,7 +55,8 @@ module.exports = function (RED) {
                 //this.log(`${zone}:${switchNum} state=${switchState} xmits=${xmits}`);
 
                 // Invoke C function to do the send
-                if (ener314rt.ookSwitch(zone, switchNum, switchState, xmits) == 0) {
+                var ret = ener314rt.ookSwitch(zone, switchNum, switchState, xmits);
+                if (ret >= 0) {
                     switch (switchState) {
                         case true:
                             node.status({ fill: "green", shape: "dot", text: "ON " + zone + ":" + switchNum });
@@ -67,7 +68,7 @@ module.exports = function (RED) {
                     // return payload unchanged
                     node.send(msg);
                 } else {
-                    node.status({ fill: "grey", shape: "dot", text: "ERROR" });
+                    node.status({ fill: "grey", shape: "dot", text: `ERROR ${ret}` });
                 }
 
             });

@@ -237,7 +237,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.3.5|02 Feb 20|Improve error handling for board failure.
 0.3.6|02 Feb 20|Added compile error to README. Removed console.log for eTRV Rx (left in by mistake).
 0.3.7|09 Feb 20|Fixed raw tx node for v0.3.x
-0.3.8|TBD|Fixed passing of switchNum into OOK node. Added support for payload.state and payload.unit as alternative parameters in OOK node. README updates
+0.3.8|TBD|Fixed passing of switchNum into OOK node. Fixed node.status showing ERROR for OOK node when there is a message in Rx buffer. Added support for payload.state and payload.unit as alternative parameters in OOK node. README updates
 
 ## Dependencies
 
