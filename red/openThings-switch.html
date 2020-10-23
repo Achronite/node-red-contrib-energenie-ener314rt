@@ -3,7 +3,7 @@
         category: 'Energenie 314RT',
         color: '#82529e',
         defaults: {
-            name: { value: "Control & Monitor" },
+            name: { value: "Control & Monitor Switch" },
             device: { type: "openThings-device", required: true },
             board: { type: "energenie-board", required: true },
             retry: { value: true, required: true}
@@ -12,7 +12,7 @@
         outputs: 1,
         align: "right",
         icon: "Adaptor.png",
-        paletteLabel: 'Control& Monitor',
+        paletteLabel: 'Monitor Switch',
         label: function () {
             return (this.name || this.label || this.paletteLabel);
         },
