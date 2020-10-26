@@ -32,7 +32,7 @@ module.exports = function (RED) {
         } else {
             node.on('input', function (msg) {
                 // Check all variables before we cache the message to transmit, msg.payload overrides any defaults set in node
-                
+
                 // Check OpenThings deviceId
                 if (deviceId == 0 || isNaN(deviceId)) {
                     this.error("DeviceId err: " + deviceId + " (" + typeof (deviceId) + ")");
@@ -78,60 +78,83 @@ module.exports = function (RED) {
                 // Check xmit times (advanced), 26ms per payload transmission
                 var xmits = Number(msg.payload.repeat) || 20;
 
-                // Set command to be sent, next time radiator wakes up
-                // (iProductId, iDeviceId, command, data, xmits)
+                // Set the node status in the GUI (before sending)
+                switch (cmd) {
+                    case 0xF4:  //TEMP_SET                  Temperature in C
+                        node.status({ fill: "grey", shape: "ring", text: `Set Temp to ${data}C` });
+                        break;
+                    case 0xAA:  //SET_THERMOSTAT_MODE for MIHO069 0,1,2  (guessing at 0xAA as report is 0x2a)
+                        switch (data) {
+                            case 0:
+                                node.status({ fill: "grey", shape: "ring", text: "Set Heating Off" });
+                                break;
+                            case 1:
+                                node.status({ fill: "grey", shape: "ring", text: "Set Temp Controlled" });
+                                break;
+                            case 2:
+                                node.status({ fill: "grey", shape: "ring", text: "Set Always ON" });
+                        }
+                        break;
+                    case 0xA5:  //SET_VALVE_STATE           0,1,2
+                        switch (data) {
+                            case 0:
+                                node.status({ fill: "grey", shape: "ring", text: "Opening Valve" });
+                                break;
+                            case 1:
+                                node.status({ fill: "grey", shape: "ring", text: "Closing Valve" });
+                                break;
+                            case 2:
+                                node.status({ fill: "grey", shape: "ring", text: "Temp Controlled" });
+                        }
+                        break;
+                    case 0xA3:  //EXERCISE_VALVE
+                        node.status({ fill: "grey", shape: "ring", text: "Exercising Valve" });
+                        break;
+                    case 0xA4:  //SET_LOW_POWER_MODE        0,1
+                        if (data) {
+                            node.status({ fill: "grey", shape: "ring", text: "Set Low power mode on" });
+                        } else {
+                            node.status({ fill: "grey", shape: "ring", text: "Set Low power mode off" });
+                        }
+                        break;
+                    case 0xA6:  //REQUEST_DIAGNOTICS
+                        node.status({ fill: "grey", shape: "ring", text: "Requesting Diagnostics" });
+                        break;
+                    case 0xBF:  //IDENTIFY
+                        node.status({ fill: "grey", shape: "ring", text: "Identifying Valve" });
+                        break;
+                    case 0xD2:  //SET_REPORTING_INTERVAL    Time in seconds (300-3600, default=300=5mins)
+                        node.status({ fill: "grey", shape: "ring", text: `Set Reporting interval to ${data}secs` });
+                        break;
+                    case 0xE2:  //REQUEST_VOLTAGE
+                        node.status({ fill: "grey", shape: "ring", text: "Requesting Voltage" });
+                        break;
+                    case 0xF3:   // SWITCH_STATE
+                        switch (data) {
+                            case 0:
+                                node.status({ fill: "red", shape: "ring", text: "OFF sent" });
+                                break;
+                            case 1:
+                                node.status({ fill: "green", shape: "ring", text: "ON sent" });
+                                break;
+                            default:
+                                node.status({ fill: "grey", shape: "ring", text: `Sent command ${cmd}:${data}` });
+                        }
+                        break;
+
+                    default:  // All other commands
+                        node.status({ fill: "grey", shape: "ring", text: `Sent command ${cmd}:${data}` });
+                }
+
+                // Send command to device immediately
                 var res = ener314rt.openThingsCmd(productId, deviceId, cmd, data, xmits);
 
                 if (res == 0) {
-                    // command successfuly cached
-                    // Set the node status in the GUI
-                    switch (cmd) {
-                        case 0xF4:  //TEMP_SET                  Temperature in C
-                            node.status({ fill: "grey", shape: "ring", text: `Set Temp to ${data}C` });
-                            break;
-                        case 0xA5:  //SET_VALVE_STATE           0,1,2
-                            switch (data) {
-                                case 0:
-                                    node.status({ fill: "grey", shape: "ring", text: "Opening Valve" });
-                                    break;
-                                case 1:
-                                    node.status({ fill: "grey", shape: "ring", text: "Closing Valve" });
-                                    break;
-                                case 2:
-                                    node.status({ fill: "grey", shape: "ring", text: "Temp Controlled" });
-                            }
-                            break;
-                        case 0xA3:  //EXERCISE_VALVE
-                            node.status({ fill: "grey", shape: "ring", text: "Exercising Valve" });
-                            break;
-                        case 0xA4:  //SET_LOW_POWER_MODE        0,1
-                            if (data) {
-                                node.status({ fill: "grey", shape: "ring", text: "Set Low power mode on" });
-                            } else {
-                                node.status({ fill: "grey", shape: "ring", text: "Set Low power mode off" });
-                            }
-                            break;
-                        case 0xA6:  //REQUEST_DIAGNOTICS
-                            node.status({ fill: "grey", shape: "ring", text: "Requesting Diagnostics" });
-                            break;
-                        case 0xBF:  //IDENTIFY
-                            node.status({ fill: "grey", shape: "ring", text: "Identifying Valve" });
-                            break;
-                        case 0xD2:  //SET_REPORTING_INTERVAL    Time in seconds (300-3600, default=300=5mins)
-                            node.status({ fill: "grey", shape: "ring", text: `Set Reporting interval to ${data}secs` });
-                            break;
-                        case 0xE2:  //REQUEST_VOLTAGE
-                            node.status({ fill: "grey", shape: "ring", text: "Requesting Voltage" });
-                            break;
-                        default:  // All other commands
-                            node.status({ fill: "grey", shape: "ring", text: `Sent command ${cmd}:${data}`});
-                    }
-
+                    // TODO: clear message
                 } else {
                     node.status({ fill: "red", shape: "dot", text: "Device Unknown" });
                     node.error(`Device currently unknown, retry later`);
                 }
-                // dont send any payload for the input messages, as we are also a monitor node
 
             });
 
