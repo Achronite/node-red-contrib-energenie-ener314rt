@@ -39,21 +39,20 @@ module.exports = function (RED) {
                 }
 
                 // Check the command type by numeric passed in for now
-                //  0 = valve open
-                //  1 = valve closed
-                //  2 = valve controlled by temperature
-                //  other number = set target temperature of radiator
+                //  0 = switch off
+                //  1 = switch on
+                //  other number = set target temperature
                 switch (typeof msg.payload) {
                     case 'number':
                         var data = msg.payload;
-                        if (msg.payload >= 0 && msg.payload <= 2)
-                            var cmd = 0xA5; // set valve state                            
+                        if (msg.payload >= 0 && msg.payload <= 1)
+                            var cmd = 0xF3; // set switch state                            
                         else
                             var cmd = 0xF4; // set temperature
                         break;
                     case 'boolean':
-                        // assume set valve state
-                        var cmd = 0xA5; // set valve state
+                        // assume set switch state
+                        var cmd = 0xF3; // set valve state
                         var data = msg.payload ? 0 : 1;
                         break;
                     case 'object':
