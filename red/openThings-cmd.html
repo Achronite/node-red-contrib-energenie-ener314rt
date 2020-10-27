@@ -36,47 +36,30 @@
         <input type="text" id="node-input-device"/>
     </div>
     <div class="form-tips">
-        <p><strong>Tip:</strong> The ecmd is capable of accepting commands.  After an ecmd reports it's temperature (every <strong>SET_REPORTING_INTERVAL</strong>, 
-        default 5 minutes) it listens for these commands for only 200ms!</p>
-
-        <p>To cater for this hardware limitation this node uses command caching and dynamic polling. 
-        Any command sent using the ecmd node will be held until a <strong>TEMPERATURE</strong> report is received; 
-        at this point the most recent cached command (only 1 is supported) will be sent to the ecmd.  
-        Cached commands will continue to be resent until they have been succesfully received or until the number of Retries has reached 0.</p>
-        
-        <p>The reason that a command may be resent multiple times is due to reporting and/or timing issues. The ecmd devices, 
-        unfortunately, do not send acknowledgement for every command type (see npm/github for list).
-        This includes the <strong>TEMP_SET</strong> command!  So these commands are always resent for the full number of retries.</p>
-        
-        <p><strong>NOTE:</strong> The performance of node-red may decrease when an ecmd command is being cached due to dynamic polling. 
-        The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached
-        (it goes from checking every 5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.</p>
+        <p>This node sends OpenThings commands immediately to devices that listen continuously for commands, these are usually mains powered.</p>
     </div>
 </script>
 
 <script type="text/x-red" data-help-name="openThings-cmd">
     <h3>Details</h3>
-        <p>Node that monitors and controls the energenie thermostatic radiator valve (ecmd) supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
-                <p>The status of the node shows '.. sent' when a signal is sent to device, it then reads the temperature from the device, confirming it has received the request, e.g.
-        <ul>
-            <li>'Temp nn.n' > 'Current Temperature'</li>
-        </ul>
-        <p>NOTE: The radiator valve can only accept commands after it has reported, by default this is every 5 minutes. Only the latest command will be cached and sent to the radiator valve</p>
+        <p>Node that monitors and controls the energenie/OpenThings devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>This node is designed to send openThings commands immediately to devices that listen continuously for commands, these are usually mains powered.</p>
+        <p>This node will NOT work with the eTRV, use the specially designed node instead.</p>
     <h3>Inputs</h3>
         <dl class="message-properties">
             <dt>payload
                 <span class="property-type">boolean</span>
             </dt>
-            <dd>The state that you want the radiator valve to be in, where true=on, false=off</dd>
+            <dd>The state that you want the switch to be in, where true=on, false=off</dd>
         </dl>
         <p>OR</p>
         <dl class="message-properties">
             <dt>payload
                 <span class="property-type">Integer</span>
             </dt>
-            <dd>The target temperature for the radiator in degrees Celcius</dd>
+            <dd>The target temperature in degrees Celcius (2+).</dd>
         </dl>
-        <p>OR (ADVANCED MODE)</p>
+        <p>OR</p>
         <dl class="message-properties">
             <dt>payload.command
                 <span class="property-type">Integer</span>
@@ -116,8 +99,8 @@
             <dd>The current temperature in Celcius</dd>    
         </dl>
         <p>NOTE: As this node also receives, input messages do not get outputted.</p>
-    <h3>Advanced Commands</h3>
-        <p>Send advanced command to the device. The <code>command</code> should be set to a numeric value shown below, and parameter (if required) should be passed in as <code>data</code></p>
+    <h3>ACommands</h3>
+        <p>Send command to the device. The <code>command</code> should be set to a numeric value shown below, and parameter (if required) should be passed in as <code>data</code></p>
         <p>Example <code>msg.payload</code>:</p>
 <pre>{
     "command": 165,
@@ -127,39 +110,27 @@
             <dt>TEMP_SET
                 <span class="property-type">244</span>
             </dt>
-            <dd>Send new target temperature to driver board</dd>
+            <dd>Set new target temperature</dd>
             <dd>.data='temperature in C'</dd>            
                 
-            <dt>SET_VALVE_STATE
-                <span class="property-type">165</span>  
+            <dt>SET_THERMOSTAT_MODE (alpha)
+                <span class="property-type">170</span>  
             </dt>
-            <dd>Set valve state</dd>
+            <dd>Set mode of thermostat</dd>
             <dd>.data=
-                <br> 0 = Set Valve Fully Open
-                <br> 1 = Set Valve Fully Closed
-                <br> 2 = Set Normal Operation</dd>                
+                <br> 0 = Set Heating Off
+                <br> 1 = Set Temp Controlled
+                <br> 2 = Set Always ON</dd>            
                 
-            <dt>EXERCISE_VALVE
-                <span class="property-type">163</span>   
-            </dt>
-            <dd>Send exercise valve command to driver board.</dd>
-
-            <dt>SET_LOW_POWER_MODE
-                <span class="property-type">164</span>
-            </dt>
-            <dd>.data=
-            <br> 0=Low power mode off
-            <br> 1=Low power mode on</dd>
-
             <dt>REQUEST_DIAGNOTICS
                 <span class="property-type">166</span>  
             </dt>
             <dd>Request diagnostic data from device, if all is OK it will return 0. Otherwise see additional monitored values for status messages.</dd>
 
             <dt>IDENTIFY
-                    <span class="property-type">191</span>
-                </dt>
-                <dd>Identify the device by making the green light flash on the selected ecmd</dd>
+                <span class="property-type">191</span>
+            </dt>
+            <dd>Identify the device by making light flash (if available)</dd>
 
             <dt>SET_REPORTING_INTERVAL
                 <span class="property-type">210</span>
@@ -172,5 +143,12 @@
             </dt>
             <dd>Request battery voltage.</dd>
 
-            </dl>
+            <dt>SWITCH_STATE
+                <span class="property-type">243</span>   
+            </dt>
+            <dd>Set switch state.</dd>
+            <dd>.data=
+                <br> 0 = Off
+                <br> 1 = On</dd>
+        </dl>
 </script>
