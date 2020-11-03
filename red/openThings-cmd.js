@@ -151,8 +151,8 @@ module.exports = function (RED) {
                 if (res == 0) {
                     // TODO: clear message
                 } else {
-                    node.status({ fill: "red", shape: "dot", text: "Device Unknown" });
-                    node.error(`Device currently unknown, retry later`);
+                    node.status({ fill: "red", shape: "dot", text: `Error $res` });
+                    node.error(`Error ${res} sending command ${cmd}`);
                 }
 
             });
