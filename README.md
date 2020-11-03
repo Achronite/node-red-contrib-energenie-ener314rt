@@ -87,9 +87,9 @@ Here is a table showing what each node *should* support, and a tag showing if it
 ||**Protocol / Type**|*OOK*|*FSK*|*FSK*||
 |ENER002|Green Button Adapter|x|||x|
 |ENER010|MiHome 4 gang Multiplug|x|||x|
-|MIHO002|MiHome Adapter (Blue)|x||||
-|MIHO004|MiHome Energy Monitor (Pink)||x|||
-|MIHO005|MiHome Adapter Plus (Purple)||x|x|x|
+|MIHO002|MiHome Smart Plug (Blue)|x||||
+|MIHO004|MiHome Smart Monitor Plug (Pink)||x|||
+|MIHO005|MiHome Smart Plug+ (Purple)||x|x|x|
 |MIHO006|MiHome House Monitor||x||x|
 |MIHO007|MiHome Socket (White)|x|||x|
 |MIHO008|MiHome Light Switch (White)|x||||
@@ -121,7 +121,7 @@ Some example ```msg.payload```s are shown below. I have provided parameter name 
 
 A full parameter list can be found in C/src/achronite/openThings.c if required.
 
-### Example msg.payload - Adapter Plus (MIHO005)
+### Example msg.payload - Smart Plug+ (MIHO005)
 Every 10 seconds:
 ```
 deviceId: <device number>
@@ -268,7 +268,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.3.6|02 Feb 20|Added compile error to README. Removed console.log for eTRV Rx (left in by mistake).
 0.3.7|09 Feb 20|Fixed raw tx node for v0.3.x
 0.3.8|01 Mar 20|Fixed passing of switchNum into OOK node. Fixed node.status showing ERROR for OOK node when there is a message in Rx buffer. Added support for payload.state and payload.unit as alternative parameters in OOK node. README updates
-0.3.9|TBD|Readme updates, including success tests for 3 more devices from AdamCMC.
+0.4.0|TBD|Added new C&M node that immediately sends commands (designed for MIHO069 Thermostat). Added MIHO069 thermostat params. Added support for UNKNOWN commands (this assumes a uint as datatype for .data). Updated Energenie device names. Renamed old C&M node to be 'Smart Plug+'. Readme updates, including success tests for 3 more devices from AdamCMC.
 
 ## Dependencies
 
@@ -293,4 +293,4 @@ Future work is detailed on the [github issues page](https://github.com/Achronite
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - March 2020 - v0.3.9 Beta
+@Achronite - November 2020 - v0.4.0 Beta

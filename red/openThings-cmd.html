@@ -85,7 +85,7 @@
             <dt>payload.productId
                 <span class="property-type">integer</span>
             </dt>
-            <dd>Product code (2 for Adapter Plus)</dd>
+            <dd>Product code (18 for Thermostat)</dd>
             <dt>payload.timestamp
                 <span class="property-type">timestamp</span>
             </dt>
@@ -99,14 +99,15 @@
             <dd>The current temperature in Celcius</dd>    
         </dl>
         <p>NOTE: As this node also receives, input messages do not get outputted.</p>
-    <h3>ACommands</h3>
+    <h3>Commands</h3>
         <p>Send command to the device. The <code>command</code> should be set to a numeric value shown below, and parameter (if required) should be passed in as <code>data</code></p>
         <p>Example <code>msg.payload</code>:</p>
 <pre>{
     "command": 165,
     "data": 2
 }</pre>
-        <dl class="message-properties">    
+        <dl class="message-properties">
+            <p>Example commands</p>
             <dt>TEMP_SET
                 <span class="property-type">244</span>
             </dt>

@@ -3,7 +3,7 @@
         category: 'Energenie 314RT',
         color: '#82529e',
         defaults: {
-            name: { value: "Control & Monitor Switch" },
+            name: { value: "Smart Plug+" },
             device: { type: "openThings-device", required: true },
             board: { type: "energenie-board", required: true },
             retry: { value: true, required: true}
@@ -12,7 +12,7 @@
         outputs: 1,
         align: "right",
         icon: "Adaptor.png",
-        paletteLabel: 'Monitor Switch',
+        paletteLabel: 'Smart Plug+',
         label: function () {
             return (this.name || this.label || this.paletteLabel);
         },
@@ -47,7 +47,7 @@
         <p>Node that monitors and switches the OpenThings based devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
         <p>This includes:</p>
         <ul>
-            <li>MiHome Purple Adapter Plus</li>
+            <li>MiHome Smart Plug+ (MIHO005)</li>
         </ul>
         <p>The status of the node shows '.. sent' when a signal is sent to device, it then reads the status from the device, confirming it has received the request, e.g.
         <ul>
@@ -106,13 +106,13 @@
             <dt>payload.productId
                 <span class="property-type">integer</span>
             </dt>
-            <dd>Product code (2 for Adapter Plus)</dd>
+            <dd>Product code (2 for Smart Plug+)</dd>
             <dt>payload.timestamp
                 <span class="property-type">timestamp</span>
             </dt>
             <dd>Date & Time the message was received</dd>
         </dl>
-        <p>Monitored Values (Adapter + shown)</p>
+        <p>Monitored Values (Smart Plug+ shown)</p>
         <dl class="message-properties">
             <dt>payload.FREQUENCY
                 <span class="property-type">float</span>
