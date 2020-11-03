@@ -89,7 +89,7 @@ Here is a table showing what each node *should* support, and a tag showing if it
 |ENER010|MiHome 4 gang Multiplug|x|||x|
 |MIHO002|MiHome Smart Plug (Blue)|x||||
 |MIHO004|MiHome Smart Monitor Plug (Pink)||x|||
-|MIHO005|MiHome Smart Plug+ (Purple)||x|x|x|
+|MIHO005|MiHome Smart Plug+ (Purple)||x|use Smart Plug+ node|x|
 |MIHO006|MiHome House Monitor||x||x|
 |MIHO007|MiHome Socket (White)|x|||x|
 |MIHO008|MiHome Light Switch (White)|x||||
@@ -104,7 +104,7 @@ Here is a table showing what each node *should* support, and a tag showing if it
 |MIHO026|MiHome Light Switch (Steel)|x|
 |MIHO032|MiHome Motion sensor||x||x|
 |MIHO033|MiHome Open Sensor||x||x|
-|MIHO069|MiHome Heating Thermostat||x|Not Supported||
+|MIHO069|MiHome Heating Thermostat||x|x|o|
 |MIHO089|MiHome Click - Smart Button||x|||
 
 
