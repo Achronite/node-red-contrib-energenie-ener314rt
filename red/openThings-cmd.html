@@ -3,7 +3,7 @@
         category: 'Energenie 314RT',
         color: '#82529e',
         defaults: {
-            name: { value: "Control/Monitor" },
+            name: { value: "Control&Monitor" },
             device: { type: "openThings-device", required: true },
             board: { type: "energenie-board", required: true }
         },
@@ -11,7 +11,7 @@
         outputs: 1,
         align: "right",
         icon: "Thermostat.png",
-        paletteLabel: 'Control /Monitor',
+        paletteLabel: 'Control&Monitor',
         label: function () {
             return (this.name || this.label || this.paletteLabel);
         },
@@ -42,7 +42,7 @@
 
 <script type="text/x-red" data-help-name="openThings-cmd">
     <h3>Details</h3>
-        <p>Node that monitors and controls the energenie/OpenThings devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>Node that monitors and controls 'generic' energenie/OpenThings devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
         <p>This node is designed to send openThings commands immediately to devices that listen continuously for commands, these are usually mains powered.</p>
         <p>This node will NOT work with the eTRV, use the specially designed node instead.</p>
     <h3>Inputs</h3>
