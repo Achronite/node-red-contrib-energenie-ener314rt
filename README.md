@@ -111,7 +111,9 @@ Here is a table showing what each node *should* support, and a tag showing if it
 
 
 ### NOT SUPPORTED:
-Specific nodes are required to send the correct control signals to some **'control & monitor'** devices.  This version has specific nodes for the MiHome Heating thermostatic radiator valve (eTRV, MIHO013), and the MiHome Smart Plug+ (MIHO004) see below.  For other mains-powered devices you should be able to use the Control & Monitor node using 'advanced' commands.
+Specific nodes are required to send the correct control signals to some **'control & monitor'** devices.  This version has specific nodes for the MiHome Heating thermostatic radiator valve (eTRV, MIHO013), and the MiHome Smart Plug+ (MIHO004) see below.
+
+For other **mains-powered** devices (for example the MIHO069 Heating Thermostat) you should be able to send any OpenThings Commands to the Control & Monitor device using the **'Control & Monitor'** node.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
 
 
 ## Processing Monitor Messages
