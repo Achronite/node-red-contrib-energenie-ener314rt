@@ -19,11 +19,12 @@ on a Raspberry Pi with an [ENER314-RT](https://energenie4u.co.uk/catalogue/produ
 
 **'Control'**, **'Monitor'** and **'Control & Monitor'** radio based devices are supported from the legacy and MiHome range.
 
-There are 5 nodes in total:
+There are 6 nodes in total:
 * **Blue** for switching '**Control**' (OOK) based devices
 * **Pink** for monitoring MiHome **'Monitor'** devices
-* **Purple Switch** for monitoring and switching **'Control & Monitor'** devices
-* **Purple eTRV** for monitoring and controlling **'Control & Monitor'** MiHome Thermostatic Radiator valves (eTRV)
+* **Purple Control & Monitor** for monitoring and switching **'Control & Monitor'** OpenThings devices
+* **Purple Smart Plug+** for monitoring and switching **'Control & Monitor'** MiHome Smart Plug+ devices
+* **Purple eTRV** for monitoring and controlling **'Control & Monitor'** MiHome Thermostatic Radiator valves (eTRV) using command caching
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
@@ -74,6 +75,7 @@ The number of individual devices this node can control is over 4 million, so it 
 * Each zone can contain up to 6 switches (1-6) - NOTE: officially energenie state this is only 4 devices (1-4)
 * All devices within the **same** zone can be switched **at the same time** using a switch number of '0'.
 * A default zone '0' can be used to use Energenie's default zone (0x6C6C6).
+* If you have a MiHome 4 gang Multiplug, the same zone must be used for controlling all 4 switches
 
 
 ## Supported Devices
@@ -109,12 +111,12 @@ Here is a table showing what each node *should* support, and a tag showing if it
 
 
 ### NOT SUPPORTED:
-Specific nodes are required to send the correct control signals to other **'control & monitor'** devices.  This version now supports the MiHome Heating thermostatic radiator valve (eTRV), see below.
+Specific nodes are required to send the correct control signals to some **'control & monitor'** devices.  This version has specific nodes for the MiHome Heating thermostatic radiator valve (eTRV, MIHO013), and the MiHome Smart Plug+ (MIHO004) see below.  For other mains-powered devices you should be able to use the Control & Monitor node using 'advanced' commands.
 
 
 ## Processing Monitor Messages
 
-The **'Monitor'**, **'Control & Monitor'** & **'eTRV'**  nodes receive monitoring information from the devices and emit the received parameter values on their output.  These messages conform to the OpenThings parameter standard.
+The **'Monitor'**, **'Control & Monitor'**, **'eTRV'** & **'Smart Plug+'**  nodes receive monitoring information from the devices and emit the received parameter values on their output.  These messages conform to the OpenThings parameter standard.
 All OpenThings parameters received from the device are decoded and returned in the ```msg.payload```.  I use the returned *SWITCH_STATE* parameter to set the *node.status* of the C&M nodes to say if it is 'ON' or 'OFF', and the *TEMPERATURE* value is used on the eTRV node to show the current temperature.
 
 Some example ```msg.payload```s are shown below. I have provided parameter name and type mapping for the known values for received messages. Connect up a debug node to see what your specific devices output.
@@ -159,6 +161,16 @@ mfrId: 4
 productId: 13
 timestamp: <numeric 'epoch based' timestamp, of when message was read>
 DOOR_SENSOR: <Sensor state, 0 = open, 1 = closed>
+```
+### Example msg.payload - Heating Thermostat (MIHO069)
+```
+deviceId: <device number>
+mfrId: 4
+productId: 18
+timestamp: <numeric 'epoch based' timestamp, of when message was read>
+TEMPERATURE: <current temperature in celcius>
+REL_HUMIDITY: <Humidity as a percentage>
+THERMOSTAT_MODE: <Thermostat mode, 0 = off, 1 = temp controlled, 2= always on>
 ```
 
 ## MiHome Radiator Valve (eTRV) Support
