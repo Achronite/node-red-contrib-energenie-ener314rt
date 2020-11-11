@@ -268,7 +268,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.3.6|02 Feb 20|Added compile error to README. Removed console.log for eTRV Rx (left in by mistake).
 0.3.7|09 Feb 20|Fixed raw tx node for v0.3.x
 0.3.8|01 Mar 20|Fixed passing of switchNum into OOK node. Fixed node.status showing ERROR for OOK node when there is a message in Rx buffer. Added support for payload.state and payload.unit as alternative parameters in OOK node. README updates
-0.3.9|11 Nov 20|Fix the dependent version of energenie-ener314rt to 0.3.4 to allow version 0.4.0 (alpha) release without minimal impact to node-red. README updates, including example monitor messages and success tests for 3 more devices from AdamCMC.
+0.3.9|11 Nov 20|Fix the dependent version of energenie-ener314rt to 0.3.4 to allow version 0.4.0 (alpha) testing without impacting node-red code. README updates, including example monitor messages and success tests for 3 more devices from AdamCMC.
 
 ## Dependencies
 
@@ -289,6 +289,8 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Bugs and Future Work
 
 Future work is detailed on the [github issues page](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues). Please raise any bugs, questions, queries or enhancements you have using this page.
+
+I am currently working on supporting the MIHO069 Thermostat (which I do not own).  Please contribute via github issues if you would like to be involved in testing.
 
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
