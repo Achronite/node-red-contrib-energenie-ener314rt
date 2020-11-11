@@ -282,7 +282,8 @@ If you have any issues with the code, particularly if your board is not initiali
 0.3.6|02 Feb 20|Added compile error to README. Removed console.log for eTRV Rx (left in by mistake).
 0.3.7|09 Feb 20|Fixed raw tx node for v0.3.x
 0.3.8|01 Mar 20|Fixed passing of switchNum into OOK node. Fixed node.status showing ERROR for OOK node when there is a message in Rx buffer. Added support for payload.state and payload.unit as alternative parameters in OOK node. README updates
-0.4.0|TBD|Added new C&M node that immediately sends commands (designed for MIHO069 Thermostat). Added MIHO069 thermostat params. Added support for UNKNOWN commands (this assumes a uint as datatype for .data). Updated Energenie device names. Renamed old C&M node to be 'Smart Plug+'. Readme updates, including success tests for 3 more devices from AdamCMC.
+0.3.9|11 Nov 20|Fix the dependent version of energenie-ener314rt to 0.3.4 to allow version 0.4.0 (alpha) testing without impacting node-red code. README updates, including example monitor messages and success tests for 3 more devices from AdamCMC.
+0.4.0|TBD|Added new C&M node that immediately sends commands (designed for MIHO069 Thermostat). Added MIHO069 thermostat params. Added support for UNKNOWN commands (this assumes a uint as datatype for .data). Updated Energenie device names. Renamed old C&M node to be 'Smart Plug+'. Readme updates.
 
 ## Dependencies
 
