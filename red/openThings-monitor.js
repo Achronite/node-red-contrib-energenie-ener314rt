@@ -36,6 +36,13 @@ module.exports = function (RED) {
                     node.status({ fill: "red", shape: "ring", text: "off" });
                 } else if (OTmsg.TEMPERATURE) {
                     node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
+                } else if (OTmsg.MOTION_DETECTOR == 1) {
+                    var d = new Date(0);
+                    d.setUTCSeconds(OTmsg.timestamp);
+                    let timeStr = d.toTimeString();
+                    node.status({ fill: "red", shape: "dot", text: `Motion at ${timeStr}` });
+                } else if (OTmsg.MOTION_DETECTOR == 0) {
+                    node.status({ fill: "grey", shape: "ring" });
                 }
                 // send on decoded OpenThings message as is
                 node.send({ 'payload': OTmsg });
