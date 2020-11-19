@@ -73,7 +73,8 @@
             </dt>
             <dd>Date & Time the message was received</dd>
         </dl>
-        <p>Monitored Values (Adapter + shown)</p>
+        <p>Monitored Values</p>
+        <h4>Adapter+</h4>
         <dl class="message-properties">
             <dt>payload.FREQUENCY
                 <span class="property-type">float</span>
@@ -95,6 +96,13 @@
                 <span class="property-type">boolean</span>
             </dt>
             <dd>Device State, 0 = off, 1 = on</dd>
+        </dl>
+        <h4>Motion Sensor</h4>
+        <dl class="message-properties">
+            <dt>payload.MOTION_DETECTOR
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>1 = motion detected, 0 = no motion detected in last minute</dd>
         </dl>
         <p>Other devices may return other parameters which you can use. All known parameter names and values should be returned in the received messages.</p>
         <p>Connect up a debug node to see what your specific devices output.</p>

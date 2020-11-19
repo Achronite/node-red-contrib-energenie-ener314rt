@@ -42,7 +42,9 @@ module.exports = function (RED) {
                     let timeStr = d.toTimeString();
                     node.status({ fill: "red", shape: "dot", text: `Motion at ${timeStr}` });
                 } else if (OTmsg.MOTION_DETECTOR == 0) {
-                    node.status({ fill: "grey", shape: "ring" });
+                    var d = new Date(0);
+                    d.setUTCSeconds(OTmsg.timestamp);
+                    node.status({ fill: "grey", shape: "ring", text: `No Motion at ${timeStr}` });
                 }
                 // send on decoded OpenThings message as is
                 node.send({ 'payload': OTmsg });
