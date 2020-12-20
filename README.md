@@ -27,7 +27,7 @@ There are 4 types of node to match the colour coding of the Energenie MiHome dev
 
 There are currently 8 nodes available to use, either generic or specifc:
 | Node | Created For | Recommended for |
-|:---:|---|---|:---:|---|
+|---|---|---|
 |![Blue Control](doc-images/B-Control.png?raw=true)|OOK Devices|All Blue, Green & Legacy Devices|
 |![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Monitor Devices|MiHome Smart Monitor Plug|
 |![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032|MiHome Motion sensor|
