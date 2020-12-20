@@ -127,14 +127,41 @@
                     $('#node-config-input-product').val(dev[0]);
                     $('#node-config-input-productId').val(Number(dev[1]));
                     $('#node-config-input-deviceId').val(Number(dev[2]));
-                    $('#node-config-input-name').val(dev[0]+':'+dev[2]);
+                    $('#node-config-input-name').val(dev[0] + ':' + dev[2]);
                     if (dev[3] == 1) {
                         $('#node-config-input-control').val("Control & Monitor");
-                    } else if (dev[3] == 2){
+                    } else if (dev[3] == 2) {
                         $('#node-config-input-control').val("Control & Monitor (Cached)");
                     } else {
                         $('#node-config-input-control').val("Monitor");
                     }
+
+                    // dynamic icon - this is not supported by node-red so commented out for now
+                    /*
+                    switch (Number(dev[1])) {
+                        case 0x01: // Monitor Plug
+                        case 0x02: // Adapter Plus
+                            $('#node-config-input-icon').val("Adaptor.png");
+                            break;
+                        case 0x03: // Radiator Valve
+                            $('#node-config-input-icon').val("TRV.png");
+                            break;
+                        case 0x05: // House Monitor
+                            $('#node-config-input-icon').val("TRV.png");
+                            break;
+                        case 0x0C: // Motion Sensor
+                            $('#node-config-input-icon').val("PIR.png");
+                            break;
+                        case 0x0D: // Open Sensor
+                            $('#node-config-input-icon').val("Sensor.png");
+                            break;
+                        case 0x12: // Thermostat
+                            $('#node-config-input-icon').val("Thermostat.png");
+                            break;
+                        default:
+                            $('#node-config-input-icon').val("");
+                    }
+                    */
                     //$('#node-config-input-product').val = deviceName;
                     // force redraw to clear red warning boxes
                     RED.view.redraw();

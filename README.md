@@ -19,13 +19,23 @@ on a Raspberry Pi with an [ENER314-RT](https://energenie4u.co.uk/catalogue/produ
 
 **'Control'**, **'Monitor'** and **'Control & Monitor'** radio based devices are supported from the legacy and MiHome range.
 
-There are 6 nodes in total:
+There are 4 types of node to match the colour coding of the Energenie MiHome devices:
 * **Blue** for switching '**Control**' (OOK) based devices
 * **Pink** for monitoring MiHome **'Monitor'** devices
-* **Purple Control & Monitor** for monitoring and switching **'Control & Monitor'** OpenThings devices
-* **Purple Smart Plug+** for monitoring and switching **'Control & Monitor'** MiHome Smart Plug+ devices
-* **Purple eTRV** for monitoring and controlling **'Control & Monitor'** MiHome Thermostatic Radiator valves (eTRV) using command caching
+* **Purple** for monitoring and switching **'Control & Monitor'** OpenThings devices
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
+
+There are currently 8 nodes available to use, either generic or specifc:
+| Icon | Colour | Node Name | Created For | Recommended for |
+|:---:|---|---|:---:|---|
+|![icon](red/icons/Adaptor.png?raw=true)|Blue|Control|OOK Devices|All Blue, Green & Legacy Devices|
+|![icon](red/icons/Adaptor.png?raw=true)|Pink|Monitor|All Monitor Devices|MiHome Smart Monitor Plug|
+|![icon](red/icons/PIR.png?raw=true)|Pink|PIR Sensor|MIHO032|MiHome Motion sensor|
+|![icon](red/icons/TRV2.png?raw=true)|Purple|eTRV|MIHO013|MiHome Radiator Valve|
+|![icon](red/icons/Thermostat.png?raw=true)|Purple|Thermostat|MIHO069|Home Heating Thermostat|
+|![icon](red/icons/Adaptor.png?raw=true)|Purple|Smart Plug+|MIHO005|MiHome Smart Plug+|
+|![icon](red/icons/Thermostat.png?raw=true)|Purple|Control & Monitor|Control & Monitor Devices|Mains powered Control & Monitor Devices|
+||Green|Raw Transmit|Any Device|Non-energenie Devices|
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
@@ -82,43 +92,43 @@ The number of individual devices this node can control is over 4 million, so it 
 
 These nodes are designed for energenie RF radio devices in the OOK & FSK (OpenThings) ranges.
 
-Here is a table showing what each node *should* support, and a tag showing if it has been tested (please let me know of any succesful tests, and I'll update the table):
+Here is a table showing which node is recommended for each energenie device, and a tick showing if it has been tested (please let me know of any succesful tests, and I'll update the table):
 
-| Device | Description | Control Node (Blue)|Monitor Node (Pink)|Control+Monitor Node (Purple)|Tested OK|
+
+| Device | Description | Type | Recommend Node | Tested OK |
 |---|---|:---:|:---:|:---:|:---:|
-||**Protocol / Type**|*OOK*|*FSK*|*FSK*||
-|ENER002|Green Button Adapter|x|||x|
-|ENER010|MiHome 4 gang Multiplug|x|||x|
-|MIHO002|MiHome Smart Plug (Blue)|x||||
-|MIHO004|MiHome Smart Monitor Plug (Pink)||x|||
-|MIHO005|MiHome Smart Plug+ (Purple)||x|use Smart Plug+ node|x|
-|MIHO006|MiHome House Monitor||x||x|
-|MIHO007|MiHome Socket (White)|x|||x|
-|MIHO008|MiHome Light Switch (White)|x||||
-|MIHO013|MiHome Radiator Valve||x|use eTRV node|x|
-|MIHO014|Single Pole Relay (inline)|x||||
-|MIHO015|MiHome Relay|x||||
-|MIHO021|MiHome Socket (Nickel)|x|||White|
-|MIHO022|MiHome Socket (Chrome)|x|||White|
-|MIHO023|MiHome Socket (Steel)|x|||White|
-|MIHO024|MiHome Light Switch (Nickel)|x|
-|MIHO025|MiHome Light Switch (Chrome)|x|
-|MIHO026|MiHome Light Switch (Steel)|x|
-|MIHO032|MiHome Motion sensor||x||x|
-|MIHO033|MiHome Open Sensor||x||x|
-|MIHO069|MiHome Heating Thermostat||x|x|o|
-|MIHO089|MiHome Click - Smart Button||x|||
-
+|ENER002|Green Button Adapter|OOK|Blue: Control| &#10003; |
+|ENER010|MiHome 4 gang Multiplug|OOK|Blue: Control| &#10003; |
+|MIHO002|MiHome Smart Plug (Blue)|OOK|Blue: Control||
+|MIHO004|MiHome Smart Monitor Plug|FSK|Pink: Monitor| &#10003; |
+|MIHO005|MiHome Smart Plug+|FSK|Purple: Smart Plug+| &#10003; |
+|MIHO006|MiHome House Monitor|FSK|Pink: Monitor| &#10003; |
+|MIHO007|MiHome Socket (White)|OOK|Blue: Control| &#10003; |
+|MIHO008|MiHome Light Switch (White)|OOK|Blue: Control||
+|MIHO013|MiHome Radiator Valve|FSK Cached|Purple: eTRV| &#10003; |
+|MIHO014|Single Pole Relay (inline)|OOK|Blue: Control||
+|MIHO015|MiHome Relay|OOK|Blue: Control||
+|MIHO021|MiHome Socket (Nickel)|OOK|Blue: Control|White|
+|MIHO022|MiHome Socket (Chrome)|OOK|Blue: Control|White|
+|MIHO023|MiHome Socket (Steel)|OOK|Blue: Control|White|
+|MIHO024|MiHome Light Switch (Nickel)|OOK|Blue: Control||
+|MIHO025|MiHome Light Switch (Chrome)|OOK|Blue: Control||
+|MIHO026|MiHome Light Switch (Steel)|OOK|Blue: Control||
+|MIHO032|MiHome Motion sensor|FSK|Pink: PIR Sensor| &#10003; |
+|MIHO033|MiHome Open Sensor|FSK|Pink: Monitor||
+|MIHO069|MiHome Heating Thermostat|FSK|Purple: Control & Monitor|alpha|
+|MIHO089|MiHome Click - Smart Button|FSK?|Pink: Monitor||
 
 ### NOT SUPPORTED:
-Specific nodes are required to send the correct control signals to some **'control & monitor'** devices.  This version has specific nodes for the MiHome Heating thermostatic radiator valve (eTRV, MIHO013), and the MiHome Smart Plug+ (MIHO004) see below.
+Specific nodes may be required to send the correct control signals to some **'Control & Monitor'** devices.  Most **mains-powered** devices (for example the MIHO069 Heating Thermostat) you should be able to send any OpenThings Commands to the Control & Monitor device using the **'Control & Monitor'** node.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
 
-For other **mains-powered** devices (for example the MIHO069 Heating Thermostat) you should be able to send any OpenThings Commands to the Control & Monitor device using the **'Control & Monitor'** node.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
+The use of these nodes within the node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  I believe this is due to GPIO being unavailable within the containers that Home Assistant uses.
 
 
 ## Processing Monitor Messages
 
-The **'Monitor'**, **'Control & Monitor'**, **'eTRV'** & **'Smart Plug+'**  nodes receive monitoring information from the devices and emit the received parameter values on their output.  These messages conform to the OpenThings parameter standard.
+The Pink and Purple nodes receive monitoring information from the devices and emit the received parameter values on their output.  These messages conform to the OpenThings parameter standard.
+
 All OpenThings parameters received from the device are decoded and returned in the ```msg.payload```.  I use the returned *SWITCH_STATE* parameter to set the *node.status* of the C&M nodes to say if it is 'ON' or 'OFF', and the *TEMPERATURE* value is used on the eTRV node to show the current temperature.
 
 Some example ```msg.payload```s are shown below. I have provided parameter name and type mapping for the known values for received messages. Connect up a debug node to see what your specific devices output.
@@ -196,7 +206,7 @@ The MiHome Thermostatic Radiator valve (eTRV) can accept commands to perform ope
 
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
-#### Sending eTRV Commands
+### Sending eTRV Commands
 Single commands should be sent as a numeric value within a JSON request, for example to Request Diagnostics you can use a template node (Output as Parsed JSON) to send the following ```msg.payload```:
 ```
 {
@@ -212,7 +222,7 @@ Example for setting temperature to 20C using command mode:
 }
 ```
 
-#### eTRV Command Caching
+### eTRV Command Caching
 The eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes). The receiver is activated after each *TEMPERATURE* report to listen for commands. The receiver only remains active for 200ms or until a message is received.
 
 To cater for this hardware limitation the **'eTRV node'** uses command caching and dynamic polling. Any command sent using the eTRV node will be held until a TEMPERATURE report is received; at this point the most recent cached message (only 1 is supported) will be sent to the eTRV.  Messages will continue to be resent until they have been succesfully received or until the number of Retries has reached 0.
@@ -261,8 +271,11 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |VOLTAGE|Current battery voltage|float|VOLTAGE_TS|
 |VOLTAGE_TS|Tmestamp of when battery voltage was last received|epoch|VOLTAGE_TS|
 
+## Changing Icons
+The icon as displayed on the node within the flows can be changed using the 'Icon' dropdown in the 'Appearance' tab in the node properties. I have created icons for a few of the energenie devices. Use the search button and enter 'ener' to find them.
+
 ## Troubleshooting
-If you have any issues with the code, particularly if your board is not initialising, please try [ener314rt-debug](https://github.com/Achronite/ener314rt-debug), which has been created as a standalone node.js application with full debug enabled.  Node-red is not required to execute this test.
+If you have any issues with the code, particularly if your board is not initialising, please try [ener314rt-debug](https://github.com/Achronite/ener314rt-debug), which has been created as a standalone node.js application with full debug enabled.  Node-red is not required to execute these tests.
 
 * *Unable to initialise Energenie ENER314-RT board error: -n*: Check that your card is installed correctly, and that you **do not** have hardware SPI enabled.  On raspbian if the hardware SPI driver was loaded, you will see the device `/dev/spidev0.0`.  If you see this, you will need to switch hardware SPI OFF.
 
@@ -308,4 +321,4 @@ Future work is detailed on the [github issues page](https://github.com/Achronite
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - November 2020 - v0.4.0 Beta
+@Achronite - December 2020 - v0.4.0 Beta
