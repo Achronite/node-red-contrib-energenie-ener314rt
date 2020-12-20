@@ -26,16 +26,16 @@ There are 4 types of node to match the colour coding of the Energenie MiHome dev
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
 There are currently 8 nodes available to use, either generic or specifc:
-| Icon | Colour | Node Name | Created For | Recommended for |
+| Node | Created For | Recommended for |
 |:---:|---|---|:---:|---|
-|![icon](red/icons/Adaptor.png?raw=true)|Blue|Control|OOK Devices|All Blue, Green & Legacy Devices|
-|![icon](red/icons/Adaptor.png?raw=true)|Pink|Monitor|All Monitor Devices|MiHome Smart Monitor Plug|
-|![icon](red/icons/PIR.png?raw=true)|Pink|PIR Sensor|MIHO032|MiHome Motion sensor|
-|![icon](red/icons/TRV2.png?raw=true)|Purple|eTRV|MIHO013|MiHome Radiator Valve|
-|![icon](red/icons/Thermostat.png?raw=true)|Purple|Thermostat|MIHO069|Home Heating Thermostat|
-|![icon](red/icons/Adaptor.png?raw=true)|Purple|Smart Plug+|MIHO005|MiHome Smart Plug+|
-|![icon](red/icons/Thermostat.png?raw=true)|Purple|Control & Monitor|Control & Monitor Devices|Mains powered Control & Monitor Devices|
-||Green|Raw Transmit|Any Device|Non-energenie Devices|
+|![Blue Control](doc-images/B-Control.png?raw=true)|OOK Devices|All Blue, Green & Legacy Devices|
+|![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Monitor Devices|MiHome Smart Monitor Plug|
+|![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032|MiHome Motion sensor|
+|![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013|MiHome Radiator Valve|
+|![Purple Thermostat](doc-images/C-Thermostat.png?raw=true)|MIHO069|Home Heating Thermostat|
+|![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005|MiHome Smart Plug+|
+|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|Control & Monitor Devices|Mains powered Control & Monitor Devices|
+|![Green Raw Transmit](doc-images/G-Raw.png?raw=true)|Any Device|Non-energenie Devices|
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
