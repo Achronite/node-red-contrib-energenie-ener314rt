@@ -20,21 +20,21 @@ on a Raspberry Pi with an [ENER314-RT](https://energenie4u.co.uk/catalogue/produ
 **'Control'**, **'Monitor'** and **'Control & Monitor'** radio based devices are supported from the legacy and MiHome range.
 
 There are 4 types of node to match the colour coding of the Energenie MiHome devices:
-* **Blue** for switching '**Control**' (OOK) based devices
-* **Pink** for monitoring MiHome **'Monitor'** devices
-* **Purple** for monitoring and switching **'Control & Monitor'** OpenThings devices
+* **Blue** for switching '**Control**' OOK based devices
+* **Pink** for monitoring MiHome **'Monitor'** FSK/OpenThings devices
+* **Purple** for monitoring and controlling **'Control & Monitor'** FSK/OpenThings devices
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
-There are currently 8 nodes available to use, either generic or specifc:
+There are currently 8 nodes available to use:
 | Node | Created For | Recommended for |
 |---|---|---|
-|![Blue Control](doc-images/B-Control.png?raw=true)|OOK Devices|All Blue, Green & Legacy Devices|
-|![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Monitor Devices|MiHome Smart Monitor Plug|
+|![Blue Control](doc-images/B-Control.png?raw=true)|All Control Only Devices|All Blue, Green & Legacy (OOK) Devices|
+|![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Monitor Devices|MiHome Smart Monitor Plug, Open Sensor|
 |![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032|MiHome Motion sensor|
 |![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013|MiHome Radiator Valve|
 |![Purple Thermostat](doc-images/C-Thermostat.png?raw=true)|MIHO069|Home Heating Thermostat|
-|![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005|MiHome Smart Plug+|
-|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|Control & Monitor Devices|Mains powered Control & Monitor Devices|
+|![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005|MiHome Smart Plug+ / Adaptor+|
+|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|All Control & Monitor Devices|Mains powered Control & Monitor Devices|
 |![Green Raw Transmit](doc-images/G-Raw.png?raw=true)|Any Device|Non-energenie Devices|
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
@@ -96,7 +96,7 @@ Here is a table showing which node is recommended for each energenie device, and
 
 
 | Device | Description | Type | Recommend Node | Tested OK |
-|---|---|:---:|:---:|:---:|:---:|
+|---|---|:---:|---|:---:|
 |ENER002|Green Button Adapter|OOK|Blue: Control| &#10003; |
 |ENER010|MiHome 4 gang Multiplug|OOK|Blue: Control| &#10003; |
 |MIHO002|MiHome Smart Plug (Blue)|OOK|Blue: Control||
