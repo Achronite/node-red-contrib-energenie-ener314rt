@@ -3,7 +3,7 @@
   "version": "0.4.0",
   "description": "Node-red module for energenie ENER314-RT board for raspberry pi",
   "dependencies": {
-    "energenie-ener314rt": "^0.4.0"
+    "energenie-ener314rt": "^0.4.1"
   },
   "engines": {
     "node" : ">=10.0.0"
@@ -25,6 +25,7 @@
       "ook-switch": "red/ook-switch.js",
       "openThings-monitor": "red/openThings-monitor.js",
       "openThings-pir": "red/openThings-pir.js",
+      "openThings-door": "red/openThings-door.js",
       "openThings-switch": "red/openThings-switch.js",
       "openThings-trv": "red/openThings-trv.js",
       "openThings-cmd": "red/openThings-cmd.js",  
