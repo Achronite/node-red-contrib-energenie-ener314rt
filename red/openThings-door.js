@@ -31,12 +31,12 @@ module.exports = function (RED) {
 
             board.events.on(deviceId, function (OTmsg) {
                 // received event for me, update status and send monitor message to consuming downstream nodes
-                if (OTmsg.DOOR_SENSOR == 1) {
+                if (OTmsg.DOOR_SENSOR == 0) {
                     var d = new Date(0);
                     d.setUTCSeconds(OTmsg.timestamp);
                     let timeStr = d.toTimeString();
                     node.status({ fill: "grey", shape: "ring", text: `Closed at ${timeStr}` });
-                } else if (OTmsg.DOOR_SENSOR == 0) {
+                } else if (OTmsg.DOOR_SENSOR == 1) {
                     var d = new Date(0);
                     d.setUTCSeconds(OTmsg.timestamp);
                     let timeStr = d.toTimeString();

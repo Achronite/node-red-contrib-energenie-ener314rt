@@ -85,7 +85,8 @@ The number of individual devices this node can control is over 4 million, so it 
 * Each zone can contain up to 6 switches (1-6) - NOTE: officially energenie state this is only 4 devices (1-4)
 * All devices within the **same** zone can be switched **at the same time** using a switch number of '0'.
 * A default zone '0' can be used to use Energenie's default zone (0x6C6C6).
-* If you have a MiHome 4 gang Multiplug, the same zone must be used for controlling all 4 switches
+* If you have a MiHome 4 gang Multiplug, the same zone must be used for controlling all 4 switches, use switch #0 to control all, 1-4 for each socket
+* If you have a MiHome 2 gang socket or light switch, the same zone must be used for controlling the 2 switches
 
 
 ## Supported Devices
@@ -105,6 +106,8 @@ Here is a table showing which node is recommended for each energenie device, and
 |MIHO006|MiHome House Monitor|FSK|Pink: Monitor| &#10003; |
 |MIHO007|MiHome Socket (White)|OOK|Blue: Control| &#10003; |
 |MIHO008|MiHome Light Switch (White)|OOK|Blue: Control||
+|MIHO009|MiHome 2 gang Light Switch (White)|OOK|Blue: Control||
+|MIHO010|MiHome Dimmer Switch (White)|OOK|Blue: Control||
 |MIHO013|MiHome Radiator Valve|FSK Cached|Purple: eTRV| &#10003; |
 |MIHO014|Single Pole Relay (inline)|OOK|Blue: Control||
 |MIHO015|MiHome Relay|OOK|Blue: Control||
@@ -172,7 +175,7 @@ deviceId: <device number>
 mfrId: 4
 productId: 13
 timestamp: <numeric 'epoch based' timestamp, of when message was read>
-DOOR_SENSOR: <Sensor state, 0 = open, 1 = closed>
+DOOR_SENSOR: <Sensor state, 0 = closed, 1 = open>
 ```
 ### Example msg.payload - Heating Thermostat (MIHO069)
 ```
