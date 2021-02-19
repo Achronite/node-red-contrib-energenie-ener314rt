@@ -122,6 +122,7 @@ Here is a table showing which node is recommended for each energenie device, and
 |MIHO069|MiHome Heating Thermostat|FSK|Purple: Control & Monitor|alpha|
 |MIHO089|MiHome Click - Smart Button|FSK?|Pink: Monitor||
 
+
 ### NOT SUPPORTED:
 Specific nodes may be required to send the correct control signals to some **'Control & Monitor'** devices.  Most **mains-powered** devices (for example the MIHO069 Heating Thermostat) you should be able to send any OpenThings Commands to the Control & Monitor device using the **'Control & Monitor'** node.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
 
@@ -320,6 +321,8 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Bugs and Future Work
 
 Future work is detailed on the [github issues page](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues). Please raise any bugs, questions, queries or enhancements you have using this page.
+
+I am currently working on supporting the MIHO069 Thermostat (which I do not own).  Please contribute via github issues if you would like to be involved in testing.
 
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 

@@ -6,14 +6,16 @@
     "energenie-ener314rt": "^0.4.1"
   },
   "engines": {
-    "node" : ">=10.0.0"
+    "node": ">=10.0.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Achronite",
   "contributors": [
-    {"name": "Achronite"}
+    {
+      "name": "Achronite"
+    }
   ],
   "license": "MIT",
   "repository": {
