@@ -1,0 +1,155 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openThings-cmd', {
+        category: 'Energenie 314RT',
+        color: '#82529e',
+        defaults: {
+            name: { value: "Control&Monitor" },
+            device: { type: "openThings-device", required: true },
+            board: { type: "energenie-board", required: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        align: "right",
+        icon: "Thermostat.png",
+        paletteLabel: 'Control&Monitor',
+        label: function () {
+            return (this.name || this.label || this.paletteLabel);
+        },
+        // Update the label to the select device on save (displayed if node name is undefined)
+        oneditsave: function () {
+            this.label = $('#node-input-device option:selected').text();
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="openThings-cmd">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-board"><i class="fa fa-microchip"></i> Board</label>
+        <input type="text" id="node-input-board"/>
+    </div>
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-plug"></i> Device</label>
+        <input type="text" id="node-input-device"/>
+    </div>
+    <div class="form-tips">
+        <p>This node sends OpenThings commands immediately to devices that listen continuously for commands, these are usually mains powered.</p>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="openThings-cmd">
+    <h3>Details</h3>
+        <p>Node that monitors and controls 'generic' energenie/OpenThings devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>This node is designed to send openThings commands immediately to devices that listen continuously for commands, these are usually mains powered.</p>
+        <p>This node will NOT work with the eTRV, use the specially designed node instead.</p>
+    <h3>Inputs</h3>
+        <dl class="message-properties">
+            <dt>payload
+                <span class="property-type">boolean</span>
+            </dt>
+            <dd>The state that you want the switch to be in, where true=on, false=off</dd>
+        </dl>
+        <p>OR</p>
+        <dl class="message-properties">
+            <dt>payload
+                <span class="property-type">Integer</span>
+            </dt>
+            <dd>The target temperature in degrees Celcius (2+).</dd>
+        </dl>
+        <p>OR</p>
+        <dl class="message-properties">
+            <dt>payload.command
+                <span class="property-type">Integer</span>
+            </dt>
+            <dd>The numeric command to send (see commands below)</dd>
+            <dt>payload.data
+                <span class="property-type">Integer</span>
+            </dt>
+            <dd>The data associated with the command</dd>
+        </dl>
+            
+    <h3>Outputs</h3>
+        <p>Device Information</p>
+        <dl class="message-properties">
+            <dt>payload.deviceId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>The unique Id of the device</dd>
+            <dt>payload.mfrId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Usually 4 for energenie devices</dd>
+            <dt>payload.productId
+                <span class="property-type">integer</span>
+            </dt>
+            <dd>Product code (18 for Thermostat)</dd>
+            <dt>payload.timestamp
+                <span class="property-type">timestamp</span>
+            </dt>
+            <dd>Date & Time the message was received</dd>
+        </dl>
+        <p>Monitored Values</p>
+        <dl class="message-properties">
+            <dt>payload.TEMPERATURE
+                <span class="property-type">float</span>
+            </dt>
+            <dd>The current temperature in Celcius</dd>    
+        </dl>
+        <p>NOTE: As this node also receives, input messages do not get outputted.</p>
+    <h3>Commands</h3>
+        <p>Send command to the device. The <code>command</code> should be set to a numeric value shown below, and parameter (if required) should be passed in as <code>data</code></p>
+        <p>Example <code>msg.payload</code>:</p>
+<pre>{
+    "command": 165,
+    "data": 2
+}</pre>
+        <dl class="message-properties">
+            <p>Example commands</p>
+            <dt>TEMP_SET
+                <span class="property-type">244</span>
+            </dt>
+            <dd>Set new target temperature</dd>
+            <dd>.data='temperature in C'</dd>            
+                
+            <dt>SET_THERMOSTAT_MODE (alpha)
+                <span class="property-type">170</span>  
+            </dt>
+            <dd>Set mode of thermostat</dd>
+            <dd>.data=
+                <br> 0 = Set Heating Off
+                <br> 1 = Set Temp Controlled
+                <br> 2 = Set Always ON</dd>            
+                
+            <dt>REQUEST_DIAGNOTICS
+                <span class="property-type">166</span>  
+            </dt>
+            <dd>Request diagnostic data from device, if all is OK it will return 0. Otherwise see additional monitored values for status messages.</dd>
+
+            <dt>IDENTIFY
+                <span class="property-type">191</span>
+            </dt>
+            <dd>Identify the device by making light flash (if available)</dd>
+
+            <dt>SET_REPORTING_INTERVAL
+                <span class="property-type">210</span>
+            </dt>
+            <dd>Update reporting interval in seconds to requested value</dd>
+            <dd>.data = 300-3600</dd>
+
+            <dt>REQUEST_VOLTAGE
+                    <span class="property-type">226</span>   
+            </dt>
+            <dd>Request battery voltage.</dd>
+
+            <dt>SWITCH_STATE
+                <span class="property-type">243</span>   
+            </dt>
+            <dd>Set switch state.</dd>
+            <dd>.data=
+                <br> 0 = Off
+                <br> 1 = On</dd>
+        </dl>
+</script>

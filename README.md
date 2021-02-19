@@ -19,12 +19,23 @@ on a Raspberry Pi with an [ENER314-RT](https://energenie4u.co.uk/catalogue/produ
 
 **'Control'**, **'Monitor'** and **'Control & Monitor'** radio based devices are supported from the legacy and MiHome range.
 
-There are 5 nodes in total:
-* **Blue** for switching '**Control**' (OOK) based devices
-* **Pink** for monitoring MiHome **'Monitor'** devices
-* **Purple Switch** for monitoring and switching **'Control & Monitor'** devices
-* **Purple eTRV** for monitoring and controlling **'Control & Monitor'** MiHome Thermostatic Radiator valves (eTRV)
+There are 4 types of node to match the colour coding of the Energenie MiHome devices:
+* **Blue** for switching '**Control**' OOK based devices
+* **Pink** for monitoring MiHome **'Monitor'** FSK/OpenThings devices
+* **Purple** for monitoring and controlling **'Control & Monitor'** FSK/OpenThings devices
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
+
+There are currently 8 nodes available to use:
+| Node | Created For | Recommended for |
+|---|---|---|
+|![Blue Control](doc-images/B-Control.png?raw=true)|All Control Only Devices|All Blue, Green & Legacy (OOK) Devices|
+|![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Monitor Devices|MiHome Smart Monitor Plug, Open Sensor|
+|![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032|MiHome Motion sensor|
+|![Pink Open Sensor](doc-images/P-Sensor.png?raw=true)|MIHO033|MiHome Open Door/Window sensor|
+|![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013|MiHome Radiator Valve|
+|![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005|MiHome Smart Plug+ / Adaptor+|
+|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|All Control & Monitor Devices|Mains powered Control & Monitor Devices|
+|![Green Raw Transmit](doc-images/G-Raw.png?raw=true)|Any Device|Non-energenie Devices|
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
@@ -74,48 +85,55 @@ The number of individual devices this node can control is over 4 million, so it 
 * Each zone can contain up to 6 switches (1-6) - NOTE: officially energenie state this is only 4 devices (1-4)
 * All devices within the **same** zone can be switched **at the same time** using a switch number of '0'.
 * A default zone '0' can be used to use Energenie's default zone (0x6C6C6).
+* If you have a MiHome 4 gang Multiplug, the same zone must be used for controlling all 4 switches, use switch #0 to control all, 1-4 for each socket
+* If you have a MiHome 2 gang socket or light switch, the same zone must be used for controlling the 2 switches
 
 
 ## Supported Devices
 
 These nodes are designed for energenie RF radio devices in the OOK & FSK (OpenThings) ranges.
 
-I've tested the nodes with all devices that I currently own.  Here is a table showing what each node *should* support, and a tag showing if it has been tested (please let me know of any succesful tests, and I'll update the table):
+Here is a table showing which node is recommended for each energenie device, and a tick showing if it has been tested (please let me know of any succesful tests, and I'll update the table):
 
-| Device | Description | Control Node (Blue)|Monitor Node (Pink)|Control+Monitor Node (Purple)|Tested OK|
-|---|---|:---:|:---:|:---:|:---:|
-||**Protocol / Type**|*OOK*|*FSK*|*FSK*||
-|ENER002|Green Button Adapter|x|||x|
-|ENER010|MiHome 4 gang Multiplug|x|||x|
-|MIHO002|MiHome Adapter (Blue)|x||||
-|MIHO004|MiHome Energy Monitor (Pink)||x|||
-|MIHO005|MiHome Adapter Plus (Purple)||x|x|x|
-|MIHO006|MiHome House Monitor||x||x|
-|MIHO007|MiHome Socket (White)|x|||x|
-|MIHO008|MiHome Light Switch (White)|x||||
-|MIHO013|MiHome Radiator Valve||x|use eTRV node|x|
-|MIHO014|Single Pole Relay (inline)|x||||
-|MIHO015|MiHome Relay|x||||
-|MIHO021|MiHome Socket (Nickel)|x|||White|
-|MIHO022|MiHome Socket (Chrome)|x|||White|
-|MIHO023|MiHome Socket (Steel)|x|||White|
-|MIHO024|MiHome Light Switch (Nickel)|x|
-|MIHO025|MiHome Light Switch (Chrome)|x|
-|MIHO026|MiHome Light Switch (Steel)|x|
-|MIHO032|MiHome Motion sensor||x||x|
-|MIHO033|MiHome Open Sensor||x||x|
-|MIHO069|MiHome Heating Thermostat||x|Coming soon||
-|MIHO089|MiHome Click - Smart Button||x|||
+
+| Device | Description | Type | Recommend Node | Tested OK |
+|---|---|:---:|---|:---:|
+|ENER002|Green Button Adapter|OOK|Blue: Control| &#10003; |
+|ENER010|MiHome 4 gang Multiplug|OOK|Blue: Control| &#10003; |
+|MIHO002|MiHome Smart Plug (Blue)|OOK|Blue: Control||
+|MIHO004|MiHome Smart Monitor Plug|FSK|Pink: Monitor| &#10003; |
+|MIHO005|MiHome Smart Plug+|FSK|Purple: Smart Plug+| &#10003; |
+|MIHO006|MiHome House Monitor|FSK|Pink: Monitor| &#10003; |
+|MIHO007|MiHome Socket (White)|OOK|Blue: Control| &#10003; |
+|MIHO008|MiHome Light Switch (White)|OOK|Blue: Control||
+|MIHO009|MiHome 2 gang Light Switch (White)|OOK|Blue: Control||
+|MIHO010|MiHome Dimmer Switch (White)|OOK|Blue: Control||
+|MIHO013|MiHome Radiator Valve|FSK Cached|Purple: eTRV| &#10003; |
+|MIHO014|Single Pole Relay (inline)|OOK|Blue: Control||
+|MIHO015|MiHome Relay|OOK|Blue: Control||
+|MIHO021|MiHome Socket (Nickel)|OOK|Blue: Control|White|
+|MIHO022|MiHome Socket (Chrome)|OOK|Blue: Control|White|
+|MIHO023|MiHome Socket (Steel)|OOK|Blue: Control|White|
+|MIHO024|MiHome Light Switch (Nickel)|OOK|Blue: Control||
+|MIHO025|MiHome Light Switch (Chrome)|OOK|Blue: Control||
+|MIHO026|MiHome Light Switch (Steel)|OOK|Blue: Control||
+|MIHO032|MiHome Motion sensor|FSK|Pink: PIR Sensor| &#10003; |
+|MIHO033|MiHome Open Sensor|FSK|Pink: Open Sensor||
+|MIHO069|MiHome Heating Thermostat|FSK|Purple: Control & Monitor|alpha|
+|MIHO089|MiHome Click - Smart Button|FSK?|Pink: Monitor||
 
 
 ### NOT SUPPORTED:
-Specific nodes are required to send the correct control signals to other **'control & monitor'** devices.  This version now supports the MiHome Heating thermostatic radiator valve (eTRV), see below.
+Specific nodes may be required to send the correct control signals to some **'Control & Monitor'** devices.  Most **mains-powered** devices (for example the MIHO069 Heating Thermostat) you should be able to send any OpenThings Commands to the Control & Monitor device using the **'Control & Monitor'** node.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
+
+The use of these nodes within the node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  I believe this is due to GPIO being unavailable within the containers that Home Assistant uses.
 
 
 ## Processing Monitor Messages
 
-The **'Monitor'**, **'Control & Monitor'** & **'eTRV'**  nodes receive monitoring information from the devices and emit the received parameter values on their output.  These messages conform to the OpenThings parameter standard.
-All OpenThings parameters received from the device are decoded and returned in the ```msg.payload```.  I use the returned *SWITCH_STATE* parameter to set the *node.status* of the C&M node to say if it is 'ON' or 'OFF', and the *TEMPERATURE* value is used on the eTRV node to show the current temperature.
+The Pink and Purple nodes receive monitoring information from the devices and emit the received parameter values on their output.  These messages conform to the OpenThings parameter standard.
+
+All OpenThings parameters received from the device are decoded and returned in the ```msg.payload```.  I use the returned *SWITCH_STATE* parameter to set the *node.status* of the C&M nodes to say if it is 'ON' or 'OFF', and the *TEMPERATURE* value is used on the eTRV node to show the current temperature.
 
 Some example ```msg.payload```s are shown below. I have provided parameter name and type mapping for the known values for received messages. Connect up a debug node to see what your specific devices output.
 
@@ -158,7 +176,17 @@ deviceId: <device number>
 mfrId: 4
 productId: 13
 timestamp: <numeric 'epoch based' timestamp, of when message was read>
-DOOR_SENSOR: <Sensor state, 0 = open, 1 = closed>
+DOOR_SENSOR: <Sensor state, 0 = closed, 1 = open>
+```
+### Example msg.payload - Heating Thermostat (MIHO069)
+```
+deviceId: <device number>
+mfrId: 4
+productId: 18
+timestamp: <numeric 'epoch based' timestamp, of when message was read>
+TEMPERATURE: <current temperature in celcius>
+REL_HUMIDITY: <Humidity as a percentage>
+THERMOSTAT_MODE: <Thermostat mode, 0 = off, 1 = temp controlled, 2= always on>
 ```
 
 ## MiHome Radiator Valve (eTRV) Support
@@ -182,7 +210,7 @@ The MiHome Thermostatic Radiator valve (eTRV) can accept commands to perform ope
 
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
-#### Sending eTRV Commands
+### Sending eTRV Commands
 Single commands should be sent as a numeric value within a JSON request, for example to Request Diagnostics you can use a template node (Output as Parsed JSON) to send the following ```msg.payload```:
 ```
 {
@@ -198,7 +226,7 @@ Example for setting temperature to 20C using command mode:
 }
 ```
 
-#### eTRV Command Caching
+### eTRV Command Caching
 The eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes). The receiver is activated after each *TEMPERATURE* report to listen for commands. The receiver only remains active for 200ms or until a message is received.
 
 To cater for this hardware limitation the **'eTRV node'** uses command caching and dynamic polling. Any command sent using the eTRV node will be held until a TEMPERATURE report is received; at this point the most recent cached message (only 1 is supported) will be sent to the eTRV.  Messages will continue to be resent until they have been succesfully received or until the number of Retries has reached 0.
@@ -247,8 +275,11 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |VOLTAGE|Current battery voltage|float|VOLTAGE_TS|
 |VOLTAGE_TS|Tmestamp of when battery voltage was last received|epoch|VOLTAGE_TS|
 
+## Changing Icons
+The icon as displayed on the node within the flows can be changed using the 'Icon' dropdown in the 'Appearance' tab in the node properties. I have created icons for a few of the energenie devices. Use the search button and enter 'ener' to find them.
+
 ## Troubleshooting
-If you have any issues with the code, particularly if your board is not initialising, please try [ener314rt-debug](https://github.com/Achronite/ener314rt-debug), which has been created as a standalone node.js application with full debug enabled.  Node-red is not required to execute this test.
+If you have any issues with the code, particularly if your board is not initialising, please try [ener314rt-debug](https://github.com/Achronite/ener314rt-debug), which has been created as a standalone node.js application with full debug enabled.  Node-red is not required to execute these tests.
 
 * *Unable to initialise Energenie ENER314-RT board error: -n*: Check that your card is installed correctly, and that you **do not** have hardware SPI enabled.  On raspbian if the hardware SPI driver was loaded, you will see the device `/dev/spidev0.0`.  If you see this, you will need to switch hardware SPI OFF.
 
@@ -269,10 +300,11 @@ If you have any issues with the code, particularly if your board is not initiali
 0.3.7|09 Feb 20|Fixed raw tx node for v0.3.x
 0.3.8|01 Mar 20|Fixed passing of switchNum into OOK node. Fixed node.status showing ERROR for OOK node when there is a message in Rx buffer. Added support for payload.state and payload.unit as alternative parameters in OOK node. README updates
 0.3.9|11 Nov 20|Fix the dependent version of energenie-ener314rt to 0.3.4 to allow version 0.4.0 (alpha) testing without impacting node-red code. README updates, including example monitor messages and success tests for 3 more devices from AdamCMC.
+0.4.0|19 Feb 21|Added new C&M node that immediately sends commands (designed for MIHO069 Thermostat). Added MIHO069 thermostat params & icon. Added support for UNKNOWN commands (this assumes a uint as datatype for .data). Added specific nodes for MIHO032 Motion Sensor and MIHO033 Open Sensor. Updated Energenie device names. Renamed old C&M node to be 'Smart Plug+'. Readme updates.
 
 ## Dependencies
 
-* [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt) - *NEW in v0.3* - Node module (by same author) used to perform all radio intercation, split from original code base in version 0.3.0
+* [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt) -  Node module (by same author) used to perform all radio interaction, split from original code base in version 0.3.0
 
 ## Built With
 
@@ -295,4 +327,4 @@ I am currently working on supporting the MIHO069 Thermostat (which I do not own)
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - November 2020 - v0.3.9 Beta
+@Achronite - February 2021 - v0.4.0 Beta
