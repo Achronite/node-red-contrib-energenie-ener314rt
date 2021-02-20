@@ -29,7 +29,7 @@ There are currently 8 nodes available to use:
 | Node | Created For | Recommended for |
 |---|---|---|
 |![Blue Control](doc-images/B-Control.png?raw=true)|All Control Only Devices|All Blue, Green & Legacy (OOK) Devices|
-|![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Monitor Devices|MiHome Smart Monitor Plug, Open Sensor|
+|![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Monitor Devices|MiHome Smart Monitor Plug|
 |![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032|MiHome Motion sensor|
 |![Pink Open Sensor](doc-images/P-Sensor.png?raw=true)|MIHO033|MiHome Open Door/Window sensor|
 |![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013|MiHome Radiator Valve|
@@ -107,7 +107,7 @@ Here is a table showing which node is recommended for each energenie device, and
 |MIHO007|MiHome Socket (White)|OOK|Blue: Control| &#10003; |
 |MIHO008|MiHome Light Switch (White)|OOK|Blue: Control||
 |MIHO009|MiHome 2 gang Light Switch (White)|OOK|Blue: Control||
-|MIHO010|MiHome Dimmer Switch (White)|OOK|Blue: Control||
+|MIHO010|MiHome Dimmer Switch (White)|OOK|Blue: Control (switch 1)||
 |MIHO013|MiHome Radiator Valve|FSK Cached|Purple: eTRV| &#10003; |
 |MIHO014|Single Pole Relay (inline)|OOK|Blue: Control||
 |MIHO015|MiHome Relay|OOK|Blue: Control||
@@ -124,9 +124,11 @@ Here is a table showing which node is recommended for each energenie device, and
 
 
 ### NOT SUPPORTED:
-Specific nodes may be required to send the correct control signals to some **'Control & Monitor'** devices.  Most **mains-powered** devices (for example the MIHO069 Heating Thermostat) you should be able to send any OpenThings Commands to the Control & Monitor device using the **'Control & Monitor'** node.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
+Specific nodes may be required to send the correct control signals to some **'Control & Monitor'** devices.  Most **mains-powered** devices (for example the MIHO069 Heating Thermostat) you should be able to send any OpenThings Commands to the Control & Monitor device using the generic **'Control & Monitor'** node.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
 
-The use of these nodes within the node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  I believe this is due to GPIO being unavailable within the containers that Home Assistant uses.
+The new Light Dimmer switch can be used for on/off commands if you dedicate a new zone with switch #1 using the **'Control'** node.  I aim to fully support dimming functions in a later release (see [issue #46](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues/46).
+
+The use of these nodes within the embedded node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  I believe this is due to GPIO being unavailable within the containers that Home Assistant uses.  If you need to use Home Assistant then please install the native node-red implementation on a Pi, and communicate with it using messages, such as the MQTT nodes.
 
 
 ## Processing Monitor Messages
@@ -233,7 +235,7 @@ To cater for this hardware limitation the **'eTRV node'** uses command caching a
 
 The reason that a command may be resent multiple times is due to reporting issues. The eTRV devices, unfortunately, do not send acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.
 
-> **NOTE:** The performance of node-red may decrease when an eTRV command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
+> **NOTE:** The performance of node-red may decrease when an eTRV command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 0.5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
 
 ### eTRV Monitor Messages
 
