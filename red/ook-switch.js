@@ -59,10 +59,10 @@ module.exports = function (RED) {
                 if (ret >= 0) {
                     switch (switchState) {
                         case true:
-                            node.status({ fill: "green", shape: "dot", text: "ON " + zone + ":" + switchNum });
+                            node.status({ fill: "green", shape: "dot", text: "on" });
                             break;
                         case false:
-                            node.status({ fill: "red", shape: "ring", text: "OFF " + zone + ":" + switchNum });
+                            node.status({ fill: "red", shape: "ring", text: "off" });
                             break;
                     }
                     // return payload unchanged
