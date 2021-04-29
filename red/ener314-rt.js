@@ -19,6 +19,7 @@ var monitoring = false;
 
 module.exports = function (RED) {
     function ener314rtAdaptor(config) {
+        RED.nodes.createNode(this, config);
         var events = require('events');
         this.events = new events.EventEmitter();
         var ret;
@@ -27,7 +28,7 @@ module.exports = function (RED) {
 
         var scope = this;
 
-        if (!inited) {
+        //if (!inited) {
             // initialise stuff - do once
             ret = ener314rt.initEner314rt(false);
 
@@ -37,9 +38,8 @@ module.exports = function (RED) {
             } else {
                 this.log(`ener314rt: radio initialised`);
                 inited = true;
-                RED.nodes.createNode(this, config);
             }
-        };
+        //};
 
         // async version in ener314rt uses a monitor thread that executes a callback when a message is received, it needs this callback passing in
         // this async call has dynamic sleep function dependent on eTRV messages being sent
@@ -89,7 +89,7 @@ module.exports = function (RED) {
     }
     RED.nodes.registerType("energenie-board", ener314rtAdaptor);
 
-    // function called from the node-red GUI
+    // function called from the node-red GUI to return in memory list of OpenThings/FSK monitor devices
     RED.httpAdmin.get("/board/devices", function (req, res) {
 
         // Call discovery function
