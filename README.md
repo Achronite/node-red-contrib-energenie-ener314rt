@@ -346,4 +346,4 @@ I am currently working on supporting the MIHO069 Thermostat (which I do not own)
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - April 2021 - v0.4.1 Beta
+@Achronite - 05 May 2021 - v0.4.1 Beta
