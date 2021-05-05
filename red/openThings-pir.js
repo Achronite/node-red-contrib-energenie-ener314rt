@@ -30,20 +30,22 @@ module.exports = function (RED) {
             this.status({ fill: "grey", shape: "dot", text: "Waiting…" });
 
             board.events.on(deviceId, function (OTmsg) {
+                let motion = false;
                 // received event for me, update status and send monitor message to consuming downstream nodes
                 if (OTmsg.MOTION_DETECTOR == 1) {
                     var d = new Date(0);
                     d.setUTCSeconds(OTmsg.timestamp);
                     let timeStr = d.toTimeString();
                     node.status({ fill: "red", shape: "dot", text: `Motion at ${timeStr}` });
+                    motion = true;
                 } else if (OTmsg.MOTION_DETECTOR == 0) {
                     var d = new Date(0);
                     d.setUTCSeconds(OTmsg.timestamp);
                     let timeStr = d.toTimeString();
                     node.status({ fill: "grey", shape: "ring", text: `No Motion at ${timeStr}` });
                 }
-                // send on decoded OpenThings message as is
-                node.send({ 'payload': OTmsg });
+                // send on decoded OpenThings message as is on output 1, and state boolean on output 2
+                node.send([{ 'payload': OTmsg },{ 'payload': motion}]);
             });
 
             board.events.on('error', function () { node.error("Board event error") });
