@@ -28,18 +28,16 @@ module.exports = function (RED) {
 
         var scope = this;
 
-        //if (!inited) {
-            // initialise stuff - do once
-            ret = ener314rt.initEner314rt(false);
+        // initialise stuff - do once
+        ret = ener314rt.initEner314rt(false);
 
-            if (ret != 0) {
-                // can also happen if something else has beat us to it!
-                this.error(`Unable to initialise Energenie ENER314-RT board error: ${ret}`);
-            } else {
-                this.log(`ener314rt: radio initialised`);
-                inited = true;
-            }
-        //};
+        if (ret != 0) {
+            // can also happen if something else has beat us to it!
+            this.error(`Unable to initialise Energenie ENER314-RT board error: ${ret}`);
+        } else {
+            this.log(`ener314rt: radio initialised`);
+            inited = true;
+        }
 
         // async version in ener314rt uses a monitor thread that executes a callback when a message is received, it needs this callback passing in
         // this async call has dynamic sleep function dependent on eTRV messages being sent
