@@ -139,12 +139,12 @@ Each Energenie Light Dimmer requires a dedicated OOK zone allocating to it, as i
 |:---:|:---:|---|
 |0 OR false|OFF|Switch light off, remembering light level|
 |1 OR true|last|Switch on at the previous light level set|
-|2|20%|Switch light on at 20%|
-|3|30%|Switch light on at 30%|
-|4|40%|Switch light on at 40%|
-|5|60%|Switch light on at 60%|
-|6|80%|Switch light on at 80%|
-|7|100%|Switch light on at 100%|
+|2 or 20|20%|Switch light on at 20%|
+|3 or 30|30%|Switch light on at 30%|
+|4 or 40|40%|Switch light on at 40%|
+|5 or 60|60%|Switch light on at 60%|
+|6 or 80|80%|Switch light on at 80%|
+|7 or 100|100%|Switch light on at 100%|
 
 
 ## Processing Monitor Messages
