@@ -25,19 +25,19 @@ There are 4 types of node to match the colour coding of the Energenie MiHome dev
 * **Purple** for monitoring and controlling **'Control & Monitor'** FSK/OpenThings devices
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
-There are currently 9 nodes available to use:
+Within the 4 types there are currently 9 nodes available to use:
 
-| Node | Created For | Recommended for |
-|---|---|---|
-|![Blue Control](doc-images/B-Control.png?raw=true)|All Control Only Devices|All Blue, Green & Legacy (OOK) Devices|
-|![Blue Dimmer](doc-images/B-Dimmer.png?raw=true)|MIHO010|MiHome Dimmer|
-|![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Monitor Devices|MiHome Smart Monitor Plug|
-|![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032|MiHome Motion sensor|
-|![Pink Open Sensor](doc-images/P-Sensor.png?raw=true)|MIHO033|MiHome Open Door/Window sensor|
-|![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013|MiHome Radiator Valve|
-|![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005|MiHome Smart Plug+ / Adaptor+|
-|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|All Control & Monitor Devices|Mains powered Control & Monitor Devices|
-|![Green Raw Transmit](doc-images/G-Raw.png?raw=true)|Any Device|Non-energenie Devices|
+| Node | Created For |
+|---|---|
+|![Blue Control](doc-images/B-Control.png?raw=true)|All Blue, Green & Legacy (OOK) Energenie Devices|
+|![Blue Dimmer](doc-images/B-Dimmer.png?raw=true)|MIHO010 - MiHome Dimmer|
+|![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Pink Monitor Only Devices|
+|![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032 - MiHome Motion sensor|
+|![Pink Open Sensor](doc-images/P-Sensor.png?raw=true)|MIHO033 - MiHome Open Door/Window sensor|
+|![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013 - MiHome Radiator Valve|
+|![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005 - iHome Smart Plug+ / Adaptor+|
+|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|All Purple Mains Powered Control & Monitor Devices|
+|![Green Raw Transmit](doc-images/G-Raw.png?raw=true)|Non-Energenie 433Mhz Radio Controlled Devices|
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
