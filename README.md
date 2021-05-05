@@ -25,21 +25,62 @@ There are 4 types of node to match the colour coding of the Energenie MiHome dev
 * **Purple** for monitoring and controlling **'Control & Monitor'** FSK/OpenThings devices
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
-There are currently 8 nodes available to use:
-| Node | Created For | Recommended for |
-|---|---|---|
-|![Blue Control](doc-images/B-Control.png?raw=true)|All Control Only Devices|All Blue, Green & Legacy (OOK) Devices|
-|![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Monitor Devices|MiHome Smart Monitor Plug|
-|![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032|MiHome Motion sensor|
-|![Pink Open Sensor](doc-images/P-Sensor.png?raw=true)|MIHO033|MiHome Open Door/Window sensor|
-|![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013|MiHome Radiator Valve|
-|![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005|MiHome Smart Plug+ / Adaptor+|
-|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|All Control & Monitor Devices|Mains powered Control & Monitor Devices|
-|![Green Raw Transmit](doc-images/G-Raw.png?raw=true)|Any Device|Non-energenie Devices|
+Within the 4 types there are currently 9 nodes available to use:
+
+| Node | Created For |
+|---|---|
+|![Blue Control](doc-images/B-Control.png?raw=true)|All Blue, Green & Legacy (OOK) Energenie Devices|
+|![Blue Dimmer](doc-images/B-Dimmer.png?raw=true)|MIHO010 - MiHome Dimmer|
+|![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Pink Monitor Only Devices|
+|![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032 - MiHome Motion sensor|
+|![Pink Open Sensor](doc-images/P-Sensor.png?raw=true)|MIHO033 - MiHome Open Door/Window sensor|
+|![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013 - MiHome Radiator Valve|
+|![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005 - iHome Smart Plug+ / Adaptor+|
+|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|All Purple Mains Powered Control & Monitor Devices|
+|![Green Raw Transmit](doc-images/G-Raw.png?raw=true)|Non-Energenie 433Mhz Radio Controlled Devices|
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
 >NOTE: This module does not currently support the older boards (ENER314/Pi-Mote), the Energenie Wifi sockets or the MiHome Gateway (see below for the full supported list).
+
+
+
+## Supported Devices
+
+These nodes are designed for energenie RF radio devices in the OOK & FSK (OpenThings) ranges.
+
+Here is a table showing which node is recommended for each energenie device, and a tick showing if it has been tested (please let me know of any succesful tests, and I'll update the table):
+
+
+| Device | Description | Type | Recommend Node | Tested OK |
+|---|---|:---:|---|:---:|
+|ENER002|Green Button Adapter|OOK|Blue: Control| &#10003; |
+|ENER010|MiHome 4 gang Multiplug|OOK|Blue: Control| &#10003; |
+|MIHO002|MiHome Smart Plug|OOK|Blue: Control||
+|MIHO004|MiHome Smart Monitor Plug|FSK|Pink: Monitor| &#10003; |
+|MIHO005|MiHome Smart Plug+|FSK|Purple: Smart Plug+| &#10003; |
+|MIHO006|MiHome House Monitor|FSK|Pink: Monitor| &#10003; |
+|MIHO007|MiHome Socket|OOK|Blue: Control| &#10003; |
+|MIHO008|MiHome Single Light|OOK|Blue: Control||
+|MIHO009|Double Gang MiHome Light|OOK|Blue: Control||
+|MIHO010|MiHome Dimmer Switch|OOK|Blue: Dimmer||
+|MIHO013|MiHome Radiator Valve|FSK Cached|Purple: eTRV| &#10003; |
+|MIHO014|Single Pole Relay (inline)|OOK|Blue: Control||
+|MIHO015|MiHome Relay|OOK|Blue: Control||
+|MIHO021<br />MIHO022<br />MIHO023|MiHome Double Socket|OOK|Blue: Control| &#10003; |
+|MIHO024<br />MIHO025<br />MIHO026|MiHome Single Light|OOK|Blue: Control||
+|MIHO032|MiHome Motion sensor|FSK|Pink: PIR Sensor| &#10003; |
+|MIHO033|MiHome Open Sensor|FSK|Pink: Open Sensor||
+|MIHO069|MiHome Heating Thermostat|FSK|Purple: Control & Monitor|alpha|
+|MIHO071<br />MIHO072<br />MIHO073|Double Gang MiHome Light|OOK|Blue: Control||
+|MIHO076<br />MIHO077<br />MIHO087|MiHome Dimmer Switch|OOK|Blue: Dimmer||
+|MIHO089|MiHome Click - Smart Button|FSK?|Pink: Monitor||
+
+
+### NOT SUPPORTED:
+Specific nodes may be required to send the correct control signals to some **'Control & Monitor'** devices.  Most **mains-powered** devices (for example the MIHO069 Heating Thermostat) you should be able to send any OpenThings Commands to the Control & Monitor device using the generic **'Control & Monitor'** node.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
+
+The use of these nodes within the embedded node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  I believe this is due to GPIO being unavailable within the containers that Home Assistant uses.  If you need to use Home Assistant then please install the native node-red implementation on a Pi, and communicate with it using messages, such as the MQTT nodes.
 
 
 ## Getting Started
@@ -89,53 +130,28 @@ The number of individual devices this node can control is over 4 million, so it 
 * If you have a MiHome 2 gang socket or light switch, the same zone must be used for controlling the 2 switches
 
 
-## Supported Devices
 
-These nodes are designed for energenie RF radio devices in the OOK & FSK (OpenThings) ranges.
+## Light Dimmer Support (NEW IN v0.4.1)
 
-Here is a table showing which node is recommended for each energenie device, and a tick showing if it has been tested (please let me know of any succesful tests, and I'll update the table):
+Each Energenie Light Dimmer requires a dedicated OOK zone allocating to it, as internally it uses the switch numbers to set the brightness level of the dimmer. This node works slightly differently to the standard **'Control'** node. The `payload` determines the light level required as follows:
 
-
-| Device | Description | Type | Recommend Node | Tested OK |
-|---|---|:---:|---|:---:|
-|ENER002|Green Button Adapter|OOK|Blue: Control| &#10003; |
-|ENER010|MiHome 4 gang Multiplug|OOK|Blue: Control| &#10003; |
-|MIHO002|MiHome Smart Plug (Blue)|OOK|Blue: Control||
-|MIHO004|MiHome Smart Monitor Plug|FSK|Pink: Monitor| &#10003; |
-|MIHO005|MiHome Smart Plug+|FSK|Purple: Smart Plug+| &#10003; |
-|MIHO006|MiHome House Monitor|FSK|Pink: Monitor| &#10003; |
-|MIHO007|MiHome Socket (White)|OOK|Blue: Control| &#10003; |
-|MIHO008|MiHome Light Switch (White)|OOK|Blue: Control||
-|MIHO009|MiHome 2 gang Light Switch (White)|OOK|Blue: Control||
-|MIHO010|MiHome Dimmer Switch (White)|OOK|Blue: Control (switch 1)||
-|MIHO013|MiHome Radiator Valve|FSK Cached|Purple: eTRV| &#10003; |
-|MIHO014|Single Pole Relay (inline)|OOK|Blue: Control||
-|MIHO015|MiHome Relay|OOK|Blue: Control||
-|MIHO021|MiHome Socket (Nickel)|OOK|Blue: Control|White|
-|MIHO022|MiHome Socket (Chrome)|OOK|Blue: Control|White|
-|MIHO023|MiHome Socket (Steel)|OOK|Blue: Control|White|
-|MIHO024|MiHome Light Switch (Nickel)|OOK|Blue: Control||
-|MIHO025|MiHome Light Switch (Chrome)|OOK|Blue: Control||
-|MIHO026|MiHome Light Switch (Steel)|OOK|Blue: Control||
-|MIHO032|MiHome Motion sensor|FSK|Pink: PIR Sensor| &#10003; |
-|MIHO033|MiHome Open Sensor|FSK|Pink: Open Sensor||
-|MIHO069|MiHome Heating Thermostat|FSK|Purple: Control & Monitor|alpha|
-|MIHO089|MiHome Click - Smart Button|FSK?|Pink: Monitor||
-
-
-### NOT SUPPORTED:
-Specific nodes may be required to send the correct control signals to some **'Control & Monitor'** devices.  Most **mains-powered** devices (for example the MIHO069 Heating Thermostat) you should be able to send any OpenThings Commands to the Control & Monitor device using the generic **'Control & Monitor'** node.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
-
-The new Light Dimmer switch can be used for on/off commands if you dedicate a new zone with switch #1 using the **'Control'** node.  I aim to fully support dimming functions in a later release (see [issue #46](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues/46).
-
-The use of these nodes within the embedded node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  I believe this is due to GPIO being unavailable within the containers that Home Assistant uses.  If you need to use Home Assistant then please install the native node-red implementation on a Pi, and communicate with it using messages, such as the MQTT nodes.
+|payload|Brightness Level|Action|
+|:---:|:---:|---|
+|0 OR false|OFF|Switch light off, remembering light level|
+|1 OR true|last|Switch on at the previous light level set|
+|2|20%|Switch light on at 20%|
+|3|30%|Switch light on at 30%|
+|4|40%|Switch light on at 40%|
+|5|60%|Switch light on at 60%|
+|6|80%|Switch light on at 80%|
+|7|100%|Switch light on at 100%|
 
 
 ## Processing Monitor Messages
 
 The Pink and Purple nodes receive monitoring information from the devices and emit the received parameter values on their output.  These messages conform to the OpenThings parameter standard.
 
-All OpenThings parameters received from the device are decoded and returned in the ```msg.payload```.  I use the returned *SWITCH_STATE* parameter to set the *node.status* of the C&M nodes to say if it is 'ON' or 'OFF', and the *TEMPERATURE* value is used on the eTRV node to show the current temperature.
+All OpenThings parameters received from the device are decoded and returned in the ```msg.payload```.  Some of the values are used to set the *node.status* for the specific nodes, for example *SWITCH_STATE* is used to indicate if a device is 'ON' or 'OFF', and the *TEMPERATURE* value is used on the eTRV node to show the current temperature.
 
 Some example ```msg.payload```s are shown below. I have provided parameter name and type mapping for the known values for received messages. Connect up a debug node to see what your specific devices output.
 
@@ -194,7 +210,7 @@ THERMOSTAT_MODE: <Thermostat mode, 0 = off, 1 = temp controlled, 2= always on>
 ## MiHome Radiator Valve (eTRV) Support
 
 v0.3+ now supports the MiHome Thermostatic Radiator valve (eTRV).
-> WARNING: Due to the way the eTRV works there may be a delay from when a command is sent to it being processed by the device. See **eTRV Command Caching** below
+> WARNING: Due to the way the eTRV works there may be a delay from when a command is sent to it being processed by the device. See **eTRV Command Caching** below.
 
 ### eTRV Commands
 The MiHome Thermostatic Radiator valve (eTRV) can accept commands to perform operations, provide diagnostics or perform self tests.  The documented commands are provided in the table below.
@@ -290,19 +306,20 @@ If you have any issues with the code, particularly if your board is not initiali
 # Package Details
 
 ## Change History
-| Version | Date | Change details
+| Version | Date | Change details |
 |---|---|---|
-0.1.0|27 Apr 19|Initial Release
-0.2.0|08 May 19|Full NPM & node-red catalogue release
-0.3.0|10 Jan 20|Major change - Switched to use node.js Native API (N-API) for calling C functions, and split off new node module.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.  This version requires node.js v10+.
-0.3.2|17 Jan 20|Added node v10+ dependency (via 'engines').  Fixed issue with teaching OOK devices, and added 'off' button. Added troubleshooting section to docs.
-0.3.4|22 Jan 20|Fixed zone 0 switch all devices. Tested Energenie 4-way gang. Updates to GUI tip shown for eTRV. Made emit monitor device specific to improve performance.
-0.3.5|02 Feb 20|Improve error handling for board failure.
-0.3.6|02 Feb 20|Added compile error to README. Removed console.log for eTRV Rx (left in by mistake).
-0.3.7|09 Feb 20|Fixed raw tx node for v0.3.x
-0.3.8|01 Mar 20|Fixed passing of switchNum into OOK node. Fixed node.status showing ERROR for OOK node when there is a message in Rx buffer. Added support for payload.state and payload.unit as alternative parameters in OOK node. README updates
-0.3.9|11 Nov 20|Fix the dependent version of energenie-ener314rt to 0.3.4 to allow version 0.4.0 (alpha) testing without impacting node-red code. README updates, including example monitor messages and success tests for 3 more devices from AdamCMC.
-0.4.0|19 Feb 21|Added new C&M node that immediately sends commands (designed for MIHO069 Thermostat). Added MIHO069 thermostat params & icon. Added support for UNKNOWN commands (this assumes a uint as datatype for .data). Added specific nodes for MIHO032 Motion Sensor and MIHO033 Open Sensor. Updated Energenie device names. Renamed old C&M node to be 'Smart Plug+'. Readme updates.
+0.1.0|27 Apr 19|Initial Release|
+0.2.0|08 May 19|Full NPM & node-red catalogue release|
+0.3.0|10 Jan 20|Major change - Switched to use node.js Native API (N-API) for calling C functions, and split off new node module.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.  This version requires node.js v10+.|
+0.3.2|17 Jan 20|Added node v10+ dependency (via 'engines').  Fixed issue with teaching OOK devices, and added 'off' button. Added troubleshooting section to docs.|
+0.3.4|22 Jan 20|Fixed zone 0 switch all devices. Tested Energenie 4-way gang. Updates to GUI tip shown for eTRV. Made emit monitor device specific to improve performance.|
+0.3.5|02 Feb 20|Improve error handling for board failure.|
+0.3.6|02 Feb 20|Added compile error to README. Removed console.log for eTRV Rx (left in by mistake).|
+0.3.7|09 Feb 20|Fixed raw tx node for v0.3.x|
+0.3.8|01 Mar 20|Fixed passing of switchNum into OOK node. Fixed node.status showing ERROR for OOK node when there is a message in Rx buffer. Added support for payload.state and payload.unit as alternative parameters in OOK node. README updates|
+0.3.9|11 Nov 20|Fix the dependent version of energenie-ener314rt to 0.3.4 to allow version 0.4.0 (alpha) testing without impacting node-red code. README updates, including example monitor messages and success tests for 3 more devices from AdamCMC.|
+0.4.0|19 Feb 21|Added new C&M node that immediately sends commands (designed for MIHO069 Thermostat). Added MIHO069 thermostat params & icon. Added support for UNKNOWN commands (this assumes a uint as datatype for .data). Added specific nodes for MIHO032 Motion Sensor and MIHO033 Open Sensor. Updated Energenie device names. Renamed old C&M node to be 'Smart Plug+'. Readme updates.|
+0.4.1|05 May 21|Added MiHome Dimmer node. Made ON/OFF status messages consistant across node types. Bug fix for issue #49. Only stop monitoring during close if has been started. README updates.|
 
 ## Dependencies
 
@@ -329,4 +346,4 @@ I am currently working on supporting the MIHO069 Thermostat (which I do not own)
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - February 2021 - v0.4.0 Beta
+@Achronite - 05 May 2021 - v0.4.1 Beta
