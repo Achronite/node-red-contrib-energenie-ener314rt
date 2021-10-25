@@ -79,7 +79,7 @@ Here is a table showing which node is recommended for each energenie device, and
 
 
 ### NOT SUPPORTED:
-Specific nodes may be required for new energenie devices.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
+Specific nodes may be required for new energenie devices.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' devices, commands or parameters.
 
 The use of these nodes within the **embedded** node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  I believe this is due to GPIO being unavailable within the containers that Home Assistant uses.  If you need to use Home Assistant then please install the native node-red implementation on a raspberry Pi, and communicate with it using messages, such as the MQTT nodes.
 
@@ -212,7 +212,7 @@ TARGET_TEMP: <Target set temperature>
 SWITCH_STATE: <Not sure - it is probably the current state of the heating>
 ```
 
-## MiHome Heating device Support
+## MiHome Heating Device Support
 
 The MiHome Thermostatic Radiator valve (eTRV) and MiHome Thermostat are battery powered devices that do not constantly listen for commands. This required specific code to be written to 'cache' commands for these devices.  As a result there may be a delay from when a command is sent to it being processed by the device. See **eTRV Command Caching** below.
 
@@ -339,7 +339,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.4.0|19 Feb 21|Added new C&M node that immediately sends commands (designed for MIHO069 Thermostat). Added MIHO069 thermostat params & icon. Added support for UNKNOWN commands (this assumes a uint as datatype for .data). Added specific nodes for MIHO032 Motion Sensor and MIHO033 Open Sensor. Updated Energenie device names. Renamed old C&M node to be 'Smart Plug+'. Readme updates.|
 0.4.1|bugfix|Reduced internal efficiency 'sleep' from 5s to 0.5s (for non-eTRV send mode) to reduce risk of losing a message (Issue #14). Fix crash when using over 6 devices (Issue #15).
 0.4.2|05 May 21|Added MiHome Dimmer node. Made ON/OFF status messages consistant across node types. Bug fix for issue #49. Only stop monitoring during close if has been started. README updates.|
-0.5.0|Oct 21|Added specific node for MIHO069 Mi|Home Thermostat, deprecating the Control & Monitor node.
+0.5.0|Oct 21|Added specific node for MIHO069 MiHome Thermostat, deprecating the Control & Monitor node.
 
 
 ## Dependencies
