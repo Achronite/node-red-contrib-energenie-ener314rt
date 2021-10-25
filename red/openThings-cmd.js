@@ -7,6 +7,8 @@
 ** File: OpenThings-cmd.js
 ** Purpose: Node-Red wrapper for call to Control & Monitor node for ENER314-RT Control & Monitor device
 **
+** NOTE: This node has been deprecated as all purple devices now have specific nodes createc for them
+**
 */
 "use strict";
 
