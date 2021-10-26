@@ -37,7 +37,7 @@ module.exports = function (RED) {
                 var xmits = Number(msg.payload.repeat) || 20;
 
                 // Cater for other message types first (default to on)
-                if (typeof msg.payload === 'number' || typeof msg.payload.brightness === 'number' )
+                if (typeof msg.payload === 'number' || typeof msg.payload.brightness === 'number')
                     var brightness = msg.payload.brightness | msg.payload;
                 else {
                     var brightness = 1;
@@ -47,7 +47,9 @@ module.exports = function (RED) {
                         brightness = 0
                     else if (typeof msg.payload.state == typeof true && !msg.payload.state)
                         brightness = 0
-                    else if (msg.payload === "off" || msg.payload.powerOn === "off" || msg.payload.state === "off")
+                    else if (typeof msg.payload.on == typeof true && !msg.payload.on)
+                        brightness = 0
+                    else if (msg.payload === "off" || msg.payload.powerOn === "off" || msg.payload.state === "off" || msg.payload.on === "off")
                         brightness = 0;
                 }
 
