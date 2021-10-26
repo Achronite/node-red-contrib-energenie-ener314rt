@@ -43,7 +43,7 @@
 <script type="text/x-red" data-help-name="openThings-thermostat">
     <h3>Details</h3>
         <p>Node that monitors and controls MIHO069 Energenie thermostat devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
-        <p>This node uses cached OpenThings commands as the thermostat is battery powered, so there may be a delay before your commands are succesfully processed by the thermostat.</p>
+        <p>The thermostat is battery powered, so there may be a delay before your commands are succesfully processed by the thermostat.  This node uses internal caching of only one input message at a time, when the thermostat sends a WAKEUP message the cached message is sent.</p>
     <h3>Inputs</h3>
         <dl class="message-properties">
             <dt>payload
