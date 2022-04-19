@@ -32,7 +32,7 @@
       "openThings-switch": "red/openThings-switch.js",
       "openThings-trv": "red/openThings-trv.js",
       "openThings-thermostat": "red/openThings-thermostat.js",
-      "openThings-cmd": "red/openThings-cmd.js",  
+      "openThings-cmd": "red/openThings-cmd.js",
       "ener314rt-raw": "red/ener314rt-raw.js",
       "openThings-device": "red/openThings-device.js",
       "energenie-board": "red/ener314-rt.js"
