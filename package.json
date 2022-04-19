@@ -3,7 +3,7 @@
   "version": "0.5.0",
   "description": "Node-red module for energenie ENER314-RT board for raspberry pi",
   "dependencies": {
-    "energenie-ener314rt": "^0.4.2"
+    "energenie-ener314rt": "0.5.0"
   },
   "engines": {
     "node": ">=10.0.0"
