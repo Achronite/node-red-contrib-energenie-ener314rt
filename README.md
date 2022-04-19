@@ -213,8 +213,7 @@ SWITCH_STATE: <Not sure - it is probably the current state of the heating>
 ```
 
 ## MiHome Heating Device Support
-
-The MiHome Thermostatic Radiator valve (eTRV) and MiHome Thermostat are battery powered devices that do not constantly listen for commands. This required specific code to be written to 'cache' commands for these devices.  As a result there may be a delay from when a command is sent to it being processed by the device. See **eTRV Command Caching** below.
+The MiHome Thermostatic Radiator valve (eTRV) and MiHome Thermostat are battery powered devices that do not constantly listen for commands. This required specific code to be written to 'cache' commands for these devices.  As a result there may be a delay from when a command is sent to it being processed by the device. See **Command Caching** below.
 
 ### Sending Commands (purple nodes)
 Single commands are sent as a numeric value within a JSON request as shown in the tables below.  For example to Request Diagnostics you can use a template node (Output as Parsed JSON) to send the following ```msg.payload```:
@@ -232,7 +231,7 @@ Example for setting temperature to 20C using command mode:
 }
 ```
 #### eTRV Commands
-The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operations, provide diagnostics or perform self tests.  The documented commands are provided in the table below.
+The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operations, provide diagnostics or perform self tests.  The documented commands are provided in the table below, there may also be other undocumented commands.
 
 | Command | # | Description | .data | Response Msg |
 |---|:---:|---|---|:---:|
@@ -248,7 +247,7 @@ The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operat
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
 #### Thermostat Commands
-The MiHome Thermostat accepts commands to perform operations.  The commands in the table below *should* work, but I have not tested these (I do not have a thermostat).  Please let me know if these work for you.
+The MiHome Thermostat accepts commands to perform operations.  The commands in the table below *should* work, but I have not tested these (I do not have a thermostat).  Please let me know if these work for you, or if you are aware of any other commands.
 
 | Command | # | Description | .data | Tested |
 |---|:---:|---|---|:---:|
@@ -339,7 +338,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.4.0|19 Feb 21|Added new C&M node that immediately sends commands (designed for MIHO069 Thermostat). Added MIHO069 thermostat params & icon. Added support for UNKNOWN commands (this assumes a uint as datatype for .data). Added specific nodes for MIHO032 Motion Sensor and MIHO033 Open Sensor. Updated Energenie device names. Renamed old C&M node to be 'Smart Plug+'. Readme updates.|
 0.4.1|bugfix|Reduced internal efficiency 'sleep' from 5s to 0.5s (for non-eTRV send mode) to reduce risk of losing a message (Issue #14). Fix crash when using over 6 devices (Issue #15).
 0.4.2|05 May 21|Added MiHome Dimmer node. Made ON/OFF status messages consistant across node types. Bug fix for issue #49. Only stop monitoring during close if has been started. README updates.|
-0.5.0|Oct 21|Added specific node for MIHO069 MiHome Thermostat, deprecating the Control & Monitor node.
+0.5.0|19 Apr 22|Added specific node for MIHO069 MiHome Thermostat, deprecating the generic Control & Monitor node (as no other C&M devices exist at present).
 
 
 ## Dependencies
@@ -367,4 +366,4 @@ I am currently working on supporting the MIHO069 Thermostat (which I do not own)
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - October 2021 - v0.5.0 Beta
+@Achronite - April 2022 - v0.5.0 Beta
