@@ -1,9 +1,9 @@
 <script type="text/javascript">
-    RED.nodes.registerType('openThings-cmd', {
+    RED.nodes.registerType('openThings-thermostat', {
         category: 'Energenie 314RT',
         color: '#82529e',
         defaults: {
-            name: { value: "Control&Monitor" },
+            name: { value: "Thermostat" },
             device: { type: "openThings-device", required: true },
             board: { type: "energenie-board", required: true }
         },
@@ -11,7 +11,7 @@
         outputs: 1,
         align: "right",
         icon: "Thermostat.png",
-        paletteLabel: 'Control&Monitor',
+        paletteLabel: 'Thermostat',
         label: function () {
             return (this.name || this.label || this.paletteLabel);
         },
@@ -22,7 +22,7 @@
     });
 </script>
 
-<script type="text/x-red" data-template-name="openThings-cmd">
+<script type="text/x-red" data-template-name="openThings-thermostat">
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
@@ -36,29 +36,31 @@
         <input type="text" id="node-input-device"/>
     </div>
     <div class="form-tips">
-        <p>This node sends OpenThings commands immediately to devices that listen continuously for commands, these are usually mains powered.</p>
-        <p>This node was deprecated in v0.5.x, please use the other Purple nodes specifically created for your device instead.</p>
+        <p>This node monitors and controls MIHO069 Energenie Mi|Home thermostat devices</p>
     </div>
 </script>
 
-<script type="text/x-red" data-help-name="openThings-cmd">
+<script type="text/x-red" data-help-name="openThings-thermostat">
     <h3>Details</h3>
-        <p>DEPRECATED Node that monitors and controls 'generic' energenie/OpenThings devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
-        <p>This node is designed to send openThings commands immediately to devices that listen continuously for commands, these are usually mains powered.</p>
-        <p>This node will NOT work with the eTRV, use the specially designed node instead.</p>
+        <p>Node that monitors and controls MIHO069 Energenie thermostat devices supported by the Energenie Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>The thermostat is battery powered, so there may be a delay before your commands are succesfully processed by the thermostat.  This node uses internal caching of only one input message at a time, when the thermostat sends a WAKEUP message the cached message is sent.</p>
     <h3>Inputs</h3>
         <dl class="message-properties">
             <dt>payload
                 <span class="property-type">boolean</span>
             </dt>
-            <dd>The state that you want the switch to be in, where true=on, false=off</dd>
+            <dd>The state that you want the switch to be in, where true=on, false=off (I'm guessing this could be used to 'advance' the heating).</dd>
         </dl>
         <p>OR</p>
         <dl class="message-properties">
             <dt>payload
                 <span class="property-type">Integer</span>
             </dt>
-            <dd>The target temperature in degrees Celcius (2+).</dd>
+            <dd>If 0-2 sets the mode of the thermostat:<br>
+                &nbsp;0 = Set Heating Off<br>
+                &nbsp;1 = Set Temp Controlled<br>
+                &nbsp;2 = Set Always ON<br>
+                Otherwise set the target temperature in degrees Celcius (3+).</dd>
         </dl>
         <p>OR</p>
         <dl class="message-properties">
@@ -97,11 +99,31 @@
             <dt>payload.TEMPERATURE
                 <span class="property-type">float</span>
             </dt>
-            <dd>The current temperature in Celcius</dd>    
+            <dd>The current temperature in Celcius</dd>
+            <dt>payload.REL_HUMIDITY
+                <span class="property-type">int</span>
+            </dt>
+            <dd>The current humidity in percent</dd>
+            <dt>payload.BATTERY_LEVEL
+                <span class="property-type">float</span>
+            </dt>
+            <dd>The current battery voltage</dd>
+            <dt>payload.THERMOSTAT_MODE
+                <span class="property-type">int</span>
+            </dt>
+            <dd>The current operating mode of the thermostat</dd>
+            <dt>payload.TARGET_TEMP
+                <span class="property-type">float</span>
+            </dt>
+            <dd>The current target temperature in Celcius</dd>
+            <dt>payload.SWITCH_STATE
+                <span class="property-type">int</span>
+            </dt>
+            <dd>The current switch state</dd>  
         </dl>
         <p>NOTE: As this node also receives, input messages do not get outputted.</p>
     <h3>Commands</h3>
-        <p>Send command to the device. The <code>command</code> should be set to a numeric value shown below, and parameter (if required) should be passed in as <code>data</code></p>
+        <p>Commands can be sent to this device. The <code>command</code> should be set to a numeric value shown below, and parameter (if required) should be passed in as <code>data</code></p>
         <p>Example <code>msg.payload</code>:</p>
 <pre>{
     "command": 165,
@@ -148,7 +170,7 @@
             <dt>SWITCH_STATE
                 <span class="property-type">243</span>   
             </dt>
-            <dd>Set switch state.</dd>
+            <dd>Set switch state of device (maybe used for advancing the heating).</dd>
             <dd>.data=
                 <br> 0 = Off
                 <br> 1 = On</dd>

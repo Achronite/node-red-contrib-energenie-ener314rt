@@ -45,7 +45,9 @@ module.exports = function (RED) {
                     switchState = msg.payload ? true : false;
                 else if (typeof msg.payload.powerOn == typeof true)
                     switchState = msg.payload.powerOn ? true : false;
-                else if (msg.payload === "on" || msg.payload.powerOn === "on")
+                else if (typeof msg.payload.on == typeof true)
+                    switchState = msg.payload.on ? true : false;
+                else if (msg.payload === "on" || msg.payload.powerOn === "on" || msg.payload.on === "on")
                     switchState = true;
 
                 // Set the node status in the GUI

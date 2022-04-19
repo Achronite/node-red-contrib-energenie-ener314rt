@@ -44,7 +44,9 @@ module.exports = function (RED) {
                     switchState = msg.payload.powerOn;
                 else if (typeof msg.payload.state == typeof true)
                     switchState = msg.payload.state;
-                else if (msg.payload === "on" || msg.payload.powerOn === "on" || msg.payload.state === "on")
+                else if (typeof msg.payload.on == typeof true)
+                    switchState = msg.payload.on;
+                else if (msg.payload === "on" || msg.payload.powerOn === "on" || msg.payload.state === "on" || msg.payload.on === "on")
                     switchState = true;
 
                 // Check Switch Number

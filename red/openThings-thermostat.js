@@ -1,13 +1,11 @@
 /*
-** Node-red control of Energenie ENER314-RT board for control & monitor devices
-** Author: Achronite, October 2020
+** Node-red control of Energenie ENER314-RT board for battery powered control & monitor devices
+** Author: Achronite, October 2020 - October 2021
 **
-** v0.4 Beta
+** v0.5 Beta
 **
-** File: OpenThings-cmd.js
-** Purpose: Node-Red wrapper for call to Control & Monitor node for ENER314-RT Control & Monitor device
-**
-** NOTE: This node has been deprecated as all purple devices now have specific nodes createc for them
+** File: OpenThings-thermostat.js
+** Purpose: Node-Red wrapper for MIHO069 Thermostat devices
 **
 */
 "use strict";
@@ -16,7 +14,7 @@ var ener314rt = require('energenie-ener314rt');
 
 module.exports = function (RED) {
 
-    function OpenThingsCmdNode(config) {
+    function OpenThingsThermostatNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
 
@@ -41,20 +39,21 @@ module.exports = function (RED) {
                 }
 
                 // Check the command type by numeric passed in for now
-                //  0 = switch off
-                //  1 = switch on
+                //  0 = off
+                //  1 = thermostatically controlled
+                //  2 = on
                 //  other number = set target temperature
                 switch (typeof msg.payload) {
                     case 'number':
                         var data = msg.payload;
-                        if (msg.payload >= 0 && msg.payload <= 1)
-                            var cmd = 0xF3; // set switch state                            
+                        if (msg.payload >= 0 && msg.payload <= 2)
+                            var cmd = 0xAA; // set thermostat mode                            
                         else
                             var cmd = 0xF4; // set temperature
                         break;
                     case 'boolean':
-                        // assume set switch state
-                        var cmd = 0xF3; // set valve state
+                        // assume set switch state (I'm not sure what this does for thermostats!)
+                        var cmd = 0xF3; // set switch state
                         var data = msg.payload ? 0 : 1;
                         break;
                     case 'object':
@@ -93,7 +92,7 @@ module.exports = function (RED) {
                                 node.status({ fill: "grey", shape: "ring", text: "Set Temp Controlled" });
                                 break;
                             case 2:
-                                node.status({ fill: "grey", shape: "ring", text: "Set Always ON" });
+                                node.status({ fill: "grey", shape: "ring", text: "Set Heating ON" });
                         }
                         break;
                     case 0xA5:  //SET_VALVE_STATE           0,1,2
@@ -122,7 +121,7 @@ module.exports = function (RED) {
                         node.status({ fill: "grey", shape: "ring", text: "Requesting Diagnostics" });
                         break;
                     case 0xBF:  //IDENTIFY
-                        node.status({ fill: "grey", shape: "ring", text: "Identifying Valve" });
+                        node.status({ fill: "grey", shape: "ring", text: "Identifying device" });
                         break;
                     case 0xD2:  //SET_REPORTING_INTERVAL    Time in seconds (300-3600, default=300=5mins)
                         node.status({ fill: "grey", shape: "ring", text: `Set Reporting interval to ${data}secs` });
@@ -147,10 +146,54 @@ module.exports = function (RED) {
                         node.status({ fill: "grey", shape: "ring", text: `Sent command ${cmd}:${data}` });
                 }
 
-                // Send command to device immediately
-                var res = ener314rt.openThingsCmd(productId, deviceId, cmd, data, xmits);
+                // Set command to be sent, next time the device wakes up
+                var res = ener314rt.openThingsCacheCmd(deviceId, cmd, data);
+                // ener314rt.openThingsCmd(productId, deviceId, cmd, data, xmits);
 
                 if (res == 0) {
+                    // command successfuly cached
+                    // Set the node status in the GUI
+                    switch (cmd) {
+                        case 0xF4:  //TEMP_SET                  Temperature in C
+                            node.status({ fill: "grey", shape: "ring", text: `Set Temp to ${data}C` });
+                            break;
+                        case 0xAA:  //SET_THERMOSTAT_MODE           0,1,2
+                            switch (data) {
+                                case 0:
+                                    node.status({ fill: "grey", shape: "ring", text: "Requesting Standby Mode" });
+                                    break;
+                                case 1:
+                                    node.status({ fill: "grey", shape: "ring", text: "Requesting Thermostatic Mode" });
+                                    break;
+                                case 2:
+                                    node.status({ fill: "grey", shape: "ring", text: "Requesting Always ON" });
+                            }
+                            break;
+                        case 0xF3:  //SWITCH_STATE
+                            node.status({ fill: "grey", shape: "ring", text: "Set switch state ${data}" });
+                            break;
+                        case 0xA4:  //SET_LOW_POWER_MODE        0,1
+                            if (data) {
+                                node.status({ fill: "grey", shape: "ring", text: "Set Low power mode on" });
+                            } else {
+                                node.status({ fill: "grey", shape: "ring", text: "Set Low power mode off" });
+                            }
+                            break;
+                        case 0xA6:  //REQUEST_DIAGNOTICS
+                            node.status({ fill: "grey", shape: "ring", text: "Requesting Diagnostics" });
+                            break;
+                        case 0xBF:  //IDENTIFY
+                            node.status({ fill: "grey", shape: "ring", text: "Identifying" });
+                            break;
+                        case 0xD2:  //SET_REPORTING_INTERVAL    Time in seconds (300-3600, default=300=5mins)
+                            node.status({ fill: "grey", shape: "ring", text: `Set Reporting interval to ${data}secs` });
+                            break;
+                        case 0xE2:  //REQUEST_VOLTAGE
+                            node.status({ fill: "grey", shape: "ring", text: "Requesting Voltage" });
+                            break;
+                        default:
+                            node.error(`Unknown command ${cmd}`);
+                    }
                     // TODO: clear message
                 } else {
                     node.status({ fill: "red", shape: "dot", text: `Error $res` });
@@ -163,6 +206,10 @@ module.exports = function (RED) {
                 // set node status for Control & Monitor temperature
                 if (typeof (OTmsg.TEMPERATURE) == 'number') {
                     node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
+                } else if (typeof (OTmsg.WAKEUP) == 'number' && OTmsg.WAKEUP != 0) {
+                    // The thermostat also reports the current temperature as WAKEUP messages!
+                    node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.WAKEUP });
+                    OTmsg.TEMPERATURE = OTmsg.WAKEUP;
                 }
 
                 // send on decoded OpenThings message as is
@@ -176,5 +223,5 @@ module.exports = function (RED) {
         }
 
     }
-    RED.nodes.registerType("openThings-cmd", OpenThingsCmdNode);
+    RED.nodes.registerType("openThings-thermostat", OpenThingsThermostatNode);
 }

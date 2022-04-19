@@ -25,7 +25,7 @@ There are 4 types of node to match the colour coding of the Energenie MiHome dev
 * **Purple** for monitoring and controlling **'Control & Monitor'** FSK/OpenThings devices
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
-Within the 4 types there are currently 9 nodes available to use:
+Within the 4 types there are currently 10 nodes available to use:
 
 | Node | Created For |
 |---|---|
@@ -35,8 +35,9 @@ Within the 4 types there are currently 9 nodes available to use:
 |![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032 - MiHome Motion sensor|
 |![Pink Open Sensor](doc-images/P-Sensor.png?raw=true)|MIHO033 - MiHome Open Door/Window sensor|
 |![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013 - MiHome Radiator Valve|
-|![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005 - iHome Smart Plug+ / Adaptor+|
-|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|All Purple Mains Powered Control & Monitor Devices|
+|![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005 - MiHome Smart Plug+ / Adaptor+|
+|![Purple Thermostat](doc-images/C-Thermostat.png?raw=true)|MIHO069 - MiHome Thermostat|
+|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|Purple Mains Powered Control & Monitor Devices (DEPRECATED)|
 |![Green Raw Transmit](doc-images/G-Raw.png?raw=true)|Non-Energenie 433Mhz Radio Controlled Devices|
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
@@ -71,16 +72,16 @@ Here is a table showing which node is recommended for each energenie device, and
 |MIHO024<br />MIHO025<br />MIHO026|MiHome Single Light|OOK|Blue: Control||
 |MIHO032|MiHome Motion sensor|FSK|Pink: PIR Sensor| &#10003; |
 |MIHO033|MiHome Open Sensor|FSK|Pink: Open Sensor||
-|MIHO069|MiHome Heating Thermostat|FSK|Purple: Control & Monitor|alpha|
+|MIHO069|MiHome Heating Thermostat|FSK|Purple: Thermostat|alpha|
 |MIHO071<br />MIHO072<br />MIHO073|Double Gang MiHome Light|OOK|Blue: Control||
 |MIHO076<br />MIHO077<br />MIHO087|MiHome Dimmer Switch|OOK|Blue: Dimmer||
 |MIHO089|MiHome Click - Smart Button|FSK?|Pink: Monitor||
 
 
 ### NOT SUPPORTED:
-Specific nodes may be required to send the correct control signals to some **'Control & Monitor'** devices.  Most **mains-powered** devices (for example the MIHO069 Heating Thermostat) you should be able to send any OpenThings Commands to the Control & Monitor device using the generic **'Control & Monitor'** node.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' commands or parameters.
+Specific nodes may be required for new energenie devices.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' devices, commands or parameters.
 
-The use of these nodes within the embedded node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  I believe this is due to GPIO being unavailable within the containers that Home Assistant uses.  If you need to use Home Assistant then please install the native node-red implementation on a Pi, and communicate with it using messages, such as the MQTT nodes.
+The use of these nodes within the **embedded** node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  I believe this is due to GPIO being unavailable within the containers that Home Assistant uses.  If you need to use Home Assistant then please install the native node-red implementation on a raspberry Pi, and communicate with it using messages, such as the MQTT nodes.
 
 
 ## Getting Started
@@ -202,18 +203,35 @@ deviceId: <device number>
 mfrId: 4
 productId: 18
 timestamp: <numeric 'epoch based' timestamp, of when message was read>
-TEMPERATURE: <current temperature in celcius>
-REL_HUMIDITY: <Humidity as a percentage>
+TEMPERATURE: 23.06
+REL_HUMIDITY: 72
+BATTERY_LEVEL: 3.08
+MOTION_DETECTOR: <Motion detector state, 0 = no motion, 1 = motion>
 THERMOSTAT_MODE: <Thermostat mode, 0 = off, 1 = temp controlled, 2= always on>
+TARGET_TEMP: <Target set temperature>
+SWITCH_STATE: <Not sure - it is probably the current state of the heating>
 ```
 
-## MiHome Radiator Valve (eTRV) Support
+## MiHome Heating Device Support
+The MiHome Thermostatic Radiator valve (eTRV) and MiHome Thermostat are battery powered devices that do not constantly listen for commands. This required specific code to be written to 'cache' commands for these devices.  As a result there may be a delay from when a command is sent to it being processed by the device. See **Command Caching** below.
 
-v0.3+ now supports the MiHome Thermostatic Radiator valve (eTRV).
-> WARNING: Due to the way the eTRV works there may be a delay from when a command is sent to it being processed by the device. See **eTRV Command Caching** below.
-
-### eTRV Commands
-The MiHome Thermostatic Radiator valve (eTRV) can accept commands to perform operations, provide diagnostics or perform self tests.  The documented commands are provided in the table below.
+### Sending Commands (purple nodes)
+Single commands are sent as a numeric value within a JSON request as shown in the tables below.  For example to Request Diagnostics you can use a template node (Output as Parsed JSON) to send the following ```msg.payload```:
+```
+{
+    "command": 226,
+    "data": 0
+}
+```
+Example for setting temperature to 20C using command mode:
+```
+{
+    "command": 244,
+    "data": 20
+}
+```
+#### eTRV Commands
+The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operations, provide diagnostics or perform self tests.  The documented commands are provided in the table below, there may also be other undocumented commands.
 
 | Command | # | Description | .data | Response Msg |
 |---|:---:|---|---|:---:|
@@ -228,34 +246,31 @@ The MiHome Thermostatic Radiator valve (eTRV) can accept commands to perform ope
 
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
-### Sending eTRV Commands
-Single commands should be sent as a numeric value within a JSON request, for example to Request Diagnostics you can use a template node (Output as Parsed JSON) to send the following ```msg.payload```:
-```
-{
-    "command": 226,
-    "data": 0
-}
-```
-Example for setting temperature to 20C using command mode:
-```
-{
-    "command": 244,
-    "data": 20
-}
-```
+#### Thermostat Commands
+The MiHome Thermostat accepts commands to perform operations.  The commands in the table below *should* work, but I have not tested these (I do not have a thermostat).  Please let me know if these work for you, or if you are aware of any other commands.
 
-### eTRV Command Caching
-The eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes). The receiver is activated after each *TEMPERATURE* report to listen for commands. The receiver only remains active for 200ms or until a message is received.
+| Command | # | Description | .data | Tested |
+|---|:---:|---|---|:---:|
+|SET_THERMOSTAT_MODE|170|Change mode of thermostat where<br>0 = OFF<br>1 = Temp Controlled<br>2 = ON|0-2|No|
+|REQUEST_DIAGNOTICS|166|Request diagnostic data from device||No|
+|IDENTIFY|191|Identify the device by making the green light flash for 60 seconds||No|
+|SET_REPORTING_INTERVAL|210|Update reporting interval to requested value|300-3600 seconds|No|
+|REQUEST_VOLTAGE|226|Report current voltage of the batteries||No|
+|TEMP_SET|244|Send new target temperature for thermostat.<br>NOTE: The THERMOSTAT_MODE must be set to '1' for this to work.|int|No|
 
-To cater for this hardware limitation the **'eTRV node'** uses command caching and dynamic polling. Any command sent using the eTRV node will be held until a TEMPERATURE report is received; at this point the most recent cached message (only 1 is supported) will be sent to the eTRV.  Messages will continue to be resent until they have been succesfully received or until the number of Retries has reached 0.
 
-The reason that a command may be resent multiple times is due to reporting issues. The eTRV devices, unfortunately, do not send acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.
+### Command Caching
+Battery powered energenie devices, such as the eTRV or Room Thermostat do not constantly listen for commands.  For example, the eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes) after which the receiver is then activated to listen for commands. The receiver only remains active for 200ms or until a message is received.
 
-> **NOTE:** The performance of node-red may decrease when an eTRV command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 0.5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
+To cater for these hardware limitations the **'eTRV'** and **'Thermostat'** nodes use command caching and dynamic polling. Any command sent using these nodes will be held until a TEMPERATURE (for eTRV) or WAKEUP (for Thermostat) message is received; at this point the most recent cached message (only 1 is supported) will be sent to the device.  Messages will continue to be resent until they have been succesfully received or until the number of retries has reached 0.
+
+Sometimes a specific command may be resent multiple times. This is particularly a problem for the eTRV devices, as they do not send an acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.
+
+> **NOTE:** The performance of node-red may decrease when a command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 0.5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
 
 ### eTRV Monitor Messages
 
-To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above, additional code has been added to cache the monitor information for these devices.  An example of the values is shown below, only 'known' values are returned when the eTRV regularly reports the TEMPERATURE.  See table for types and determining when field was last updated:
+To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above, additional code has been added to store the received and set information for these devices.  An example of the values are shown below, only 'known' values are returned when the eTRV regularly reports the TEMPERATURE.  See table for types and determining when field was last updated:
 ```
 {
     "deviceId":3989,
@@ -293,7 +308,9 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |VOLTAGE|Current battery voltage|float|VOLTAGE_TS|
 |VOLTAGE_TS|Tmestamp of when battery voltage was last received|epoch|VOLTAGE_TS|
 
-## Changing Icons
+>TIP: To get up-to-date information for a specific eTRV parameter you will need to request the device for an update by sending the appropriate command (see [eTRV Commands](#-eTRV-Commands) above),
+
+## Changing the Icons
 The icon as displayed on the node within the flows can be changed using the 'Icon' dropdown in the 'Appearance' tab in the node properties. I have created icons for a few of the energenie devices. Use the search button and enter 'ener' to find them.
 
 ## Troubleshooting
@@ -321,6 +338,8 @@ If you have any issues with the code, particularly if your board is not initiali
 0.4.0|19 Feb 21|Added new C&M node that immediately sends commands (designed for MIHO069 Thermostat). Added MIHO069 thermostat params & icon. Added support for UNKNOWN commands (this assumes a uint as datatype for .data). Added specific nodes for MIHO032 Motion Sensor and MIHO033 Open Sensor. Updated Energenie device names. Renamed old C&M node to be 'Smart Plug+'. Readme updates.|
 0.4.1|bugfix|Reduced internal efficiency 'sleep' from 5s to 0.5s (for non-eTRV send mode) to reduce risk of losing a message (Issue #14). Fix crash when using over 6 devices (Issue #15).
 0.4.2|05 May 21|Added MiHome Dimmer node. Made ON/OFF status messages consistant across node types. Bug fix for issue #49. Only stop monitoring during close if has been started. README updates.|
+0.5.0|19 Apr 22|Added specific node for MIHO069 MiHome Thermostat, deprecating the generic Control & Monitor node (as no other C&M devices exist at present).
+
 
 ## Dependencies
 
@@ -347,4 +366,4 @@ I am currently working on supporting the MIHO069 Thermostat (which I do not own)
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - 05 May 2021 - v0.4.1 Beta
+@Achronite - April 2022 - v0.5.0 Beta
