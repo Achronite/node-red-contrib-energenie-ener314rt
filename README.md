@@ -339,6 +339,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.4.1|bugfix|Reduced internal efficiency 'sleep' from 5s to 0.5s (for non-eTRV send mode) to reduce risk of losing a message (Issue #14). Fix crash when using over 6 devices (Issue #15).
 0.4.2|05 May 21|Added MiHome Dimmer node. Made ON/OFF status messages consistant across node types. Bug fix for issue #49. Only stop monitoring during close if has been started. README updates.|
 0.5.0|19 Apr 22|Added specific node for MIHO069 MiHome Thermostat, deprecating the generic Control & Monitor node (as no other C&M devices exist at present).
+0.5.1|Jul 22|Increased support for MiHome House Monitor issue #57 (added apparent_power to node status & new node icon)
 
 
 ## Dependencies
@@ -366,4 +367,4 @@ I am currently working on supporting the MIHO069 Thermostat (which I do not own)
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - April 2022 - v0.5.0 Beta
+@Achronite - July 2022 - v0.5.1 Beta
