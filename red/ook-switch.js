@@ -1,8 +1,8 @@
 /*
 ** Node-red control of Energenie ENER314-RT board for remote control of radio sockets
-** Author: Achronite, December 2018 - September 2019
+** Author: Achronite, December 2018 - September 2022
 **
-** v0.3 Alpha
+** v0.4 Alpha
 **
 ** File: ook-switch.js
 ** Purpose: Node-Red wrapper for call to switch node for ENER314-RT OOK device
@@ -32,8 +32,8 @@ module.exports = function (RED) {
 
                 //this.log(`IN ${msg.payload.zone}:${msg.payload.unit} state=${msg.payload.state}`);
 
-                var zone = Number(msg.payload.zone) || Number(config.zone) || 0;
-                var switchNum = Number(msg.payload.switchNum) || Number(msg.payload.unit) || Number(config.switchNum) || 1;
+                var zone = Number(msg.payload.zone) || Number(config.zone);
+                var switchNum = Number(msg.payload.switchNum) || Number(msg.payload.unit) || Number(config.switchNum);
                 var xmits = Number(msg.payload.repeat) || 20;
 
                 // Check Switch State in message (default to off)
