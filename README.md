@@ -133,7 +133,7 @@ To increase reliability a new hardware SPI driver has been added.  The hardware 
 
 
 
-## Light Dimmer Support (NEW IN v0.4.1)
+## Light Dimmer Support
 
 Each Energenie Light Dimmer requires a dedicated OOK zone allocating to it, as internally it uses the switch numbers to set the brightness level of the dimmer. This node works slightly differently to the standard **'Control'** node. The `payload` determines the light level required as follows:
 
@@ -247,7 +247,7 @@ The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operat
 
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
-#### Thermostat Commands
+#### Thermostat Commands (untested)
 The MiHome Thermostat accepts commands to perform operations.  The commands in the table below *should* work, but I have not tested these (I do not have a thermostat).  Please let me know if these work for you, or if you are aware of any other commands.
 
 | Command | # | Description | .data | Tested |
@@ -263,9 +263,9 @@ The MiHome Thermostat accepts commands to perform operations.  The commands in t
 ### Command Caching
 Battery powered energenie devices, such as the eTRV or Room Thermostat do not constantly listen for commands.  For example, the eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes) after which the receiver is then activated to listen for commands. The receiver only remains active for 200ms or until a message is received.
 
-To cater for these hardware limitations the **'eTRV'** and **'Thermostat'** nodes use command caching and dynamic polling. Any command sent using these nodes will be held until a TEMPERATURE (for eTRV) or WAKEUP (for Thermostat) message is received; at this point the most recent cached message (only 1 is supported) will be sent to the device.  Messages will continue to be resent until they have been succesfully received or until the number of retries has reached 0.  ** NEW v0.6.x ** - When a command is known to have been processed (e.g DIAGNOSTICS) the 'command' and 'retries' topics are reset to 0.
+To cater for these hardware limitations the **'eTRV'** and **'Thermostat'** nodes use command caching and dynamic polling. Any command sent using these nodes will be held until a TEMPERATURE (for eTRV) or WAKEUP (for Thermostat) message is received; at this point the most recent cached message (only 1 is supported) will be sent to the device.  Messages will continue to be resent until they have been succesfully received or until the number of retries has reached 0.
 
-Sometimes a specific command may be resent multiple times. This is particularly a problem for the eTRV devices, as they do not send an acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.
+Sometimes a specific command may be resent multiple times. This is particularly a problem for the eTRV devices, as they do not send an acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.  ** NEW v0.6.x ** - When a device *has* acknowledged a command the 'command' and 'retries' topics are reset to 0.
 
 > **NOTE:** The performance of node-red may decrease when a command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 0.5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
 
@@ -284,7 +284,7 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
     "DIAGNOSTICS":512,
     "DIAGNOSTICS_TS":1567927343,
     "LOW_POWER_MODE":false,
-    "TARGET_C": 10,
+    "TARGET_TEMP": 10,
     "VOLTAGE": 3.19,
     "VOLTAGE_TS": 1568036414,
     "ERRORS": true,
@@ -302,7 +302,7 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |ERROR_TEXT|error information|string|DIAGNOSTIC_TS|
 |EXERCISE_VALVE|The result of the *EXERCISE_VALVE* command| success or fail|DIAGNOSTIC_TS|
 |LOW_POWER_MODE|eTRV is in low power mode state>|boolean|DIAGNOSTIC_TS|
-|TARGET_C|Target temperature in celcius|int|TEMP_SET command|
+|TARGET_TEMP|Target temperature in celcius|int|TEMP_SET command|
 |TEMPERATURE|The current temperature in celcius|float|timestamp|
 |VALVE_STATE|Current valve mode/state| open, closed, auto, error|VALVE_STATE command *or* DIAGNOSTIC_TS on error|
 |VALVE_TS|timestamp of when last *EXERCISE_VALVE* took place|epoch|DIAGNOSTIC_TS|
@@ -342,7 +342,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.5.0|19 Apr 22|Added specific node for MIHO069 MiHome Thermostat, deprecating the generic Control & Monitor node (as no other C&M devices exist at present).
 0.5.1|Sep 22|Increased support for MiHome House Monitor issue #57 (added apparent_power to node status & new node icon), Fixed Zone 0 (all) for Control Node (Issue #61)
 0.5.2|Sep 22|Added node-red version to package.json
-0.6.0|22 Jan 23|Updated for 0.6.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt), which contains multiple fixes and improvements, highlights: <br>Hardware driver support added using spidev, which falls back to software driver if unavailable.<br>Renamed TARGET_C to TARGET_TEMP for eTRV.<br>Add capability for cached/pre-cached commands to be cleared with command=0.
+0.6.0|23 Jan 23|Updated for v0.6.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt), which contains multiple fixes and improvements. Highlights: <br>Hardware driver support added using spidev, which falls back to software driver if unavailable.<br>Renamed TARGET_C to TARGET_TEMP for eTRV.<br>Add capability for cached/pre-cached commands to be cleared with command=0.
 
 
 ## Dependencies
