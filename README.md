@@ -3,7 +3,6 @@ A node-red module to control the Energenie MiHome line of products via the ENER3
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-brightgreen.svg)](https://github.com/Achronite/node-red-contrib-energenie-ener314/graphs/commit-activity)
 [![Downloads](https://img.shields.io/npm/dm/node-red-contrib-energenie-ener314rt.svg)](https://www.npmjs.com/package/node-red-contrib-energenie-ener314rt)
-[![HitCount](http://hits.dwyl.io/achronite/node-red-contrib-energenie-ener314rt.svg)](http://hits.dwyl.io/achronite/node-red-contrib-energenie-ener314rt)
 ![node](https://img.shields.io/node/v/node-red-contrib-energenie-ener314rt)
 [![Release](https://img.shields.io/github/release-pre/achronite/node-red-contrib-energenie-ener314rt.svg)](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/releases)
 [![NPM](https://nodei.co/npm/node-red-contrib-energenie-ener314rt.png)](https://nodei.co/npm/node-red-contrib-energenie-ener314rt/)
@@ -80,7 +79,7 @@ Here is a table showing which node is recommended for each energenie device, and
 ### NOT SUPPORTED:
 Specific nodes may be required for new energenie devices.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' devices, commands or parameters.
 
-The use of these nodes within the **embedded** node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  I believe this is due to GPIO being unavailable within the containers that Home Assistant uses.  If you need to use Home Assistant then please install the native node-red implementation on a raspberry Pi, and communicate with it using messages, such as the MQTT nodes.
+The use of these nodes within the **embedded** node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  A new MQTT / Home Assistant integration is now available at [mqtt-energenie-ener314rt](https://github.com/Achronite/mqtt-energenie-ener314rt), please use this instead.
 
 
 ## Getting Started
@@ -118,6 +117,8 @@ The use of these nodes within the **embedded** node-red implementation in [Home 
 * Click 'Add' to finish configuration of the device
 * Click 'Done'
 
+## Hardware based SPI driver - *NEW* In Version 0.6
+To increase reliability a new hardware SPI driver has been added.  The hardware SPI driver version can be enabled using `sudo raspi-config` choosing `Interface Options` and `SPI` to enable the hardware SPI mode, do this whilst this software is not running.  The module tries to use the hardware driver on start-up, if it has not been enabled it falls back to using the software SPI driver.
 
 ## 'Control Only' OOK Zone Rules
 
@@ -131,7 +132,7 @@ The use of these nodes within the **embedded** node-red implementation in [Home 
 
 
 
-## Light Dimmer Support (NEW IN v0.4.1)
+## Light Dimmer Support
 
 Each Energenie Light Dimmer requires a dedicated OOK zone allocating to it, as internally it uses the switch numbers to set the brightness level of the dimmer. This node works slightly differently to the standard **'Control'** node. The `payload` determines the light level required as follows:
 
@@ -245,7 +246,7 @@ The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operat
 
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
-#### Thermostat Commands
+#### Thermostat Commands (untested)
 The MiHome Thermostat accepts commands to perform operations.  The commands in the table below *should* work, but I have not tested these (I do not have a thermostat).  Please let me know if these work for you, or if you are aware of any other commands.
 
 | Command | # | Description | .data | Tested |
@@ -263,7 +264,7 @@ Battery powered energenie devices, such as the eTRV or Room Thermostat do not co
 
 To cater for these hardware limitations the **'eTRV'** and **'Thermostat'** nodes use command caching and dynamic polling. Any command sent using these nodes will be held until a TEMPERATURE (for eTRV) or WAKEUP (for Thermostat) message is received; at this point the most recent cached message (only 1 is supported) will be sent to the device.  Messages will continue to be resent until they have been succesfully received or until the number of retries has reached 0.
 
-Sometimes a specific command may be resent multiple times. This is particularly a problem for the eTRV devices, as they do not send an acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.
+Sometimes a specific command may be resent multiple times. This is particularly a problem for the eTRV devices, as they do not send an acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.  ** NEW v0.6.x ** - When a device *has* acknowledged a command the 'command' and 'retries' topics are reset to 0.
 
 > **NOTE:** The performance of node-red may decrease when a command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 0.5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
 
@@ -282,7 +283,7 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
     "DIAGNOSTICS":512,
     "DIAGNOSTICS_TS":1567927343,
     "LOW_POWER_MODE":false,
-    "TARGET_C": 10,
+    "TARGET_TEMP": 10,
     "VOLTAGE": 3.19,
     "VOLTAGE_TS": 1568036414,
     "ERRORS": true,
@@ -300,7 +301,7 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |ERROR_TEXT|error information|string|DIAGNOSTIC_TS|
 |EXERCISE_VALVE|The result of the *EXERCISE_VALVE* command| success or fail|DIAGNOSTIC_TS|
 |LOW_POWER_MODE|eTRV is in low power mode state>|boolean|DIAGNOSTIC_TS|
-|TARGET_C|Target temperature in celcius|int|TEMP_SET command|
+|TARGET_TEMP|Target temperature in celcius|int|TEMP_SET command|
 |TEMPERATURE|The current temperature in celcius|float|timestamp|
 |VALVE_STATE|Current valve mode/state| open, closed, auto, error|VALVE_STATE command *or* DIAGNOSTIC_TS on error|
 |VALVE_TS|timestamp of when last *EXERCISE_VALVE* took place|epoch|DIAGNOSTIC_TS|
@@ -315,7 +316,7 @@ The icon as displayed on the node within the flows can be changed using the 'Ico
 ## Troubleshooting
 If you have any issues with the code, particularly if your board is not initialising, please try [ener314rt-debug](https://github.com/Achronite/ener314rt-debug), which has been created as a standalone node.js application with full debug enabled.  Node-red is not required to execute these tests.
 
-* *Unable to initialise Energenie ENER314-RT board error: -n*: Check that your card is installed correctly, and that you **do not** have hardware SPI enabled.  On raspbian if the hardware SPI driver was loaded, you will see the device `/dev/spidev0.0`.  If you see this, you will need to switch hardware SPI OFF.
+* *Unable to initialise Energenie ENER314-RT board error: -n*: Check that your card is installed correctly.
 
 * *Compile errors during install: 'unknown type/function napi_...'*:  This node module requires node.js v10 or above to work, upgrade your node.js version and retry.
 
@@ -339,11 +340,13 @@ If you have any issues with the code, particularly if your board is not initiali
 0.4.2|05 May 21|Added MiHome Dimmer node. Made ON/OFF status messages consistant across node types. Bug fix for issue #49. Only stop monitoring during close if has been started. README updates.|
 0.5.0|19 Apr 22|Added specific node for MIHO069 MiHome Thermostat, deprecating the generic Control & Monitor node (as no other C&M devices exist at present).
 0.5.1|Sep 22|Increased support for MiHome House Monitor issue #57 (added apparent_power to node status & new node icon), Fixed Zone 0 (all) for Control Node (Issue #61)
+0.5.2|Sep 22|Added node-red version to package.json
+0.6.0|23 Jan 23|Updated for v0.6.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt), which contains multiple fixes and improvements. Highlights: <br>Hardware driver support added using spidev, which falls back to software driver if unavailable.<br>Renamed TARGET_C to TARGET_TEMP for eTRV.<br>Add capability for cached/pre-cached commands to be cleared with command=0.
 
 
 ## Dependencies
 
-* [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt) -  Node module (by same author) used to perform all radio interaction, split from original code base in version 0.3.0
+* [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt) -  Node module (by same author) used to perform all radio interaction
 
 ## Built With
 
@@ -361,9 +364,9 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 Future work is detailed on the [github issues page](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues). Please raise any bugs, questions, queries or enhancements you have using this page.
 
-I am currently working on supporting the MIHO069 Thermostat (which I do not own).  Please contribute via github issues if you would like to be involved in testing.
+I am currently working on a new node.js implementation of ENER314-RT that uses MQTT for Home Assistant - [mqtt-energenie-ener314rt](https://github.com/Achronite/mqtt-energenie-ener314rt).
 
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - September 2022 - v0.5.1 Beta
+@Achronite - January 2023 - v0.6.0 Beta
