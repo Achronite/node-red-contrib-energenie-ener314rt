@@ -209,7 +209,7 @@ BATTERY_LEVEL: 3.08
 MOTION_DETECTOR: <Motion detector state, 0 = no motion, 1 = motion>
 THERMOSTAT_MODE: <Thermostat mode, 0 = off, 1 = temp controlled, 2= always on>
 TARGET_TEMP: <Target set temperature>
-SWITCH_STATE: <Not sure - it is probably the current state of the heating>
+SWITCH_STATE: <Current state of the heating 0 = off, 1 = heating>
 ```
 
 ## MiHome Heating Device Support
@@ -242,22 +242,22 @@ The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operat
 |IDENTIFY|191|Identify the device by making the green light flash on the selected eTRV for 60 seconds||No|
 |SET_REPORTING_INTERVAL|210|Update reporting interval to requested value|300-3600 seconds|No|
 |REQUEST_VOLTAGE|226|Report current voltage of the batteries||VOLTAGE|
-|TEMP_SET|244|Send new target temperature for eTRV.<br>NOTE: The VALVE_STATE must be set to 'Auto' for this to work.|int|No|
+|TARGET_TEMP|244|Send new target temperature for eTRV.<br>NOTE: The VALVE_STATE must be set to 'Auto' for this to work.|int|No|
 
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
-#### Thermostat Commands (untested)
-The MiHome Thermostat accepts commands to perform operations.  The commands in the table below *should* work, but I have not tested these (I do not have a thermostat).  Please let me know if these work for you, or if you are aware of any other commands.
+#### Thermostat Commands
+The MiHome Thermostat accepts the following commands to perform operations.
+
+> WARNING: If you are using a MiHome gateway to control your thermostat command clash may occur by issuing command within node-red.
 
 | Command | # | Description | .data | Tested |
 |---|:---:|---|---|:---:|
-|SET_THERMOSTAT_MODE|170|Change mode of thermostat where<br>0 = OFF<br>1 = Temp Controlled<br>2 = ON|0-2|No|
-|REQUEST_DIAGNOTICS|166|Request diagnostic data from device||No|
-|IDENTIFY|191|Identify the device by making the green light flash for 60 seconds||No|
-|SET_REPORTING_INTERVAL|210|Update reporting interval to requested value|300-3600 seconds|No|
-|REQUEST_VOLTAGE|226|Report current voltage of the batteries||No|
-|TEMP_SET|244|Send new target temperature for thermostat.<br>NOTE: The THERMOSTAT_MODE must be set to '1' for this to work.|int|No|
+|CANCEL|0|Cancel existing cached command (set retries to 0)||Yes|
+|SET_THERMOSTAT_MODE|170|Change mode of thermostat where<br>0 = OFF<br>1 = Temp Controlled<br>2 = ON|0-2|Yes|
+|TARGET_TEMP|244|Send new target temperature for thermostat.<br>NOTE: The THERMOSTAT_MODE must be set to '1' for this to work.|int|Yes|
 
+In order for the Thermostat to provide updates for it's telemetry data when used **without a MiHome gateway**, auto messaging has been enabled within this module.  To start this auto-messaging you will need to send a `THERMOSTAT_MODE` command.  The most recent `THERMOSTAT_MODE` value will be stored and periodically replayed (until a restart) to prompt the thermostat into providing it's telemetry data.
 
 ### Command Caching
 Battery powered energenie devices, such as the eTRV or Room Thermostat do not constantly listen for commands.  For example, the eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes) after which the receiver is then activated to listen for commands. The receiver only remains active for 200ms or until a message is received.
@@ -342,7 +342,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.5.1|Sep 22|Increased support for MiHome House Monitor issue #57 (added apparent_power to node status & new node icon), Fixed Zone 0 (all) for Control Node (Issue #61)
 0.5.2|Sep 22|Added node-red version to package.json
 0.6.0|23 Jan 23|Updated for v0.6.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt), which contains multiple fixes and improvements. Highlights: <br>Hardware driver support added using spidev, which falls back to software driver if unavailable.<br>Renamed TARGET_C to TARGET_TEMP for eTRV.<br>Add capability for cached/pre-cached commands to be cleared with command=0.
-
+0.7.0|Jan 24|Updated for v0.7.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt), which contains multiple fixes and improvements. Highlights: <br>Switched from deprecated WiringPi to gpiod<br>support rpi5<br>Thermostat now supported
 
 ## Dependencies
 
@@ -369,4 +369,4 @@ I am currently working on a new node.js implementation of ENER314-RT that uses M
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - January 2023 - v0.6.0 Beta
+@Achronite - January 2024 - v0.7.0 Beta

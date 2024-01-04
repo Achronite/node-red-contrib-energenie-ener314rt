@@ -22,7 +22,7 @@ module.exports = function (RED) {
         var board = RED.nodes.getNode(config.board);
         var deviceId = Number(device.deviceId) || 0;
         var productId = Number(device.productId) || 3;
-        var retry = device.retry || true;
+        var retries = Number(device.retries) || 10;
         var sentState = -1;
 
         // CHECK CONFIG
@@ -50,11 +50,6 @@ module.exports = function (RED) {
                             var cmd = 0xAA; // set thermostat mode                            
                         else
                             var cmd = 0xF4; // set temperature
-                        break;
-                    case 'boolean':
-                        // assume set switch state (I'm not sure what this does for thermostats!)
-                        var cmd = 0xF3; // set switch state
-                        var data = msg.payload ? 0 : 1;
                         break;
                     case 'object':
                         // Assume Command mode
@@ -95,59 +90,13 @@ module.exports = function (RED) {
                                 node.status({ fill: "grey", shape: "ring", text: "Set Heating ON" });
                         }
                         break;
-                    case 0xA5:  //SET_VALVE_STATE           0,1,2
-                        switch (data) {
-                            case 0:
-                                node.status({ fill: "grey", shape: "ring", text: "Opening Valve" });
-                                break;
-                            case 1:
-                                node.status({ fill: "grey", shape: "ring", text: "Closing Valve" });
-                                break;
-                            case 2:
-                                node.status({ fill: "grey", shape: "ring", text: "Temp Controlled" });
-                        }
-                        break;
-                    case 0xA3:  //EXERCISE_VALVE
-                        node.status({ fill: "grey", shape: "ring", text: "Exercising Valve" });
-                        break;
-                    case 0xA4:  //SET_LOW_POWER_MODE        0,1
-                        if (data) {
-                            node.status({ fill: "grey", shape: "ring", text: "Set Low power mode on" });
-                        } else {
-                            node.status({ fill: "grey", shape: "ring", text: "Set Low power mode off" });
-                        }
-                        break;
-                    case 0xA6:  //REQUEST_DIAGNOTICS
-                        node.status({ fill: "grey", shape: "ring", text: "Requesting Diagnostics" });
-                        break;
-                    case 0xBF:  //IDENTIFY
-                        node.status({ fill: "grey", shape: "ring", text: "Identifying device" });
-                        break;
-                    case 0xD2:  //SET_REPORTING_INTERVAL    Time in seconds (300-3600, default=300=5mins)
-                        node.status({ fill: "grey", shape: "ring", text: `Set Reporting interval to ${data}secs` });
-                        break;
-                    case 0xE2:  //REQUEST_VOLTAGE
-                        node.status({ fill: "grey", shape: "ring", text: "Requesting Voltage" });
-                        break;
-                    case 0xF3:   // SWITCH_STATE
-                        switch (data) {
-                            case 0:
-                                node.status({ fill: "red", shape: "ring", text: "OFF sent" });
-                                break;
-                            case 1:
-                                node.status({ fill: "green", shape: "ring", text: "ON sent" });
-                                break;
-                            default:
-                                node.status({ fill: "grey", shape: "ring", text: `Sent command ${cmd}:${data}` });
-                        }
-                        break;
 
                     default:  // All other commands
                         node.status({ fill: "grey", shape: "ring", text: `Sent command ${cmd}:${data}` });
                 }
 
                 // Set command to be sent, next time the device wakes up
-                var res = ener314rt.openThingsCacheCmd(deviceId, cmd, data);
+                var res = ener314rt.openThingsCacheCmd(productId, deviceId, cmd, data, retries);
                 // ener314rt.openThingsCmd(productId, deviceId, cmd, data, xmits);
 
                 if (res == 0) {
@@ -160,36 +109,20 @@ module.exports = function (RED) {
                         case 0xAA:  //SET_THERMOSTAT_MODE           0,1,2
                             switch (data) {
                                 case 0:
-                                    node.status({ fill: "grey", shape: "ring", text: "Requesting Standby Mode" });
+                                    node.status({ fill: "grey", shape: "ring", text: "Requesting Always Off Mode" });
                                     break;
                                 case 1:
-                                    node.status({ fill: "grey", shape: "ring", text: "Requesting Thermostatic Mode" });
+                                    node.status({ fill: "grey", shape: "ring", text: "Requesting Auto Mode" });
                                     break;
                                 case 2:
-                                    node.status({ fill: "grey", shape: "ring", text: "Requesting Always ON" });
+                                    node.status({ fill: "grey", shape: "ring", text: "Requesting Always ON Mode" });
                             }
                             break;
                         case 0xF3:  //SWITCH_STATE
                             node.status({ fill: "grey", shape: "ring", text: "Set switch state ${data}" });
                             break;
-                        case 0xA4:  //SET_LOW_POWER_MODE        0,1
-                            if (data) {
-                                node.status({ fill: "grey", shape: "ring", text: "Set Low power mode on" });
-                            } else {
-                                node.status({ fill: "grey", shape: "ring", text: "Set Low power mode off" });
-                            }
-                            break;
-                        case 0xA6:  //REQUEST_DIAGNOTICS
-                            node.status({ fill: "grey", shape: "ring", text: "Requesting Diagnostics" });
-                            break;
-                        case 0xBF:  //IDENTIFY
-                            node.status({ fill: "grey", shape: "ring", text: "Identifying" });
-                            break;
-                        case 0xD2:  //SET_REPORTING_INTERVAL    Time in seconds (300-3600, default=300=5mins)
-                            node.status({ fill: "grey", shape: "ring", text: `Set Reporting interval to ${data}secs` });
-                            break;
-                        case 0xE2:  //REQUEST_VOLTAGE
-                            node.status({ fill: "grey", shape: "ring", text: "Requesting Voltage" });
+                        case 0x00:  //CANCEL
+                            node.status({ fill: "grey", shape: "ring", text: "Cancelling command" });
                             break;
                         default:
                             node.error(`Unknown command ${cmd}`);
@@ -203,13 +136,45 @@ module.exports = function (RED) {
             });
 
             board.events.on(deviceId, function (OTmsg) {
-                // set node status for Control & Monitor temperature
-                if (typeof (OTmsg.TEMPERATURE) == 'number') {
-                    node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.TEMPERATURE });
-                } else if (typeof (OTmsg.WAKEUP) == 'number' && OTmsg.WAKEUP != 0) {
-                    // The thermostat also reports the current temperature as WAKEUP messages!
-                    node.status({ fill: "grey", shape: "ring", text: "Temp " + OTmsg.WAKEUP });
-                    OTmsg.TEMPERATURE = OTmsg.WAKEUP;
+                // set node status for Control & Monitor temperature (using the information returned)
+                var nodeStatus = { fill: "grey", shape: "ring", text: ""};
+
+                if (typeof (OTmsg.THERMOSTAT_MODE) == 'number') {
+                    switch (OTmsg.THERMOSTAT_MODE) {
+                        case 0:
+                            nodeStatus.text = "Off ";
+                            break;
+                        case 1:
+                            nodeStatus.text = "Auto ";
+                            nodeStatus.fill = "green";
+                            break;
+                        case 2:
+                            nodeStatus.text = "On ";
+                            nodeStatus.fill = "red";
+                    }
+                }
+
+                if (typeof (OTmsg.TEMPERATURE) == 'number') {      
+                    nodeStatus.text += OTmsg.TEMPERATURE.toFixed(1);
+                }              
+                if (typeof OTmsg.TARGET_TEMP == 'number') {
+                    nodeStatus.text += "(" + OTmsg.TARGET_TEMP + ")";
+                }
+
+                if (typeof (OTmsg.SWITCH_STATE) == 'number') {    
+                    nodeStatus.shape = "dot";
+                    switch (OTmsg.SWITCH_STATE) {
+                        case 0:
+                            nodeStatus.text+= " [Heating]"
+                            break;
+                        case 1:
+                            nodeStatus.text+= " [OFF]"
+                            break;
+                    }
+                } 
+
+                if (nodeStatus.text.length > 0){
+                    node.status(nodeStatus);
                 }
 
                 // send on decoded OpenThings message as is
