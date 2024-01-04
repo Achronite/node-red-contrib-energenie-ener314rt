@@ -235,6 +235,7 @@ The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operat
 
 | Command | # | Description | .data | Response Msg |
 |---|:---:|---|---|:---:|
+|CANCEL|0|Cancel existing cached command (set retries to 0)||Yes|
 |EXERCISE_VALVE|163|Send exercise valve command, recommended once a week to calibrate eTRV||DIAGNOSTICS|
 |SET_LOW_POWER_MODE|164|This is used to enhance battery life by limiting the hunting of the actuator, ie it limits small adjustments to degree of opening, when the room temperature is close to the *TEMP_SET* point. A consequence of the Low Power mode is that it may cause larger errors in controlling room temperature to the set temperature.|0=Off<br>1=On|No*|
 |SET_VALVE_STATE|165|Set valve state|0=Open<br>1=Closed<br>2=Auto (default)|No|
@@ -247,6 +248,7 @@ The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operat
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
 #### Thermostat Commands
+
 The MiHome Thermostat accepts the following commands to perform operations.
 
 > WARNING: If you are using a MiHome gateway to control your thermostat command clash may occur by issuing command within node-red.
@@ -254,8 +256,8 @@ The MiHome Thermostat accepts the following commands to perform operations.
 | Command | # | Description | .data | Tested |
 |---|:---:|---|---|:---:|
 |CANCEL|0|Cancel existing cached command (set retries to 0)||Yes|
-|SET_THERMOSTAT_MODE|170|Change mode of thermostat where<br>0 = OFF<br>1 = Temp Controlled<br>2 = ON|0-2|Yes|
-|TARGET_TEMP|244|Send new target temperature for thermostat.<br>NOTE: The THERMOSTAT_MODE must be set to '1' for this to work.|int|Yes|
+|THERMOSTAT_MODE|170|Change mode of thermostat where<br>0 = OFF<br>1 = Temp Controlled<br>2 = ON|0-2|Yes|
+|TARGET_TEMP|244|Send new target temperature for thermostat (0-30) in 0.5 increments.<br>NOTE: The THERMOSTAT_MODE must be set to '1' for this to work.|int|Yes|
 
 In order for the Thermostat to provide updates for it's telemetry data when used **without a MiHome gateway**, auto messaging has been enabled within this module.  To start this auto-messaging you will need to send a `THERMOSTAT_MODE` command.  The most recent `THERMOSTAT_MODE` value will be stored and periodically replayed (until a restart) to prompt the thermostat into providing it's telemetry data.
 
@@ -342,7 +344,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.5.1|Sep 22|Increased support for MiHome House Monitor issue #57 (added apparent_power to node status & new node icon), Fixed Zone 0 (all) for Control Node (Issue #61)
 0.5.2|Sep 22|Added node-red version to package.json
 0.6.0|23 Jan 23|Updated for v0.6.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt), which contains multiple fixes and improvements. Highlights: <br>Hardware driver support added using spidev, which falls back to software driver if unavailable.<br>Renamed TARGET_C to TARGET_TEMP for eTRV.<br>Add capability for cached/pre-cached commands to be cleared with command=0.
-0.7.0|Jan 24|Updated for v0.7.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt), which contains multiple fixes and improvements. Highlights: <br>Switched from deprecated WiringPi to gpiod<br>support rpi5<br>Thermostat now supported
+0.7.0|Jan 24|Updated for v0.7.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt) issue #72, which contains multiple fixes and improvements. Highlights: <br>Switched from deprecated WiringPi to gpiod<br>support rpi5<br>Thermostat now supported (#36)
 
 ## Dependencies
 
