@@ -22,7 +22,7 @@ module.exports = function (RED) {
         var board = RED.nodes.getNode(config.board);
         var deviceId = Number(device.deviceId) || 0;
         var productId = Number(device.productId) || 3;
-        var retry = device.retry || true;
+        var retries = Number(device.retries) || 10;
         var sentState = -1;
 
         // CHECK CONFIG
@@ -76,7 +76,7 @@ module.exports = function (RED) {
                 }
 
                 // Set command to be sent, next time radiator wakes up
-                var res = ener314rt.openThingsCacheCmd(deviceId, cmd, data);
+                var res = ener314rt.openThingsCacheCmd(productId, deviceId, cmd, data, retries);
 
                 if (res == 0) {
                     // command successfuly cached
@@ -118,6 +118,9 @@ module.exports = function (RED) {
                             break;
                         case 0xE2:  //REQUEST_VOLTAGE
                             node.status({ fill: "grey", shape: "ring", text: "Requesting Voltage" });
+                            break;
+                        case 0x00:  //CANCEL
+                            node.status({ fill: "grey", shape: "ring", text: "Cancelling command" });
                             break;
                         default:
                             node.error(`Unknown command ${cmd}`);
