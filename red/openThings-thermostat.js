@@ -22,7 +22,7 @@ module.exports = function (RED) {
         var board = RED.nodes.getNode(config.board);
         var deviceId = Number(device.deviceId) || 0;
         var productId = Number(device.productId) || 3;
-        var retries = Number(device.retries) || 10;
+        var retries = Number(device.retries) || 3;
         var sentState = -1;
 
         // CHECK CONFIG
@@ -90,7 +90,6 @@ module.exports = function (RED) {
                                 node.status({ fill: "grey", shape: "ring", text: "Set Heating ON" });
                         }
                         break;
-
                     default:  // All other commands
                         node.status({ fill: "grey", shape: "ring", text: `Sent command ${cmd}:${data}` });
                 }
@@ -104,7 +103,7 @@ module.exports = function (RED) {
                     // Set the node status in the GUI
                     switch (cmd) {
                         case 0xF4:  //TEMP_SET                  Temperature in C
-                            node.status({ fill: "grey", shape: "ring", text: `Set Temp to ${data}C` });
+                            node.status({ fill: "grey", shape: "dot", text: `Set Temp to ${data}C` });
                             break;
                         case 0xAA:  //SET_THERMOSTAT_MODE           0,1,2
                             switch (data) {
@@ -118,13 +117,25 @@ module.exports = function (RED) {
                                     node.status({ fill: "grey", shape: "ring", text: "Requesting Always ON Mode" });
                             }
                             break;
-                        case 0xF3:  //SWITCH_STATE
-                            node.status({ fill: "grey", shape: "ring", text: "Set switch state ${data}" });
-                            break;
                         case 0x00:  //CANCEL
                             node.status({ fill: "grey", shape: "ring", text: "Cancelling command" });
                             break;
-                        default:
+                        case 0xAB: // 171: Thermostat relay priority (0,1)
+                            if (data == 1) {
+                                node.status({ fill: "grey", shape: "ring", text: "Requesting Relay Normally Closed" });
+                            } else {
+                                node.status({ fill: "grey", shape: "ring", text: "Requesting Relay Normally Open" });
+                            }
+                            break;
+                        case 0xBA: // Thermostat Humidity calibration (-20..20)
+                            node.status({ fill: "blue", shape: "ring", text: `Requesting Humidity Calibration ${data}` });
+                            break;
+                        case 0xBD: // Thermostat temperature calibration (-20..10)
+                            node.status({ fill: "red", shape: "ring", text: `Requesting Temp Calibration ${data}` });
+                            break;
+                        case 0xFE:   // 254: the difference between the current temperature and target temperature before the (thermostat) triggers
+                            node.status({ fill: "grey", shape: "ring", text: `Requesting Temp Offset ${data}` });
+                            break; default:
                             node.error(`Unknown command ${cmd}`);
                     }
                     // TODO: clear message
@@ -137,7 +148,7 @@ module.exports = function (RED) {
 
             board.events.on(deviceId, function (OTmsg) {
                 // set node status for Control & Monitor temperature (using the information returned)
-                var nodeStatus = { fill: "grey", shape: "ring", text: ""};
+                var nodeStatus = { fill: "grey", shape: "ring", text: "" };
 
                 if (typeof (OTmsg.THERMOSTAT_MODE) == 'number') {
                     switch (OTmsg.THERMOSTAT_MODE) {
@@ -154,26 +165,26 @@ module.exports = function (RED) {
                     }
                 }
 
-                if (typeof (OTmsg.TEMPERATURE) == 'number') {      
+                if (typeof (OTmsg.TEMPERATURE) == 'number') {
                     nodeStatus.text += OTmsg.TEMPERATURE.toFixed(1);
-                }              
+                }
                 if (typeof OTmsg.TARGET_TEMP == 'number') {
                     nodeStatus.text += "(" + OTmsg.TARGET_TEMP + ")";
                 }
 
-                if (typeof (OTmsg.SWITCH_STATE) == 'number') {    
+                if (typeof (OTmsg.SWITCH_STATE) == 'number') {
                     nodeStatus.shape = "dot";
                     switch (OTmsg.SWITCH_STATE) {
                         case 0:
-                            nodeStatus.text+= " [Heating]"
+                            nodeStatus.text += " [Heating]"
                             break;
                         case 1:
-                            nodeStatus.text+= " [OFF]"
+                            nodeStatus.text += " [OFF]"
                             break;
                     }
-                } 
+                }
 
-                if (nodeStatus.text.length > 0){
+                if (nodeStatus.text.length > 0) {
                     node.status(nodeStatus);
                 }
 

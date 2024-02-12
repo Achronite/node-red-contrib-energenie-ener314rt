@@ -136,13 +136,17 @@
 }</pre>
         <dl class="message-properties">
             <p>Example commands</p>
+            <dt>CANCEL
+                <span class="property-type">0</span>
+            </dt>
+            <dd>Cancel the previously cached command (set retries to 0)</dd>
             <dt>TEMP_SET
                 <span class="property-type">244</span>
             </dt>
             <dd>Set new target temperature</dd>
             <dd>.data='temperature in C'</dd>            
                 
-            <dt>SET_THERMOSTAT_MODE (alpha)
+            <dt>SET_THERMOSTAT_MODE
                 <span class="property-type">170</span>  
             </dt>
             <dd>Set mode of thermostat</dd>
@@ -150,10 +154,32 @@
                 <br> 0 = Set Heating Off
                 <br> 1 = Set Temp Controlled
                 <br> 2 = Set Always ON</dd>           
-            <dt>CANCEL
-                <span class="property-type">0</span>
+
+            <dt>HYSTERISIS
+                <span class="property-type">254</span>
             </dt>
-            <dd>Cancel the previously cached command (set retries to 0)</dd>
+            <dd>The difference between the current temperature and target temperature before the thermostat triggers</dd>
+            <dd>.data = 0.5-10</dd>
+
+            <dt>RELAY_POLARITY
+                <span class="property-type">171</span>
+            </dt>
+            <dd>Polarity of the boiler relay</dd>
+            <dd>.data =
+                <br> 0 = Normally Open
+                <br> 1 = Normally Closed</dd>
+
+            <dt>TEMP_OFFSET
+                <span class="property-type">189</span>
+            </dt>
+            <dd>Temperature Calibration</dd>
+            <dd>.data = -20.0 to 20.0</dd>
+
+            <dt>HUMID_OFFSET
+                <span class="property-type">186</span>
+            </dt>
+            <dd>Humidity Calibration</dd>
+            <dd>.data = -20 to 20</dd>
 
         </dl>
 </script>

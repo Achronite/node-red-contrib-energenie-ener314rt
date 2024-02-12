@@ -257,9 +257,13 @@ The MiHome Thermostat accepts the following commands to perform operations.
 |---|:---:|---|---|:---:|
 |CANCEL|0|Cancel existing cached command (set retries to 0)||Yes|
 |THERMOSTAT_MODE|170|Change mode of thermostat where<br>0 = OFF<br>1 = Temp Controlled<br>2 = ON|0-2|Yes|
-|TARGET_TEMP|244|Send new target temperature for thermostat (0-30) in 0.5 increments.<br>NOTE: The THERMOSTAT_MODE must be set to '1' for this to work.|int|Yes|
+|RELAY_POLARITY|171|Polarity of the boiler relay|0=Normally Open,1=Normally Closed|Yes|
+|HUMID_OFFSET|186|Humidity Calibration|-20 to 20|Yes|
+|TEMP_OFFSET|189|Temperature Calibration|-20.0 to 20.0|Yes||TARGET_TEMP|244|Send new target temperature for thermostat (0-30) in 0.5 increments.<br>NOTE: The THERMOSTAT_MODE must be set to '1' for this to work.|5-30|Yes|
+|HYSTERISIS|254|The difference between the current temperature and target temperature before the thermostat triggers|0.5-10|Yes|
 
-In order for the Thermostat to provide updates for it's telemetry data when used **without a MiHome gateway**, auto messaging has been enabled within this module.  To start this auto-messaging you will need to send a `THERMOSTAT_MODE` command.  The most recent `THERMOSTAT_MODE` value will be stored and periodically replayed (until a restart) to prompt the thermostat into providing it's telemetry data.
+
+In order for the Thermostat to provide updates for it's telemetry data when used **without a MiHome gateway**, auto messaging has been enabled within this module.  To start this auto-messaging you will need to send a `THERMOSTAT_MODE` command.  The result of the most recent `THERMOSTAT_MODE` value will be stored and periodically replayed (until a restart) to prompt the thermostat into providing it's telemetry data.
 
 ### Command Caching
 Battery powered energenie devices, such as the eTRV or Room Thermostat do not constantly listen for commands.  For example, the eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes) after which the receiver is then activated to listen for commands. The receiver only remains active for 200ms or until a message is received.
