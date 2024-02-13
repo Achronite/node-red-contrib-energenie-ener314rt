@@ -118,7 +118,7 @@ module.exports = function (RED) {
                             }
                             break;
                         case 0x00:  //CANCEL
-                            node.status({ fill: "grey", shape: "ring", text: "Cancelling command" });
+                            node.status({ fill: "grey", shape: "ring", text: "Cancel command" });
                             break;
                         case 0xAB: // 171: Thermostat relay priority (0,1)
                             if (data == 1) {
@@ -176,10 +176,10 @@ module.exports = function (RED) {
                     nodeStatus.shape = "dot";
                     switch (OTmsg.SWITCH_STATE) {
                         case 0:
-                            nodeStatus.text += " [Heating]"
+                            nodeStatus.text += " [OFF]"
                             break;
                         case 1:
-                            nodeStatus.text += " [OFF]"
+                            nodeStatus.text += " [ON]"
                             break;
                     }
                 }
