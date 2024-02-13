@@ -23,7 +23,7 @@ There are 4 types of node to match the colour coding of the Energenie MiHome dev
 * **Purple** for monitoring and controlling **'Control & Monitor'** FSK/OpenThings devices
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
-Within the 4 types there are currently 10 nodes available to use:
+Within the 4 types there are these nodes available to use:
 
 | Node | Created For |
 |---|---|
@@ -35,7 +35,6 @@ Within the 4 types there are currently 10 nodes available to use:
 |![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013 - MiHome Radiator Valve|
 |![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005 - MiHome Smart Plug+ / Adaptor+|
 |![Purple Thermostat](doc-images/C-Thermostat.png?raw=true)|MIHO069 - MiHome Thermostat|
-|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|Purple Mains Powered Control & Monitor Devices (DEPRECATED)|
 |![Green Raw Transmit](doc-images/G-Raw.png?raw=true)|Non-Energenie 433Mhz Radio Controlled Devices|
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
@@ -55,7 +54,7 @@ Here is a table showing which node is recommended for each energenie device, and
 |---|---|:---:|---|:---:|
 |ENER002|Green Button Adapter|OOK|Blue: Control| &#10003; |
 |ENER010|MiHome 4 gang Multiplug|OOK|Blue: Control| &#10003; |
-|MIHO002|MiHome Smart Plug|OOK|Blue: Control||
+|MIHO002|MiHome Smart Plug|OOK|Blue: Control|&#10003;|
 |MIHO004|MiHome Smart Monitor Plug|FSK|Pink: Monitor| &#10003; |
 |MIHO005|MiHome Smart Plug+|FSK|Purple: Smart Plug+| &#10003; |
 |MIHO006|MiHome House Monitor|FSK|Pink: Monitor| &#10003; |
@@ -70,7 +69,7 @@ Here is a table showing which node is recommended for each energenie device, and
 |MIHO024<br />MIHO025<br />MIHO026|MiHome Single Light|OOK|Blue: Control||
 |MIHO032|MiHome Motion sensor|FSK|Pink: PIR Sensor| &#10003; |
 |MIHO033|MiHome Open Sensor|FSK|Pink: Open Sensor||
-|MIHO069|MiHome Heating Thermostat|FSK|Purple: Thermostat|alpha|
+|MIHO069|MiHome Heating Thermostat|FSK|Purple: Thermostat|&#10003;|
 |MIHO071<br />MIHO072<br />MIHO073|Double Gang MiHome Light|OOK|Blue: Control||
 |MIHO076<br />MIHO077<br />MIHO087|MiHome Dimmer Switch|OOK|Blue: Dimmer||
 |MIHO089|MiHome Click - Smart Button|FSK?|Pink: Monitor||
@@ -79,16 +78,22 @@ Here is a table showing which node is recommended for each energenie device, and
 ### NOT SUPPORTED:
 Specific nodes may be required for new energenie devices.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' devices, commands or parameters.
 
-The use of these nodes within the **embedded** node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  A new MQTT / Home Assistant integration is now available at [mqtt-energenie-ener314rt](https://github.com/Achronite/mqtt-energenie-ener314rt), please use this instead.
+The use of these nodes within the Node-RED add-on for [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  A new MQTT / Home Assistant integration is now available at [mqtt-energenie-ener314rt](https://github.com/Achronite/mqtt-energenie-ener314rt), please use this instead.
 
 
 ## Getting Started
 
 1) Plug in your ENER314-RT-VER01 board from Energenie onto the 26 pin or 40 pin connector of your Raspberry Pi.
 
-2) Install this module as you would any node-red module using the 'Manage palette' option in Node-Red GUI or by using npm.
+2) Install `gpiod` and `libgpiod` dependencies (as of v0.7.x) :
+For example (debian):
+```
+sudo apt-get install gpiod libgpiod-dev
+```
 
-3) If you have any **'Control'** only devices, perform a one-time only setup to **teach** your  devices to operate with your selected zone code(s) switch number(s) combinations: 
+3) Install this module as you would any node-red module using the 'Manage palette' option in Node-Red GUI or by using npm.
+
+4) If you have any **'Control'** only devices, perform a one-time only setup to **teach** your  devices to operate with your selected zone code(s) switch number(s) combinations: 
 
 * Drag a blue node onto the canvas
 * Open the node by double clicking
@@ -104,7 +109,7 @@ The use of these nodes within the **embedded** node-red implementation in [Home 
 
 > TIP: If you already know the house/zone code assigned, for example to an RF hand controller, you can use that in your node to make the device work with both.
 
-4)  If you have any **'Monitor'** or **'Control & Monitor'** devices perform one-time only setup to **discover** the devices
+5)  If you have any **'Monitor'** or **'Control & Monitor'** devices perform one-time only setup to **discover** the devices
 
 * Drag the appropriate pink or purple node onto the canvas (see Supported Devices table below, if you are unsure which one to use)
 * Open the node by double clicking
@@ -243,7 +248,7 @@ The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operat
 |IDENTIFY|191|Identify the device by making the green light flash on the selected eTRV for 60 seconds||No|
 |SET_REPORTING_INTERVAL|210|Update reporting interval to requested value|300-3600 seconds|No|
 |REQUEST_VOLTAGE|226|Report current voltage of the batteries||VOLTAGE|
-|TARGET_TEMP|244|Send new target temperature for eTRV.<br>NOTE: The VALVE_STATE must be set to 'Auto' for this to work.|int|No|
+|TARGET_TEMP|244|Send new target temperature for eTRV in 0.5 increments.<br>NOTE: The VALVE_STATE must be set to 'Auto' for this to work.|int|No|
 
 > \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
 
@@ -348,7 +353,7 @@ If you have any issues with the code, particularly if your board is not initiali
 0.5.1|Sep 22|Increased support for MiHome House Monitor issue #57 (added apparent_power to node status & new node icon), Fixed Zone 0 (all) for Control Node (Issue #61)
 0.5.2|Sep 22|Added node-red version to package.json
 0.6.0|23 Jan 23|Updated for v0.6.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt), which contains multiple fixes and improvements. Highlights: <br>Hardware driver support added using spidev, which falls back to software driver if unavailable.<br>Renamed TARGET_C to TARGET_TEMP for eTRV.<br>Add capability for cached/pre-cached commands to be cleared with command=0.
-0.7.0|Jan 24|Updated for v0.7.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt) issue #72, which contains multiple fixes and improvements. Highlights: <br>Switched from deprecated WiringPi to gpiod<br>support rpi5<br>Thermostat now supported (#36)
+0.7.0|Feb 24|Updated for v0.7.1 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt) issue #72, which contains multiple fixes and improvements. Highlights: <br>Switched from deprecated WiringPi to gpiod<br>support rpi5<br>Thermostat now supported (#36)<br>TRV now supports setting temperature in 0.5C increments
 
 ## Dependencies
 
