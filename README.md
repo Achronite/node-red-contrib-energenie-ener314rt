@@ -73,7 +73,7 @@ Here is a table showing which node is recommended for each energenie device, and
 |MIHO069|MiHome Heating Thermostat|FSK|Purple: Thermostat|&#10003;|
 |MIHO071<br />MIHO072<br />MIHO073|Double Gang MiHome Light|OOK|Blue: Control||
 |MIHO076<br />MIHO077<br />MIHO087|MiHome Dimmer Switch|OOK|Blue: Dimmer||
-|MIHO089|MiHome Click - Smart Button|FSK?|Pink: MiHome Click|&#10003;|
+|MIHO089|MiHome Click - Smart Button|FSK|Pink: MiHome Click|&#10003;|
 
 
 ### NOT SUPPORTED:
@@ -215,7 +215,7 @@ BATTERY_LEVEL: 3.08
 MOTION_DETECTOR: <Motion detector state, 0 = no motion, 1 = motion>
 THERMOSTAT_MODE: <Thermostat mode, 0 = off, 1 = temp controlled, 2= always on>
 TARGET_TEMP: <Target set temperature>
-SWITCH_STATE: <Current state of the heating 0 = off, 1 = heating>
+SWITCH_STATE: <Current state of the heating 0 = off, 1 = heating (when pressed)>
 ```
 ### Example msg.payload - MiHome Click (MIHO089)
 ```
