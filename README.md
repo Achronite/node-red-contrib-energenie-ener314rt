@@ -32,6 +32,7 @@ Within the 4 types there are these nodes available to use:
 |![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Pink Monitor Only Devices|
 |![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032 - MiHome Motion sensor|
 |![Pink Open Sensor](doc-images/P-Sensor.png?raw=true)|MIHO033 - MiHome Open Door/Window sensor|
+|![Pink MiHome Click](doc-images/P-Click.png?raw=true)|MIHO089 - MiHome Click|
 |![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013 - MiHome Radiator Valve|
 |![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005 - MiHome Smart Plug+ / Adaptor+|
 |![Purple Thermostat](doc-images/C-Thermostat.png?raw=true)|MIHO069 - MiHome Thermostat|
@@ -72,7 +73,7 @@ Here is a table showing which node is recommended for each energenie device, and
 |MIHO069|MiHome Heating Thermostat|FSK|Purple: Thermostat|&#10003;|
 |MIHO071<br />MIHO072<br />MIHO073|Double Gang MiHome Light|OOK|Blue: Control||
 |MIHO076<br />MIHO077<br />MIHO087|MiHome Dimmer Switch|OOK|Blue: Dimmer||
-|MIHO089|MiHome Click - Smart Button|FSK?|Pink: Monitor||
+|MIHO089|MiHome Click - Smart Button|FSK?|Pink: MiHome Click|&#10003;|
 
 
 ### NOT SUPPORTED:
@@ -215,6 +216,15 @@ MOTION_DETECTOR: <Motion detector state, 0 = no motion, 1 = motion>
 THERMOSTAT_MODE: <Thermostat mode, 0 = off, 1 = temp controlled, 2= always on>
 TARGET_TEMP: <Target set temperature>
 SWITCH_STATE: <Current state of the heating 0 = off, 1 = heating>
+```
+### Example msg.payload - MiHome Click (MIHO089)
+```
+deviceId: <device number>
+mfrId: 4
+productId: 19
+timestamp: <numeric 'epoch based' timestamp, of when message was read>
+VOLTAGE: <battery voltage>
+BUTTON: <1=Single press, 2=Double presss, 255=long press>
 ```
 
 ## MiHome Heating Device Support
@@ -362,4 +372,4 @@ I am currently working on a new node.js implementation of ENER314-RT that uses M
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - January 2024 - v0.7.0 Beta
+@Achronite - February 2024

@@ -29,6 +29,7 @@
       "openThings-monitor": "red/openThings-monitor.js",
       "openThings-pir": "red/openThings-pir.js",
       "openThings-door": "red/openThings-door.js",
+      "openThings-click": "red/openThings-click.js",
       "openThings-switch": "red/openThings-switch.js",
       "openThings-trv": "red/openThings-trv.js",
       "openThings-thermostat": "red/openThings-thermostat.js",
