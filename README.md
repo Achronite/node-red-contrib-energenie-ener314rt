@@ -10,6 +10,13 @@ A node-red module to control the Energenie MiHome line of products via the ENER3
 
 [node-red module](https://flows.nodered.org/node/node-red-contrib-energenie-ener314rt)
 
+## IMPORTANT: UPGRADING FROM PREVIOUS RELEASE
+
+**v0.7.x requires additional software dependencies that must be manually installed first.**
+
+If you are upgrading from version 0.6.x or below, please ensure that you install node.js v18.2+, `gpiod` and `libgpiod` first (see Getting Started below).
+
+
 ## Purpose
 
 You can use this node-red module to control and monitor the [Energenie](https://energenie4u.co.uk/) MiHome radio based smart devices such as adapters, sockets, lights, thermostats and relays 
@@ -41,8 +48,6 @@ Within the 4 types there are these nodes available to use:
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
 >NOTE: This module does not currently support the older boards (ENER314/Pi-Mote), the Energenie Wifi sockets or the MiHome Gateway (see below for the full supported list).
-
-
 
 ## Supported Devices
 
@@ -87,7 +92,7 @@ The use of these nodes within the Node-RED add-on for [Home Assistant](https://w
 1) Plug in your ENER314-RT-VER01 board from Energenie onto the 26 pin or 40 pin connector of your Raspberry Pi.
 
 2) Install `gpiod` and `libgpiod` dependencies (as of v0.7.x) :
-For example (debian):
+For example (Debian):
 ```
 sudo apt-get install gpiod libgpiod-dev
 ```
