@@ -2,9 +2,6 @@
 
 ## [Unreleased]
 
-* [#75](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues/75) Support for MiHome Click
-* [#74](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues/74) Thermostat icon disappears when dragged to flow
-
 Also see [Issues](https://github.com/Achronite/energenie-ener314rt/issues) for issues relating to dependent module.
 
 ## [0.7.0] 2024-02-22
