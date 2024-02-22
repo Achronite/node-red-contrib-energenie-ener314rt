@@ -47,19 +47,19 @@ Within the 4 types there are these nodes available to use:
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
->NOTE: This module does not currently support the older boards (ENER314/Pi-Mote), the Energenie Wifi sockets or the MiHome Gateway (see below for the full supported list).
+>NOTE: This module does not currently support the older boards (ENER314/Pi-Mote), the Energenie WiFi sockets or the MiHome Gateway (see below for the full supported list).
 
 ## Supported Devices
 
 These nodes are designed for energenie RF radio devices in the OOK & FSK (OpenThings) ranges.
 
-Here is a table showing which node is recommended for each energenie device, and a tick showing if it has been tested (please let me know of any succesful tests, and I'll update the table):
+Here is a table showing which node is recommended for each energenie device, and a tick showing if it has been tested (please let me know of any successful tests, and I'll update the table):
 
 
 | Device | Description | Type | Recommend Node | Tested OK |
 |---|---|:---:|---|:---:|
 |ENER002|Green Button Adapter|OOK|Blue: Control| &#10003; |
-|ENER010|MiHome 4 gang Multiplug|OOK|Blue: Control| &#10003; |
+|ENER010|MiHome 4 gang Multi-plug|OOK|Blue: Control| &#10003; |
 |MIHO002|MiHome Smart Plug|OOK|Blue: Control|&#10003;|
 |MIHO004|MiHome Smart Monitor Plug|FSK|Pink: Monitor| &#10003; |
 |MIHO005|MiHome Smart Plug+|FSK|Purple: Smart Plug+| &#10003; |
@@ -112,8 +112,7 @@ sudo apt-get install gpiod libgpiod-dev
 * All subsequent calls using the same zone/switch number will cause your device to switch.
 * Pressing the teach button again will cause the device to switch **on**, and pressing the 'power' button will cause the same device to switch **off**.
 
-
-> TIP: If you already know the house/zone code assigned, for example to an RF hand controller, you can use that in your node to make the device work with both.
+> TIP: Usually each energenie **'Control'** only devices can be assigned 2 separate zone codes, so you could operate them across this and another system (e.g RF hand controller). There is one downside though, in that the on/off state will not be reflected on the other system for these devices.
 
 5)  If you have any **'Monitor'** or **'Control & Monitor'** devices perform one-time only setup to **discover** the devices
 
@@ -133,14 +132,13 @@ To increase reliability a new hardware SPI driver has been added.  The hardware 
 
 ## 'Control Only' OOK Zone Rules
 
-* Each Energenie **'Control'** or OOK based device can be assigned to a specifc zone (or house code) and a switch number.
+* Each Energenie **'Control'** or OOK based device can be assigned to a specific zone (or house code) and a switch number.
 * Each zone is encoded as a 20-bit address (1-1048575 decimal).
 * Each zone can contain up to 6 switches (1-6) - NOTE: officially energenie state this is only 4 devices (1-4)
 * All devices within the **same** zone can be switched **at the same time** using a switch number of '0'.
 * A default zone '0' can be used to use Energenie's default zone (0x6C6C6).
-* If you have a MiHome 4 gang Multiplug, the same zone must be used for controlling all 4 switches, use switch #0 to control all, 1-4 for each socket
+* If you have a MiHome 4 gang Multi-plug, the same zone must be used for controlling all 4 switches, use switch #0 to control all, 1-4 for each socket
 * If you have a MiHome 2 gang socket or light switch, the same zone must be used for controlling the 2 switches
-
 
 
 ## Light Dimmer Support
@@ -229,7 +227,7 @@ mfrId: 4
 productId: 19
 timestamp: <numeric 'epoch based' timestamp, of when message was read>
 VOLTAGE: <battery voltage>
-BUTTON: <1=Single press, 2=Double presss, 255=long press>
+BUTTON: <1=Single press, 2=Double press, 255=long press>
 ```
 
 ## MiHome Heating Device Support
@@ -259,13 +257,13 @@ The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operat
 |EXERCISE_VALVE|163|Send exercise valve command, recommended once a week to calibrate eTRV||DIAGNOSTICS|
 |SET_LOW_POWER_MODE|164|This is used to enhance battery life by limiting the hunting of the actuator, ie it limits small adjustments to degree of opening, when the room temperature is close to the *TEMP_SET* point. A consequence of the Low Power mode is that it may cause larger errors in controlling room temperature to the set temperature.|0=Off<br>1=On|No*|
 |SET_VALVE_STATE|165|Set valve state|0=Open<br>1=Closed<br>2=Auto (default)|No|
-|REQUEST_DIAGNOTICS|166|Request diagnostic data from device, if all is OK it will return 0. Otherwise see additional monitored values for status messages||DIAGNOSTICS|
+|REQUEST_DIAGNOSTICS|166|Request diagnostic data from device, if all is OK it will return 0. Otherwise see additional monitored values for status messages||DIAGNOSTICS|
 |IDENTIFY|191|Identify the device by making the green light flash on the selected eTRV for 60 seconds||No|
 |SET_REPORTING_INTERVAL|210|Update reporting interval to requested value|300-3600 seconds|No|
 |REQUEST_VOLTAGE|226|Report current voltage of the batteries||VOLTAGE|
 |TARGET_TEMP|244|Send new target temperature for eTRV in 0.5 increments.<br>NOTE: The VALVE_STATE must be set to 'Auto' for this to work.|int|No|
 
-> \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
+> \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOSTICS* will confirm the *LOW_POWER_MODE* setting
 
 #### Thermostat Commands
 
@@ -280,19 +278,21 @@ The MiHome Thermostat accepts the following commands to perform operations.
 |RELAY_POLARITY|171|Polarity of the boiler relay|0=Normally Open,1=Normally Closed|Yes|
 |HUMID_OFFSET|186|Humidity Calibration|-20 to 20|Yes|
 |TEMP_OFFSET|189|Temperature Calibration|-20.0 to 20.0|Yes||TARGET_TEMP|244|Send new target temperature for thermostat (0-30) in 0.5 increments.<br>NOTE: The THERMOSTAT_MODE must be set to '1' for this to work.|5-30|Yes|
-|HYSTERISIS|254|The difference between the current temperature and target temperature before the thermostat triggers|0.5-10|Yes|
+|HYSTERESIS|254|The difference between the current temperature and target temperature before the thermostat triggers|0.5-10|Yes|
 
 
-In order for the Thermostat to provide updates for it's telemetry data when used **without a MiHome gateway**, auto messaging has been enabled within this module.  To start this auto-messaging you will need to send a `THERMOSTAT_MODE` command.  The result of the most recent `THERMOSTAT_MODE` value will be stored and periodically replayed (until a restart) to prompt the thermostat into providing it's telemetry data.
+In order for the Thermostat to provide updates for it's telemetry data when used **without a MiHome gateway**, auto messaging has been enabled within this module.  To start this auto-messaging you will need to send a  command that returns the `THERMOSTAT_MODE` to the application (a `THERMOSTAT_MODE` command will do).  The result of the most recent `THERMOSTAT_MODE` value will be stored and periodically replayed (until a restart) to prompt the thermostat into providing it's telemetry data.
 
 ### Command Caching
 Battery powered energenie devices, such as the eTRV or Room Thermostat do not constantly listen for commands.  For example, the eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes) after which the receiver is then activated to listen for commands. The receiver only remains active for 200ms or until a message is received.
 
-To cater for these hardware limitations the **'eTRV'** and **'Thermostat'** nodes use command caching and dynamic polling. Any command sent using these nodes will be held until a TEMPERATURE (for eTRV) or WAKEUP (for Thermostat) message is received; at this point the most recent cached message (only 1 is supported) will be sent to the device.  Messages will continue to be resent until they have been succesfully received or until the number of retries has reached 0.
+To cater for these hardware limitations the **'eTRV'** and **'Thermostat'** nodes use command caching and dynamic polling. Any command sent using these nodes will be held until a TEMPERATURE (for eTRV) or WAKEUP (for Thermostat) message is received; at this point the most recent cached message (only 1 is supported) will be sent to the device.  Messages will continue to be resent until they have been successful received or until the number of retries has reached 0.
 
 Sometimes a specific command may be resent multiple times. This is particularly a problem for the eTRV devices, as they do not send an acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.  ** NEW v0.6.x ** - When a device *has* acknowledged a command the 'command' and 'retries' topics are reset to 0.
 
-> **NOTE:** The performance of node-red may decrease when a command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 0.5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
+Be careful when sending multiple commands to the same device, as the most recent command will overwrite any existing cached command for that device (check the retries is 0 first).
+
+> **NOTE:** The performance of node-red may decrease when a command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 0.5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received by the device sooner.
 
 ### eTRV Monitor Messages
 
@@ -332,7 +332,7 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |VALVE_STATE|Current valve mode/state| open, closed, auto, error|VALVE_STATE command *or* DIAGNOSTIC_TS on error|
 |VALVE_TS|timestamp of when last *EXERCISE_VALVE* took place|epoch|DIAGNOSTIC_TS|
 |VOLTAGE|Current battery voltage|float|VOLTAGE_TS|
-|VOLTAGE_TS|Tmestamp of when battery voltage was last received|epoch|VOLTAGE_TS|
+|VOLTAGE_TS|Timestamp of when battery voltage was last received|epoch|VOLTAGE_TS|
 
 >TIP: To get up-to-date information for a specific eTRV parameter you will need to request the device for an update by sending the appropriate command (see [eTRV Commands](#-eTRV-Commands) above),
 
