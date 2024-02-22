@@ -1,9 +1,9 @@
 {
   "name": "node-red-contrib-energenie-ener314rt",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Node-red module for energenie ENER314-RT board for raspberry pi",
   "dependencies": {
-    "energenie-ener314rt": "0.6.x"
+    "energenie-ener314rt": "~0.7.2"
   },
   "engines": {
     "node": ">=10.0.0"
@@ -29,10 +29,10 @@
       "openThings-monitor": "red/openThings-monitor.js",
       "openThings-pir": "red/openThings-pir.js",
       "openThings-door": "red/openThings-door.js",
+      "openThings-click": "red/openThings-click.js",
       "openThings-switch": "red/openThings-switch.js",
       "openThings-trv": "red/openThings-trv.js",
       "openThings-thermostat": "red/openThings-thermostat.js",
-      "openThings-cmd": "red/openThings-cmd.js",
       "ener314rt-raw": "red/ener314rt-raw.js",
       "openThings-device": "red/openThings-device.js",
       "energenie-board": "red/ener314-rt.js"

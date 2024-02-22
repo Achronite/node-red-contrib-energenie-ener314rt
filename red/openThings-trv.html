@@ -5,7 +5,8 @@
         defaults: {
             name: { value: "eTRV" },
             device: { type: "openThings-device", required: true },
-            board: { type: "energenie-board", required: true }
+            board: { type: "energenie-board", required: true },
+            retries: { value: 10 }
         },
         inputs: 1,
         outputs: 1,
@@ -34,6 +35,10 @@
     <div class="form-row">
         <label for="node-input-device"><i class="fa fa-plug"></i> Device</label>
         <input type="text" id="node-input-device"/>
+    </div>
+    <div class="form-row">
+        <label for="node-input-retries"><i class="fa fa-repeat"></i> Retries</label>
+        <input type="text" id="node-input-retries"/>
     </div>
     <div class="form-tips">
         <p><strong>Tip:</strong> The eTRV is capable of accepting commands.  After an eTRV reports it's temperature (every <strong>SET_REPORTING_INTERVAL</strong>, 
@@ -72,9 +77,9 @@
         <p>OR</p>
         <dl class="message-properties">
             <dt>payload
-                <span class="property-type">Integer</span>
+                <span class="property-type">Float</span>
             </dt>
-            <dd>The target temperature for the radiator in degrees Celcius</dd>
+            <dd>The target temperature for the radiator in degrees Celcius in 0.5 increments</dd>
         </dl>
         <p>OR (ADVANCED MODE)</p>
         <dl class="message-properties">

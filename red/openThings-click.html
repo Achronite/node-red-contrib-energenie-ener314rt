@@ -1,17 +1,17 @@
 <script type="text/javascript">
-    RED.nodes.registerType('openThings-pir',{
+    RED.nodes.registerType('openThings-click',{
         category: 'Energenie 314RT',
         color: '#de348c',
         defaults: {
-            name: {value:"PIR Sensor"},
+            name: {value:"MiHome Click"},
             device: {type:"openThings-device", required: true},
             board: {type:"energenie-board", required: true}
         },
         inputs:0,
         outputs:1,
         align: "left",
-        icon: "PIR.png",
-        paletteLabel: 'PIR Sensor',
+        icon: "Click.png",
+        paletteLabel: 'MiHome Click',
         label: function() {
             return (this.name || this.label || this.paletteLabel);
         },
@@ -22,7 +22,7 @@
     });
 </script>
 
-<script type="text/x-red" data-template-name="openThings-pir">
+<script type="text/x-red" data-template-name="openThings-click">
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
@@ -37,9 +37,9 @@
     </div>
 </script>
 
-<script type="text/x-red" data-help-name="openThings-pir">
+<script type="text/x-red" data-help-name="openThings-click">
     <h3>Details</h3>
-        <p>Node created specifically for the Energenie Smart Motion Sensor (MIHO032) monitored via the Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
+        <p>Node created specifically for the Energenie MiHome Click (MIHO089) monitored via the Two-way Raspberry Pi Transceiver board (ENER314-RT).</p>
 
     <h3>Outputs</h3>
         <p>Device Config</p>
@@ -64,9 +64,13 @@
         <p>Monitored Values</p>
         <h4>Motion Sensor</h4>
         <dl class="message-properties">
-            <dt>payload.MOTION_DETECTOR
+            <dt>payload.BUTTON
                 <span class="property-type">boolean</span>
             </dt>
-            <dd>1 = motion detected, 0 = no motion detected in last minute</dd>
+            <dd>1 = single click, 2 = double click, 255 = long press</dd>
+            <dt>payload.VOLTAGE
+                <span class="property-type">float</span>
+            </dt>
+            <dd>The current battery voltage</dd>
         </dl>
 </script>

@@ -10,6 +10,13 @@ A node-red module to control the Energenie MiHome line of products via the ENER3
 
 [node-red module](https://flows.nodered.org/node/node-red-contrib-energenie-ener314rt)
 
+## IMPORTANT: UPGRADING FROM PREVIOUS RELEASE
+
+**v0.7.x requires additional software dependencies that must be manually installed first.**
+
+If you are upgrading from version 0.6.x or below, please ensure that you install node.js v18.2+, `gpiod` and `libgpiod` first (see Getting Started below).
+
+
 ## Purpose
 
 You can use this node-red module to control and monitor the [Energenie](https://energenie4u.co.uk/) MiHome radio based smart devices such as adapters, sockets, lights, thermostats and relays 
@@ -23,7 +30,7 @@ There are 4 types of node to match the colour coding of the Energenie MiHome dev
 * **Purple** for monitoring and controlling **'Control & Monitor'** FSK/OpenThings devices
 * **Green** for sending any OOK or FSK raw byte array (Advanced node)
 
-Within the 4 types there are currently 10 nodes available to use:
+Within the 4 types there are these nodes available to use:
 
 | Node | Created For |
 |---|---|
@@ -32,30 +39,28 @@ Within the 4 types there are currently 10 nodes available to use:
 |![Pink Monitor](doc-images/P-Monitor.png?raw=true)|All Pink Monitor Only Devices|
 |![Pink PIR Sensor](doc-images/P-PIR.png?raw=true)|MIHO032 - MiHome Motion sensor|
 |![Pink Open Sensor](doc-images/P-Sensor.png?raw=true)|MIHO033 - MiHome Open Door/Window sensor|
+|![Pink MiHome Click](doc-images/P-Click.png?raw=true)|MIHO089 - MiHome Click|
 |![Purple eTRV](doc-images/C-TRV.png?raw=true)|MIHO013 - MiHome Radiator Valve|
 |![Purple Smart Plug+](doc-images/C-Adaptor.png?raw=true)|MIHO005 - MiHome Smart Plug+ / Adaptor+|
 |![Purple Thermostat](doc-images/C-Thermostat.png?raw=true)|MIHO069 - MiHome Thermostat|
-|![Purple Control & Monitor](doc-images/C-CM.png?raw=true)|Purple Mains Powered Control & Monitor Devices (DEPRECATED)|
 |![Green Raw Transmit](doc-images/G-Raw.png?raw=true)|Non-Energenie 433Mhz Radio Controlled Devices|
 
 The number of individual devices this node can control is over 4 million, so it should be suitable for most installations!
 
->NOTE: This module does not currently support the older boards (ENER314/Pi-Mote), the Energenie Wifi sockets or the MiHome Gateway (see below for the full supported list).
-
-
+>NOTE: This module does not currently support the older boards (ENER314/Pi-Mote), the Energenie WiFi sockets or the MiHome Gateway (see below for the full supported list).
 
 ## Supported Devices
 
 These nodes are designed for energenie RF radio devices in the OOK & FSK (OpenThings) ranges.
 
-Here is a table showing which node is recommended for each energenie device, and a tick showing if it has been tested (please let me know of any succesful tests, and I'll update the table):
+Here is a table showing which node is recommended for each energenie device, and a tick showing if it has been tested (please let me know of any successful tests, and I'll update the table):
 
 
 | Device | Description | Type | Recommend Node | Tested OK |
 |---|---|:---:|---|:---:|
 |ENER002|Green Button Adapter|OOK|Blue: Control| &#10003; |
-|ENER010|MiHome 4 gang Multiplug|OOK|Blue: Control| &#10003; |
-|MIHO002|MiHome Smart Plug|OOK|Blue: Control||
+|ENER010|MiHome 4 gang Multi-plug|OOK|Blue: Control| &#10003; |
+|MIHO002|MiHome Smart Plug|OOK|Blue: Control|&#10003;|
 |MIHO004|MiHome Smart Monitor Plug|FSK|Pink: Monitor| &#10003; |
 |MIHO005|MiHome Smart Plug+|FSK|Purple: Smart Plug+| &#10003; |
 |MIHO006|MiHome House Monitor|FSK|Pink: Monitor| &#10003; |
@@ -70,25 +75,31 @@ Here is a table showing which node is recommended for each energenie device, and
 |MIHO024<br />MIHO025<br />MIHO026|MiHome Single Light|OOK|Blue: Control||
 |MIHO032|MiHome Motion sensor|FSK|Pink: PIR Sensor| &#10003; |
 |MIHO033|MiHome Open Sensor|FSK|Pink: Open Sensor||
-|MIHO069|MiHome Heating Thermostat|FSK|Purple: Thermostat|alpha|
+|MIHO069|MiHome Heating Thermostat|FSK|Purple: Thermostat|&#10003;|
 |MIHO071<br />MIHO072<br />MIHO073|Double Gang MiHome Light|OOK|Blue: Control||
 |MIHO076<br />MIHO077<br />MIHO087|MiHome Dimmer Switch|OOK|Blue: Dimmer||
-|MIHO089|MiHome Click - Smart Button|FSK?|Pink: Monitor||
+|MIHO089|MiHome Click - Smart Button|FSK|Pink: MiHome Click|&#10003;|
 
 
 ### NOT SUPPORTED:
 Specific nodes may be required for new energenie devices.  Please let me know, via [github](https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues), if you identify any 'unknown' devices, commands or parameters.
 
-The use of these nodes within the **embedded** node-red implementation in [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  A new MQTT / Home Assistant integration is now available at [mqtt-energenie-ener314rt](https://github.com/Achronite/mqtt-energenie-ener314rt), please use this instead.
+The use of these nodes within the Node-RED add-on for [Home Assistant](https://www.home-assistant.io/) (aka hassio) is [not supported](https://community.home-assistant.io/t/accessing-gpio-spi-from-custom-node-red-node-node-red-contrib-energenie-ener314rt/170002).  A new MQTT / Home Assistant integration is now available at [mqtt-energenie-ener314rt](https://github.com/Achronite/mqtt-energenie-ener314rt), please use this instead.
 
 
 ## Getting Started
 
 1) Plug in your ENER314-RT-VER01 board from Energenie onto the 26 pin or 40 pin connector of your Raspberry Pi.
 
-2) Install this module as you would any node-red module using the 'Manage palette' option in Node-Red GUI or by using npm.
+2) Install `gpiod` and `libgpiod` dependencies (as of v0.7.x) :
+For example (Debian):
+```
+sudo apt-get install gpiod libgpiod-dev
+```
 
-3) If you have any **'Control'** only devices, perform a one-time only setup to **teach** your  devices to operate with your selected zone code(s) switch number(s) combinations: 
+3) Install this module as you would any node-red module using the 'Manage palette' option in Node-Red GUI or by using npm.
+
+4) If you have any **'Control'** only devices, perform a one-time only setup to **teach** your  devices to operate with your selected zone code(s) switch number(s) combinations: 
 
 * Drag a blue node onto the canvas
 * Open the node by double clicking
@@ -101,10 +112,9 @@ The use of these nodes within the **embedded** node-red implementation in [Home 
 * All subsequent calls using the same zone/switch number will cause your device to switch.
 * Pressing the teach button again will cause the device to switch **on**, and pressing the 'power' button will cause the same device to switch **off**.
 
+> TIP: Usually each energenie **'Control'** only devices can be assigned 2 separate zone codes, so you could operate them across this and another system (e.g RF hand controller). There is one downside though, in that the on/off state will not be reflected on the other system for these devices.
 
-> TIP: If you already know the house/zone code assigned, for example to an RF hand controller, you can use that in your node to make the device work with both.
-
-4)  If you have any **'Monitor'** or **'Control & Monitor'** devices perform one-time only setup to **discover** the devices
+5)  If you have any **'Monitor'** or **'Control & Monitor'** devices perform one-time only setup to **discover** the devices
 
 * Drag the appropriate pink or purple node onto the canvas (see Supported Devices table below, if you are unsure which one to use)
 * Open the node by double clicking
@@ -122,14 +132,13 @@ To increase reliability a new hardware SPI driver has been added.  The hardware 
 
 ## 'Control Only' OOK Zone Rules
 
-* Each Energenie **'Control'** or OOK based device can be assigned to a specifc zone (or house code) and a switch number.
+* Each Energenie **'Control'** or OOK based device can be assigned to a specific zone (or house code) and a switch number.
 * Each zone is encoded as a 20-bit address (1-1048575 decimal).
 * Each zone can contain up to 6 switches (1-6) - NOTE: officially energenie state this is only 4 devices (1-4)
 * All devices within the **same** zone can be switched **at the same time** using a switch number of '0'.
 * A default zone '0' can be used to use Energenie's default zone (0x6C6C6).
-* If you have a MiHome 4 gang Multiplug, the same zone must be used for controlling all 4 switches, use switch #0 to control all, 1-4 for each socket
+* If you have a MiHome 4 gang Multi-plug, the same zone must be used for controlling all 4 switches, use switch #0 to control all, 1-4 for each socket
 * If you have a MiHome 2 gang socket or light switch, the same zone must be used for controlling the 2 switches
-
 
 
 ## Light Dimmer Support
@@ -209,7 +218,16 @@ BATTERY_LEVEL: 3.08
 MOTION_DETECTOR: <Motion detector state, 0 = no motion, 1 = motion>
 THERMOSTAT_MODE: <Thermostat mode, 0 = off, 1 = temp controlled, 2= always on>
 TARGET_TEMP: <Target set temperature>
-SWITCH_STATE: <Not sure - it is probably the current state of the heating>
+SWITCH_STATE: <Current state of the heating 0 = off, 1 = heating (when pressed)>
+```
+### Example msg.payload - MiHome Click (MIHO089)
+```
+deviceId: <device number>
+mfrId: 4
+productId: 19
+timestamp: <numeric 'epoch based' timestamp, of when message was read>
+VOLTAGE: <battery voltage>
+BUTTON: <1=Single press, 2=Double press, 255=long press>
 ```
 
 ## MiHome Heating Device Support
@@ -235,38 +253,46 @@ The MiHome Thermostatic Radiator valve (eTRV) accepts commands to perform operat
 
 | Command | # | Description | .data | Response Msg |
 |---|:---:|---|---|:---:|
+|CANCEL|0|Cancel existing cached command (set retries to 0)||Yes|
 |EXERCISE_VALVE|163|Send exercise valve command, recommended once a week to calibrate eTRV||DIAGNOSTICS|
 |SET_LOW_POWER_MODE|164|This is used to enhance battery life by limiting the hunting of the actuator, ie it limits small adjustments to degree of opening, when the room temperature is close to the *TEMP_SET* point. A consequence of the Low Power mode is that it may cause larger errors in controlling room temperature to the set temperature.|0=Off<br>1=On|No*|
 |SET_VALVE_STATE|165|Set valve state|0=Open<br>1=Closed<br>2=Auto (default)|No|
-|REQUEST_DIAGNOTICS|166|Request diagnostic data from device, if all is OK it will return 0. Otherwise see additional monitored values for status messages||DIAGNOSTICS|
+|REQUEST_DIAGNOSTICS|166|Request diagnostic data from device, if all is OK it will return 0. Otherwise see additional monitored values for status messages||DIAGNOSTICS|
 |IDENTIFY|191|Identify the device by making the green light flash on the selected eTRV for 60 seconds||No|
 |SET_REPORTING_INTERVAL|210|Update reporting interval to requested value|300-3600 seconds|No|
 |REQUEST_VOLTAGE|226|Report current voltage of the batteries||VOLTAGE|
-|TEMP_SET|244|Send new target temperature for eTRV.<br>NOTE: The VALVE_STATE must be set to 'Auto' for this to work.|int|No|
+|TARGET_TEMP|244|Send new target temperature for eTRV in 0.5 increments.<br>NOTE: The VALVE_STATE must be set to 'Auto' for this to work.|int|No|
 
-> \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOTICS* will confirm the *LOW_POWER_MODE* setting
+> \* Although this will not auto-report, a subsequent call to *REQUEST_DIAGNOSTICS* will confirm the *LOW_POWER_MODE* setting
 
-#### Thermostat Commands (untested)
-The MiHome Thermostat accepts commands to perform operations.  The commands in the table below *should* work, but I have not tested these (I do not have a thermostat).  Please let me know if these work for you, or if you are aware of any other commands.
+#### Thermostat Commands
+
+The MiHome Thermostat accepts the following commands to perform operations.
+
+> WARNING: If you are using a MiHome gateway to control your thermostat command clash may occur by issuing command within node-red.
 
 | Command | # | Description | .data | Tested |
 |---|:---:|---|---|:---:|
-|SET_THERMOSTAT_MODE|170|Change mode of thermostat where<br>0 = OFF<br>1 = Temp Controlled<br>2 = ON|0-2|No|
-|REQUEST_DIAGNOTICS|166|Request diagnostic data from device||No|
-|IDENTIFY|191|Identify the device by making the green light flash for 60 seconds||No|
-|SET_REPORTING_INTERVAL|210|Update reporting interval to requested value|300-3600 seconds|No|
-|REQUEST_VOLTAGE|226|Report current voltage of the batteries||No|
-|TEMP_SET|244|Send new target temperature for thermostat.<br>NOTE: The THERMOSTAT_MODE must be set to '1' for this to work.|int|No|
+|CANCEL|0|Cancel existing cached command (set retries to 0)||Yes|
+|THERMOSTAT_MODE|170|Change mode of thermostat where<br>0 = OFF<br>1 = Temp Controlled<br>2 = ON|0-2|Yes|
+|RELAY_POLARITY|171|Polarity of the boiler relay|0=Normally Open,1=Normally Closed|Yes|
+|HUMID_OFFSET|186|Humidity Calibration|-20 to 20|Yes|
+|TEMP_OFFSET|189|Temperature Calibration|-20.0 to 20.0|Yes||TARGET_TEMP|244|Send new target temperature for thermostat (0-30) in 0.5 increments.<br>NOTE: The THERMOSTAT_MODE must be set to '1' for this to work.|5-30|Yes|
+|HYSTERESIS|254|The difference between the current temperature and target temperature before the thermostat triggers|0.5-10|Yes|
 
+
+In order for the Thermostat to provide updates for it's telemetry data when used **without a MiHome gateway**, auto messaging has been enabled within this module.  To start this auto-messaging you will need to send a  command that returns the `THERMOSTAT_MODE` to the application (a `THERMOSTAT_MODE` command will do).  The result of the most recent `THERMOSTAT_MODE` value will be stored and periodically replayed (until a restart) to prompt the thermostat into providing it's telemetry data.
 
 ### Command Caching
 Battery powered energenie devices, such as the eTRV or Room Thermostat do not constantly listen for commands.  For example, the eTRV reports its temperature at the *SET_REPORTING_INTERVAL* (default 5 minutes) after which the receiver is then activated to listen for commands. The receiver only remains active for 200ms or until a message is received.
 
-To cater for these hardware limitations the **'eTRV'** and **'Thermostat'** nodes use command caching and dynamic polling. Any command sent using these nodes will be held until a TEMPERATURE (for eTRV) or WAKEUP (for Thermostat) message is received; at this point the most recent cached message (only 1 is supported) will be sent to the device.  Messages will continue to be resent until they have been succesfully received or until the number of retries has reached 0.
+To cater for these hardware limitations the **'eTRV'** and **'Thermostat'** nodes use command caching and dynamic polling. Any command sent using these nodes will be held until a TEMPERATURE (for eTRV) or WAKEUP (for Thermostat) message is received; at this point the most recent cached message (only 1 is supported) will be sent to the device.  Messages will continue to be resent until they have been successful received or until the number of retries has reached 0.
 
 Sometimes a specific command may be resent multiple times. This is particularly a problem for the eTRV devices, as they do not send an acknowledgement for every command type (indicated by a 'No' in the *Response* column in the above table).  This includes the *TEMP_SET* command!  So these commands are always resent for the full number of retries.  ** NEW v0.6.x ** - When a device *has* acknowledged a command the 'command' and 'retries' topics are reset to 0.
 
-> **NOTE:** The performance of node-red may decrease when a command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 0.5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received sooner.
+Be careful when sending multiple commands to the same device, as the most recent command will overwrite any existing cached command for that device (check the retries is 0 first).
+
+> **NOTE:** The performance of node-red may decrease when a command is cached due to dynamic polling. The frequency that the radio device is polled by the monitor thread automatically increases by a factor of 200 when a command is cached (it goes from checking every 0.5 seconds to every 25 milliseconds) this dramatically increases the chance of a message being correctly received by the device sooner.
 
 ### eTRV Monitor Messages
 
@@ -306,7 +332,7 @@ To support the MiHome Radiator Valve (MIHO013) aka **'eTRV'** in v0.3 and above,
 |VALVE_STATE|Current valve mode/state| open, closed, auto, error|VALVE_STATE command *or* DIAGNOSTIC_TS on error|
 |VALVE_TS|timestamp of when last *EXERCISE_VALVE* took place|epoch|DIAGNOSTIC_TS|
 |VOLTAGE|Current battery voltage|float|VOLTAGE_TS|
-|VOLTAGE_TS|Tmestamp of when battery voltage was last received|epoch|VOLTAGE_TS|
+|VOLTAGE_TS|Timestamp of when battery voltage was last received|epoch|VOLTAGE_TS|
 
 >TIP: To get up-to-date information for a specific eTRV parameter you will need to request the device for an update by sending the appropriate command (see [eTRV Commands](#-eTRV-Commands) above),
 
@@ -323,25 +349,7 @@ If you have any issues with the code, particularly if your board is not initiali
 # Package Details
 
 ## Change History
-| Version | Date | Change details |
-|---|---|---|
-0.1.0|27 Apr 19|Initial Release|
-0.2.0|08 May 19|Full NPM & node-red catalogue release|
-0.3.0|10 Jan 20|Major change - Switched to use node.js Native API (N-API) for calling C functions, and split off new node module.  Added a new node to support MiHome Radiator Valve, along with a separate thread for monitoring that implements caching and dynamic polling.  This version requires node.js v10+.|
-0.3.2|17 Jan 20|Added node v10+ dependency (via 'engines').  Fixed issue with teaching OOK devices, and added 'off' button. Added troubleshooting section to docs.|
-0.3.4|22 Jan 20|Fixed zone 0 switch all devices. Tested Energenie 4-way gang. Updates to GUI tip shown for eTRV. Made emit monitor device specific to improve performance.|
-0.3.5|02 Feb 20|Improve error handling for board failure.|
-0.3.6|02 Feb 20|Added compile error to README. Removed console.log for eTRV Rx (left in by mistake).|
-0.3.7|09 Feb 20|Fixed raw tx node for v0.3.x|
-0.3.8|01 Mar 20|Fixed passing of switchNum into OOK node. Fixed node.status showing ERROR for OOK node when there is a message in Rx buffer. Added support for payload.state and payload.unit as alternative parameters in OOK node. README updates|
-0.3.9|11 Nov 20|Fix the dependent version of energenie-ener314rt to 0.3.4 to allow version 0.4.0 (alpha) testing without impacting node-red code. README updates, including example monitor messages and success tests for 3 more devices from AdamCMC.|
-0.4.0|19 Feb 21|Added new C&M node that immediately sends commands (designed for MIHO069 Thermostat). Added MIHO069 thermostat params & icon. Added support for UNKNOWN commands (this assumes a uint as datatype for .data). Added specific nodes for MIHO032 Motion Sensor and MIHO033 Open Sensor. Updated Energenie device names. Renamed old C&M node to be 'Smart Plug+'. Readme updates.|
-0.4.1|bugfix|Reduced internal efficiency 'sleep' from 5s to 0.5s (for non-eTRV send mode) to reduce risk of losing a message (Issue #14). Fix crash when using over 6 devices (Issue #15).
-0.4.2|05 May 21|Added MiHome Dimmer node. Made ON/OFF status messages consistant across node types. Bug fix for issue #49. Only stop monitoring during close if has been started. README updates.|
-0.5.0|19 Apr 22|Added specific node for MIHO069 MiHome Thermostat, deprecating the generic Control & Monitor node (as no other C&M devices exist at present).
-0.5.1|Sep 22|Increased support for MiHome House Monitor issue #57 (added apparent_power to node status & new node icon), Fixed Zone 0 (all) for Control Node (Issue #61)
-0.5.2|Sep 22|Added node-red version to package.json
-0.6.0|23 Jan 23|Updated for v0.6.0 of dependency [energenie-ener314rt](https://github.com/Achronite/energenie-ener314rt), which contains multiple fixes and improvements. Highlights: <br>Hardware driver support added using spidev, which falls back to software driver if unavailable.<br>Renamed TARGET_C to TARGET_TEMP for eTRV.<br>Add capability for cached/pre-cached commands to be cleared with command=0.
+See [CHANGELOG.md](./CHANGELOG.md)
 
 
 ## Dependencies
@@ -369,4 +377,4 @@ I am currently working on a new node.js implementation of ENER314-RT that uses M
 https://github.com/Achronite/node-red-contrib-energenie-ener314rt/issues
 
 
-@Achronite - January 2023 - v0.6.0 Beta
+@Achronite - February 2024

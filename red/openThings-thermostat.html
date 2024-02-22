@@ -5,7 +5,8 @@
         defaults: {
             name: { value: "Thermostat" },
             device: { type: "openThings-device", required: true },
-            board: { type: "energenie-board", required: true }
+            board: { type: "energenie-board", required: true },
+            retries: { value: 10 }
         },
         inputs: 1,
         outputs: 1,
@@ -35,7 +36,11 @@
         <label for="node-input-device"><i class="fa fa-plug"></i> Device</label>
         <input type="text" id="node-input-device"/>
     </div>
-    <div class="form-tips">
+    <div class="form-row">
+        <label for="node-input-retries"><i class="fa fa-repeat"></i> Retries</label>
+        <input type="text" id="node-input-retries"/>
+    </div>
+        <div class="form-tips">
         <p>This node monitors and controls MIHO069 Energenie Mi|Home thermostat devices</p>
     </div>
 </script>
@@ -58,7 +63,7 @@
             </dt>
             <dd>If 0-2 sets the mode of the thermostat:<br>
                 &nbsp;0 = Set Heating Off<br>
-                &nbsp;1 = Set Temp Controlled<br>
+                &nbsp;1 = Set Temp Controlled (Auto)<br>
                 &nbsp;2 = Set Always ON<br>
                 Otherwise set the target temperature in degrees Celcius (3+).</dd>
         </dl>
@@ -119,7 +124,7 @@
             <dt>payload.SWITCH_STATE
                 <span class="property-type">int</span>
             </dt>
-            <dd>The current switch state</dd>  
+            <dd>The current boiler state</dd>  
         </dl>
         <p>NOTE: As this node also receives, input messages do not get outputted.</p>
     <h3>Commands</h3>
@@ -131,48 +136,50 @@
 }</pre>
         <dl class="message-properties">
             <p>Example commands</p>
+            <dt>CANCEL
+                <span class="property-type">0</span>
+            </dt>
+            <dd>Cancel the previously cached command (set retries to 0)</dd>
             <dt>TEMP_SET
                 <span class="property-type">244</span>
             </dt>
             <dd>Set new target temperature</dd>
             <dd>.data='temperature in C'</dd>            
                 
-            <dt>SET_THERMOSTAT_MODE (alpha)
+            <dt>SET_THERMOSTAT_MODE
                 <span class="property-type">170</span>  
             </dt>
             <dd>Set mode of thermostat</dd>
             <dd>.data=
                 <br> 0 = Set Heating Off
                 <br> 1 = Set Temp Controlled
-                <br> 2 = Set Always ON</dd>            
-                
-            <dt>REQUEST_DIAGNOTICS
-                <span class="property-type">166</span>  
-            </dt>
-            <dd>Request diagnostic data from device, if all is OK it will return 0. Otherwise see additional monitored values for status messages.</dd>
+                <br> 2 = Set Always ON</dd>           
 
-            <dt>IDENTIFY
-                <span class="property-type">191</span>
+            <dt>HYSTERISIS
+                <span class="property-type">254</span>
             </dt>
-            <dd>Identify the device by making light flash (if available)</dd>
+            <dd>The difference between the current temperature and target temperature before the thermostat triggers</dd>
+            <dd>.data = 0.5-10</dd>
 
-            <dt>SET_REPORTING_INTERVAL
-                <span class="property-type">210</span>
+            <dt>RELAY_POLARITY
+                <span class="property-type">171</span>
             </dt>
-            <dd>Update reporting interval in seconds to requested value</dd>
-            <dd>.data = 300-3600</dd>
+            <dd>Polarity of the boiler relay</dd>
+            <dd>.data =
+                <br> 0 = Normally Open
+                <br> 1 = Normally Closed</dd>
 
-            <dt>REQUEST_VOLTAGE
-                    <span class="property-type">226</span>   
+            <dt>TEMP_OFFSET
+                <span class="property-type">189</span>
             </dt>
-            <dd>Request battery voltage.</dd>
+            <dd>Temperature Calibration</dd>
+            <dd>.data = -20.0 to 20.0</dd>
 
-            <dt>SWITCH_STATE
-                <span class="property-type">243</span>   
+            <dt>HUMID_OFFSET
+                <span class="property-type">186</span>
             </dt>
-            <dd>Set switch state of device (maybe used for advancing the heating).</dd>
-            <dd>.data=
-                <br> 0 = Off
-                <br> 1 = On</dd>
+            <dd>Humidity Calibration</dd>
+            <dd>.data = -20 to 20</dd>
+
         </dl>
 </script>
